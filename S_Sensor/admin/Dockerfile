@@ -12,7 +12,7 @@ COPY C_Common/packages/core/package.json    C_Common/packages/core/
 COPY C_Common/packages/design/package.json  C_Common/packages/design/
 COPY S_Sensor/admin/package.json            S_Sensor/admin/
 
-RUN npm ci --omit=dev=false
+RUN npm install --legacy-peer-deps --no-audit --no-fund
 
 # ---------- 2) builder ----------
 FROM node:20-alpine AS builder

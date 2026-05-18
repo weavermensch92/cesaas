@@ -117,7 +117,7 @@ const ko = {
   a_focus_capture: 'EntityCluster 자동 묶음 5장 → 1 deal',
 } as const;
 
-type Dict = typeof ko;
+type Dict = { [K in keyof typeof ko]: string };
 
 const ru: Dict = {
   brand: 'HD건설기계',
