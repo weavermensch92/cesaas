@@ -34,7 +34,13 @@ service-account*.json
 # ─── Supabase ─────────────────────────────────────────────────
 .supabase/
 supabase/.branches/
-supabase/.temp/
+**/supabase/.temp/
+
+# CLI deploy 시 생성된 junction (functions/ 실 위치는 <module>/backend/functions/)
+S_Sensor/backend/supabase/
+V_Voice/backend/supabase/
+U_Unified/backend/supabase/
+T_Test/backend/supabase/
 
 # ─── Fly.io ───────────────────────────────────────────────────
 .fly/
