@@ -475,3 +475,65 @@ export interface TestSummary {
 export async function getTestSummary(since?: string): Promise<TestSummary> {
   return request('GET', '/admin-test-summary', since ? { since } : undefined);
 }
+
+// ============================================================================
+// LLM 운영 — API 키 회전 + 사용 현황
+// ============================================================================
+
+export interface AnthropicKeyMeta {
+  present: boolean;
+  last_4: string | null;
+  updated_at: string | null;
+}
+
+export interface LlmUsageRow {
+  day: string;
+  function_name: string;
+  model: string;
+  calls: number;
+  input_tokens: number;
+  output_tokens: number;
+  cache_read_tokens: number;
+  cache_creation_tokens: number;
+  total_cost_usd: number;
+  errors: number;
+}
+
+export interface LlmUsageByDay {
+  day: string;
+  calls: number;
+  input_tokens: number;
+  output_tokens: number;
+  total_cost_usd: number;
+}
+
+export interface LlmUsageSummary {
+  range: { days: number; since_iso: string };
+  totals: {
+    calls: number;
+    input_tokens: number;
+    output_tokens: number;
+    cache_read_tokens: number;
+    cache_creation_tokens: number;
+    total_cost_usd: number;
+    errors: number;
+  };
+  by_day: LlmUsageByDay[];
+  rows: LlmUsageRow[];
+}
+
+export async function getAnthropicKeyMeta(): Promise<AnthropicKeyMeta> {
+  const r = await request<{ anthropic_api_key: AnthropicKeyMeta }>('GET', '/admin-settings');
+  return r.anthropic_api_key;
+}
+
+export async function rotateAnthropicKey(key: string): Promise<AnthropicKeyMeta> {
+  const r = await request<{ anthropic_api_key: AnthropicKeyMeta }>(
+    'PATCH', '/admin-settings', undefined, { anthropic_api_key: key },
+  );
+  return r.anthropic_api_key;
+}
+
+export async function getLlmUsage(days: number): Promise<LlmUsageSummary> {
+  return request('GET', '/admin-llm-usage', { days: String(days) });
+}

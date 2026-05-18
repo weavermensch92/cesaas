@@ -15,6 +15,7 @@ const ITEMS: Item[] = [
   { href: '/voice/aggregates',  label: 'Voice · Insight',    match: (p) => p.startsWith('/voice/aggregates') },
   { href: '/studio',            label: 'Studio · V_60',      match: (p) => p.startsWith('/studio') },
   { href: '/t-test',            label: 'T_08 · 통과 판정',     match: (p) => p.startsWith('/t-test') },
+  { href: '/llm',               label: 'LLM · 운영',          match: (p) => p.startsWith('/llm') },
 ];
 
 export function SectionNav() {

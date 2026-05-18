@@ -1,15 +1,18 @@
-// Anthropic 래퍼 — C_05_LLM_정책.
-// callRule(ruleId, promptKey) → R_10에서 system/user 로드 → 호출. 하드코드 금지.
+// Anthropic 래퍼 — C_05_LLM_정책 + 013_llm_observability.
+// 키: Supabase Vault (get_anthropic_api_key RPC) → 캐시 60s → env fallback.
+// 사용량: 호출 직후 record_llm_usage RPC 로 1행 INSERT (자동 비용 계산).
 
 import Anthropic from 'anthropic';
 import { ApiError } from './errors.ts';
 import { log } from './logger.ts';
-import { envOptional, envRequired } from './env.ts';
+import { envOptional } from './env.ts';
+import { db } from './db.ts';
 import { loadRule } from './rules.ts';
 
 export const DEFAULT_MODEL = 'claude-opus-4-7';
 const MAX_RETRIES = 5;
 const BACKOFF_CAP_MS = 16000;
+const KEY_CACHE_TTL_MS = 60_000;
 
 export interface PromptTemplate {
   system: string;
@@ -31,8 +34,12 @@ export interface CallOptions {
   maxTokens?: number;
   images?: ImageBlock[];
   userText?: string;
-  /** 호출 콘텍스트 (로그용) */
+  /** 호출 콘텍스트 (로그 + usage 행 정보) */
   context?: Record<string, unknown>;
+  /** 사용 로그 function_name (미지정 시 FUNCTION_NAME env 또는 'unknown') */
+  functionName?: string;
+  /** request 추적 id (Edge Function 의 x-request-id 등) */
+  requestId?: string;
 }
 
 export interface CallResult {
@@ -40,7 +47,12 @@ export interface CallResult {
   model: string;
   ruleVersion: string;
   promptVersion: string | null;
-  usage: { input_tokens: number; output_tokens: number };
+  usage: {
+    input_tokens: number;
+    output_tokens: number;
+    cache_read_input_tokens?: number;
+    cache_creation_input_tokens?: number;
+  };
 }
 
 interface AnthropicErrLike { status?: number; message?: string }
@@ -57,13 +69,85 @@ function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-let cached: Anthropic | null = null;
-function client(): Anthropic {
-  if (cached) return cached;
-  cached = new Anthropic({ apiKey: envRequired('ANTHROPIC_API_KEY') });
-  return cached;
+// ─── API 키 해석 (Vault 우선, env fallback, 60s 캐시) ─────────────────────
+let cachedKey: string | null = null;
+let cachedKeyAt = 0;
+
+async function resolveApiKey(): Promise<string> {
+  const now = Date.now();
+  if (cachedKey && (now - cachedKeyAt) < KEY_CACHE_TTL_MS) return cachedKey;
+  try {
+    const { data, error } = await db().rpc('get_anthropic_api_key');
+    if (!error && typeof data === 'string' && data.length > 10) {
+      cachedKey = data;
+      cachedKeyAt = now;
+      return cachedKey;
+    }
+  } catch (e) {
+    log('warn', 'vault key lookup failed, falling back to env', {
+      reason: e instanceof Error ? e.message : String(e),
+    });
+  }
+  const fromEnv = envOptional('ANTHROPIC_API_KEY', '');
+  if (fromEnv) {
+    cachedKey = fromEnv;
+    cachedKeyAt = now;
+    return cachedKey;
+  }
+  throw new ApiError('config_missing', 'ANTHROPIC_API_KEY: vault 미설정 + env 미설정');
 }
 
+// 클라이언트는 키마다 별도 — 회전 시 자동 재생성
+let cachedClient: { key: string; client: Anthropic } | null = null;
+async function client(): Promise<Anthropic> {
+  const key = await resolveApiKey();
+  if (cachedClient && cachedClient.key === key) return cachedClient.client;
+  const c = new Anthropic({ apiKey: key });
+  cachedClient = { key, client: c };
+  return c;
+}
+
+// ─── 사용량 기록 ─────────────────────────────────────────────────────────
+async function recordUsage(args: {
+  functionName: string;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  cacheReadTokens?: number;
+  cacheCreationTokens?: number;
+  ruleId?: string;
+  promptKey?: string;
+  requestId?: string;
+  latencyMs?: number;
+  error?: string;
+}): Promise<void> {
+  try {
+    await db().rpc('record_llm_usage', {
+      p_function_name: args.functionName,
+      p_model: args.model,
+      p_input_tokens: args.inputTokens,
+      p_output_tokens: args.outputTokens,
+      p_cache_read_tokens: args.cacheReadTokens ?? 0,
+      p_cache_creation_tokens: args.cacheCreationTokens ?? 0,
+      p_rule_id: args.ruleId ?? null,
+      p_prompt_key: args.promptKey ?? null,
+      p_request_id: args.requestId ?? null,
+      p_latency_ms: args.latencyMs ?? null,
+      p_error: args.error ?? null,
+    });
+  } catch (e) {
+    log('warn', 'failed to record llm_usage', {
+      reason: e instanceof Error ? e.message : String(e),
+    });
+  }
+}
+
+function getFunctionName(opts: CallOptions): string {
+  if (opts.functionName) return opts.functionName;
+  return envOptional('SB_EXECUTION_ID', '').split(':')[0] || envOptional('FUNCTION_NAME', 'unknown');
+}
+
+// ─── 메인 ─────────────────────────────────────────────────────────────────
 export async function callRule(
   ruleId: string,
   promptKey: string,
@@ -74,13 +158,20 @@ export async function callRule(
   if (!tpl || typeof tpl.system !== 'string' || typeof tpl.user !== 'string') {
     throw new ApiError('internal_error', `prompt template missing: ${ruleId}#${promptKey}`);
   }
-  const out = await call(tpl, opts);
+  const out = await call(tpl, opts, ruleId, promptKey, tpl.version ?? null);
   return { ...out, ruleVersion: version, promptVersion: tpl.version ?? null };
 }
 
-async function call(template: PromptTemplate, opts: CallOptions): Promise<Omit<CallResult, 'ruleVersion' | 'promptVersion'>> {
+async function call(
+  template: PromptTemplate,
+  opts: CallOptions,
+  ruleId?: string,
+  promptKey?: string,
+  promptVersion?: string | null,
+): Promise<Omit<CallResult, 'ruleVersion' | 'promptVersion'>> {
   const model = opts.model ?? envOptional('ANTHROPIC_MODEL_PRIMARY', DEFAULT_MODEL);
   const maxTokens = opts.maxTokens ?? (typeof template.max_tokens === 'number' ? template.max_tokens : 2000);
+  const fnName = getFunctionName(opts);
 
   const content: Array<ImageBlock | { type: 'text'; text: string }> = [];
   if (opts.images?.length) content.push(...opts.images);
@@ -88,9 +179,11 @@ async function call(template: PromptTemplate, opts: CallOptions): Promise<Omit<C
 
   let attempt = 0;
   let backoff = 1000;
+  const startedAt = Date.now();
   while (true) {
     try {
-      const res = await client().messages.create({
+      const c = await client();
+      const res = await c.messages.create({
         model,
         max_tokens: maxTokens,
         system: template.system,
@@ -99,26 +192,62 @@ async function call(template: PromptTemplate, opts: CallOptions): Promise<Omit<C
       });
       const first = res.content[0];
       const text = first && first.type === 'text' ? first.text : '';
+      // deno-lint-ignore no-explicit-any
+      const u = res.usage as any;
+      const inputTokens = u?.input_tokens ?? 0;
+      const outputTokens = u?.output_tokens ?? 0;
+      const cacheReadTokens = u?.cache_read_input_tokens ?? 0;
+      const cacheCreationTokens = u?.cache_creation_input_tokens ?? 0;
+
+      void recordUsage({
+        functionName: fnName,
+        model: res.model,
+        inputTokens,
+        outputTokens,
+        cacheReadTokens,
+        cacheCreationTokens,
+        ruleId,
+        promptKey,
+        requestId: opts.requestId,
+        latencyMs: Date.now() - startedAt,
+      });
+
       return {
         text,
         model: res.model,
         usage: {
-          input_tokens: res.usage.input_tokens,
-          output_tokens: res.usage.output_tokens,
+          input_tokens: inputTokens,
+          output_tokens: outputTokens,
+          cache_read_input_tokens: cacheReadTokens,
+          cache_creation_input_tokens: cacheCreationTokens,
         },
       };
     } catch (err) {
       attempt += 1;
       if (!isRetryable(err) || attempt >= MAX_RETRIES) {
         const status = (err as AnthropicErrLike).status;
+        const reason = err instanceof Error ? err.message : String(err);
         log('error', 'LLM call failed (terminal)', { attempt, status, ...opts.context });
+        void recordUsage({
+          functionName: fnName,
+          model,
+          inputTokens: 0,
+          outputTokens: 0,
+          ruleId,
+          promptKey,
+          requestId: opts.requestId,
+          latencyMs: Date.now() - startedAt,
+          error: `status=${status ?? 'n/a'} ${reason}`.slice(0, 500),
+        });
         if (status === 429) {
           throw new ApiError('llm_rate_limited', 'Anthropic rate limit', { attempt });
         }
-        throw new ApiError('llm_failed', 'Anthropic call failed', {
-          attempt,
-          reason: err instanceof Error ? err.message : String(err),
-        });
+        if (status === 401 || status === 403) {
+          // 키 캐시 무효화 — 회전 직후 회복
+          cachedKey = null;
+          cachedClient = null;
+        }
+        throw new ApiError('llm_failed', 'Anthropic call failed', { attempt, reason });
       }
       log('warn', 'LLM retry', { attempt, backoff_ms: backoff, ...opts.context });
       await sleep(backoff);
