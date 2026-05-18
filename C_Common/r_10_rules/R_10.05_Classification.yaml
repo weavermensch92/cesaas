@@ -1,0 +1,103 @@
+# R_10.05 — Classification
+# Dealer/Visitor 응답을 8 segment + LeadPriority로 매핑.
+# 클라이언트(v3 HTML)는 deterministic 룰 우선, 매칭 안 되면 서버 LLM 보조.
+#
+# 스키마:
+#   segments:
+#     <segment_key>:
+#       label_ko / label_ru
+#       match: <when 절 expression list> — all_of / any_of / not 트리 (간이)
+#
+#   priority:
+#     thresholds:
+#       p1: ... p5: ...
+#
+#   screen_kinds: URL → kind 매핑 (Sensor 1차 분류)
+
+version: 0.1
+updated_at: '2026-05-18'
+
+segments:
+  mining:
+    label_ko: '광업'
+    label_ru: 'Горнодобыча'
+    match:
+      all_of:
+        - axis.usage == 'heavy'
+        - axis.industry == 'mining'
+
+  key_account:
+    label_ko: '키 어카운트'
+    label_ru: 'Ключ. клиент'
+    match:
+      all_of:
+        - axis.scale == 'enterprise'
+        - axis.qty_gte == 10
+
+  construction_heavy:
+    label_ko: '대규모 건설'
+    label_ru: 'Крупное строит.'
+    match:
+      all_of:
+        - axis.industry == 'construction'
+        - axis.scale == 'large'
+
+  agriculture:
+    label_ko: '농업'
+    label_ru: 'С/х'
+    match:
+      all_of:
+        - axis.industry == 'agriculture'
+
+  forestry:
+    label_ko: '임업'
+    label_ru: 'Лесное хоз-во'
+    match:
+      all_of:
+        - axis.industry == 'forestry'
+
+  general_construction:
+    label_ko: '일반 건설'
+    label_ru: 'Общ. строит.'
+    match:
+      all_of:
+        - axis.industry == 'construction'
+        - axis.scale == 'small_medium'
+
+  rental:
+    label_ko: '렌탈'
+    label_ru: 'Аренда'
+    match:
+      all_of:
+        - axis.usage == 'rental'
+
+  other:
+    label_ko: '기타'
+    label_ru: 'Прочее'
+    match:
+      all_of: []
+
+priority:
+  thresholds:
+    p1: { score_gte: 85, intent: 'high' }
+    p2: { score_gte: 70 }
+    p3: { score_gte: 55 }
+    p4: { score_gte: 40 }
+    p5: { score_gte: 0 }
+
+# Sensor URL → 화면 kind 1차 분류 (S_20.02 § 3)
+screen_kinds:
+  - pattern: '/crm/deal/details/'
+    kind: deal_detail
+  - pattern: '/crm/deal/'
+    kind: deal_list
+  - pattern: '/crm/company/details/'
+    kind: company
+  - pattern: '/crm/contact/details/'
+    kind: contact
+  - pattern: '/crm/activity/'
+    kind: activity
+  - pattern: '/crm/funnel/'
+    kind: funnel
+  - pattern: '/crm/task/'
+    kind: task

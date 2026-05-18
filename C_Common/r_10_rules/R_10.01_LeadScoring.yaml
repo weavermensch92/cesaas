@@ -1,0 +1,55 @@
+# R_10.01 — LeadScoring
+# Sensor + Voice 데이터를 합쳐 0~100 점수 산출.
+# U_Unified.Lead.score 컬럼에 저장.
+
+version: 0.1
+updated_at: '2026-05-18'
+
+weights:
+  # Sensor 13 필드에서 도출
+  sensor:
+    company:        4
+    contact:        4
+    phone:          4
+    email:          4
+    region:         3
+    industry:       6
+    model_interest: 10
+    qty:            12
+    budget:         10
+    timeline:       12
+    funding:        8
+    stage:          8
+    notes:          5
+
+  # Voice axis 가중치
+  voice:
+    scale:    10
+    usage:    8
+    budget:   10
+    timeline: 10
+    funding:  6
+    nps:      4
+
+  # 통합 보정
+  unified:
+    has_sensor_capture:  +5
+    has_voice_response:  +5
+    same_entity_match:   +10
+    contact_consent:     +3
+
+penalties:
+  missing_required:    -10  # 필수 axis 누락
+  ambiguous_industry:  -5
+  stale_capture_30d:   -8
+
+normalization:
+  output_range: [0, 100]
+  rounding: integer
+
+priority_buckets:
+  P1: { gte: 85 }
+  P2: { gte: 70, lt: 85 }
+  P3: { gte: 55, lt: 70 }
+  P4: { gte: 40, lt: 55 }
+  P5: { lt: 40 }

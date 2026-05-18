@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HD · Voice Admin — Static Mock</title>
+  <style>
+    :root {
+      --hd-eco:#00E600; --hd-heritage:#00AD1D; --hd-prosperity:#008233; --hd-dark-green:#024638;
+      --hd-discovery:#003087; --hd-trust:#002554;
+      --hd-gray:#63666A; --hd-paper:#fff; --hd-bg:#f6f8f6;
+      --hd-steel-200:#d6dadf; --hd-steel-300:#b8bcc2; --hd-steel-100:#e9edf0; --hd-steel-50:#f3f5f7; --hd-steel-700:#4f535a;
+      --hd-amber:#b45309; --hd-red:#b91c1c;
+      --hd-green:var(--hd-heritage); --hd-green-50:#e8f7eb;
+      --hd-blue:var(--hd-discovery); --hd-blue-50:#e8eef9;
+      --hd-amber-50:#fffbeb; --hd-red-50:#fef2f2;
+      --hd-radius:6px; --hd-radius-lg:10px;
+      --hd-font:'Noto Sans KR','Malgun Gothic',-apple-system,Segoe UI,Arial,sans-serif;
+      --hd-font-display:'HD Sans',var(--hd-font);
+      --hd-fs:13px;
+
+      --seg-mining:#002554; --seg-key-account:#008233; --seg-construction-heavy:#003087;
+      --seg-agriculture:#00AD1D; --seg-forestry:#024638;
+      --seg-general-construction:#0891b2; --seg-rental:#b45309; --seg-other:#63666A;
+    }
+    *{box-sizing:border-box;}
+    body{margin:0;background:var(--hd-bg);font-family:var(--hd-font);color:#1d1d1f;font-size:var(--hd-fs);}
+    a{color:var(--hd-discovery);text-decoration:none;}
+    a:hover{text-decoration:underline;}
+
+    .topbar{background:var(--hd-trust);color:#fff;height:52px;display:flex;align-items:center;gap:16px;padding:0 18px;}
+    .topbar .mark{width:22px;height:22px;border-radius:4px;background:var(--hd-heritage);display:grid;place-items:center;color:#002554;font-weight:900;font-size:12px;font-family:var(--hd-font-display);}
+    .topbar .logo{font:700 14px var(--hd-font-display);letter-spacing:-0.01em;display:flex;align-items:center;gap:9px;}
+    .topbar .crumb{color:rgba(255,255,255,0.62);font-size:12.5px;}
+    .topbar .user{display:flex;align-items:center;gap:8px;font-size:12px;margin-left:auto;}
+    .topbar .avatar{width:26px;height:26px;border-radius:50%;background:#003087;display:grid;place-items:center;font-size:11px;font-weight:700;}
+
+    .subnav{height:40px;display:flex;align-items:center;gap:4px;padding:0 18px;background:#fff;border-bottom:1px solid var(--hd-steel-200);overflow-x:auto;}
+    .snav{padding:6px 10px;font-size:12.5px;color:var(--hd-steel-700);border-radius:6px;cursor:pointer;text-decoration:none;}
+    .snav.active{color:var(--hd-trust);background:var(--hd-steel-100);font-weight:600;}
+
+    main{padding:18px;max-width:1280px;margin:0 auto;}
+    .anchor{display:block;height:0;visibility:hidden;}
+    .h1{font:700 22px/1.1 var(--hd-font-display);color:var(--hd-heritage);letter-spacing:-0.01em;margin:6px 0 4px;}
+    .h2{font:600 13px var(--hd-font);color:var(--hd-gray);margin:0 0 14px;}
+
+    .card{background:#fff;border:1px solid var(--hd-steel-200);border-radius:var(--hd-radius-lg);overflow:hidden;}
+    .card-hd{padding:10px 14px;border-bottom:1px solid var(--hd-steel-200);display:flex;align-items:center;gap:10px;font-weight:600;}
+
+    table{width:100%;border-collapse:separate;border-spacing:0;font-size:var(--hd-fs);}
+    thead th{position:sticky;top:0;background:var(--hd-steel-50);text-align:left;padding:8px 14px;font-weight:600;font-size:11.5px;color:var(--hd-steel-700);border-bottom:1px solid var(--hd-steel-200);white-space:nowrap;text-transform:uppercase;letter-spacing:0.02em;}
+    tbody td{padding:10px 14px;border-bottom:1px solid var(--hd-steel-100);vertical-align:middle;height:36px;}
+    tbody tr:hover td{background:var(--hd-steel-50);}
+    .num{font-variant-numeric:tabular-nums;}
+
+    .badge{display:inline-flex;align-items:center;gap:5px;padding:2px 7px;border-radius:4px;font-size:10.5px;font-weight:600;letter-spacing:0.02em;background:var(--hd-steel-100);color:var(--hd-steel-700);}
+    .badge.green{background:var(--hd-green-50);color:var(--hd-green);}
+    .badge.blue{background:var(--hd-blue-50);color:var(--hd-blue);}
+    .badge.amber{background:var(--hd-amber-50);color:var(--hd-amber);}
+    .badge.red{background:var(--hd-red-50);color:var(--hd-red);}
+    .badge.accent{background:var(--hd-green-50);color:var(--hd-prosperity);}
+    .badge.ghost{background:transparent;border:1px solid var(--hd-steel-200);color:var(--hd-steel-700);}
+
+    .btn{height:30px;padding:0 12px;border-radius:6px;font-size:12.5px;font-weight:500;display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:1px solid var(--hd-steel-300);background:#fff;color:var(--hd-trust);}
+    .btn:hover{background:var(--hd-steel-50);}
+    .btn.primary{background:var(--hd-trust);color:#fff;border-color:var(--hd-trust);}
+    .btn.ghost{background:transparent;border:none;color:var(--hd-steel-700);}
+
+    .chip{padding:4px 10px;font-size:12px;color:var(--hd-steel-700);border-radius:6px;cursor:pointer;}
+    .chip.active{color:var(--hd-trust);background:var(--hd-steel-100);font-weight:600;}
+
+    .eyebrow{font:600 10.5px var(--hd-font);text-transform:uppercase;letter-spacing:0.04em;color:var(--hd-gray);}
+    .meta{font-size:11.5px;color:var(--hd-gray);}
+
+    .kpi{padding:14px;}
+    .kpi-label{font:600 10.5px var(--hd-font);text-transform:uppercase;letter-spacing:0.04em;color:var(--hd-gray);}
+    .kpi-val{font:700 28px/1.0 var(--hd-font-display);margin-top:6px;color:var(--hd-trust);}
+    .kpi-val.green{color:var(--hd-prosperity);}
+    .kpi-val.red{color:var(--hd-red);}
+
+    .anchor-jump{position:fixed;bottom:20px;right:20px;display:flex;gap:6px;background:#fff;padding:6px;border:1px solid var(--hd-steel-200);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.08);font-size:12px;z-index:9;}
+    .anchor-jump a{padding:4px 10px;border-radius:4px;color:var(--hd-trust);}
+    .anchor-jump a:hover{background:var(--hd-steel-100);text-decoration:none;}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <span class="logo"><span class="mark">H</span> HD건설기계 · Sensor Admin</span>
+    <span class="crumb">러시아 채널 · <b>Voice 응답 검토</b></span>
+    <span class="user"><span class="avatar">K</span> kim@hd.com</span>
+  </div>
+
+  <div class="subnav">
+    <a class="snav" href="admin-mock.html#captures">Captures</a>
+    <a class="snav active" href="#responses">Voice · Responses</a>
+    <a class="snav" href="#aggregates">Voice · Insight</a>
+  </div>
+
+  <main>
+    <a class="anchor" id="responses"></a>
+    <section>
+      <h1 class="h1">Voice · Responses</h1>
+      <p class="h2">V_30.01 · cursor pagination · filters</p>
+
+      <div class="card" style="margin-bottom:12px;padding:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+        <span class="eyebrow">유형</span>
+        <span class="chip">All</span>
+        <span class="chip active">Dealer</span>
+        <span class="chip">Visitor</span>
+        <span style="width:1px;height:18px;background:var(--hd-steel-200);"></span>
+        <span class="eyebrow">Segment</span>
+        <span class="chip active">mining</span>
+        <span class="chip">key_account</span>
+        <span class="chip">construction_heavy</span>
+        <span class="chip">rental</span>
+        <button class="btn ghost" style="font-size:11px">clear</button>
+        <span style="width:1px;height:18px;background:var(--hd-steel-200);"></span>
+        <span class="eyebrow">NPS</span>
+        <input type="number" placeholder="min" value="7" style="width:60px;height:28px;padding:0 8px;border:1px solid var(--hd-steel-300);border-radius:6px;font-size:12px;" />
+        <input type="number" placeholder="max" value="10" style="width:60px;height:28px;padding:0 8px;border:1px solid var(--hd-steel-300);border-radius:6px;font-size:12px;" />
+        <span style="width:1px;height:18px;background:var(--hd-steel-200);"></span>
+        <span class="eyebrow">Opt-in</span>
+        <span class="chip">All</span>
+        <span class="chip active">Yes</span>
+        <span class="chip">No</span>
+        <span style="margin-left:auto"></span>
+        <button class="btn">CSV</button>
+        <button class="btn primary">CSV (anon)</button>
+      </div>
+
+      <div class="card">
+        <table>
+          <thead><tr><th>시각</th><th>유형</th><th>Segment</th><th>NPS</th><th>언어</th><th>수신</th><th>옵트인</th><th>발신</th></tr></thead>
+          <tbody>
+            <tr><td class="num">08:00 · 2026-05-26</td><td><span class="badge accent">dealer</span></td><td><span class="badge green">mining</span></td><td><b style="color:var(--hd-prosperity)">9</b></td><td>ru</td><td><span class="badge green">✓</span></td><td><span class="badge blue">opt-in</span></td><td class="num">dealer_001</td></tr>
+            <tr><td class="num">08:02 · 2026-05-26</td><td><span class="badge accent">dealer</span></td><td><span class="badge green">key_account</span></td><td><b style="color:var(--hd-prosperity)">10</b></td><td>ru</td><td><span class="badge green">✓</span></td><td><span class="badge blue">opt-in</span></td><td class="num">dealer_001</td></tr>
+            <tr><td class="num">08:05 · 2026-05-26</td><td><span class="badge blue">visitor</span></td><td><span class="badge blue">construction_heavy</span></td><td><b style="color:var(--hd-amber)">7</b></td><td>en</td><td><span class="badge ghost">–</span></td><td><span class="badge ghost">anon</span></td><td class="num">8f3d1e</td></tr>
+            <tr><td class="num">08:08 · 2026-05-26</td><td><span class="badge blue">visitor</span></td><td><span class="badge amber">rental</span></td><td><b style="color:var(--hd-amber)">7</b></td><td>ru</td><td><span class="badge green">✓</span></td><td><span class="badge blue">opt-in</span></td><td class="num">a12b9c</td></tr>
+            <tr><td class="num">08:14 · 2026-05-26</td><td><span class="badge accent">dealer</span></td><td><span class="badge green">mining</span></td><td><b style="color:var(--hd-prosperity)">9</b></td><td>ru</td><td><span class="badge green">✓</span></td><td><span class="badge blue">opt-in</span></td><td class="num">dealer_002</td></tr>
+            <tr><td class="num">08:22 · 2026-05-26</td><td><span class="badge blue">visitor</span></td><td><span class="badge blue">construction_heavy</span></td><td><b style="color:var(--hd-red)">5</b></td><td>ru</td><td><span class="badge ghost">–</span></td><td><span class="badge ghost">anon</span></td><td class="num">d7e221</td></tr>
+            <tr><td class="num">08:31 · 2026-05-26</td><td><span class="badge blue">visitor</span></td><td><span class="badge green">agriculture</span></td><td><b style="color:var(--hd-amber)">8</b></td><td>en</td><td><span class="badge green">✓</span></td><td><span class="badge blue">opt-in</span></td><td class="num">e9f0a1</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:8px;"><button class="btn">더 보기</button><span class="meta" style="margin-left:auto">7 / 67</span></div>
+    </section>
+
+    <a class="anchor" id="aggregates"></a>
+    <section style="margin-top:36px;">
+      <h1 class="h1">Voice · Insight v0</h1>
+      <p class="h2">V_30.03 · segment 분포 · NPS · event·언어</p>
+
+      <div class="card" style="margin-bottom:12px;padding:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <span class="eyebrow">기간</span>
+        <input type="date" value="2026-05-26" style="height:28px;padding:0 8px;border:1px solid var(--hd-steel-300);border-radius:6px;font-size:12px;" />
+        <span class="meta">~</span>
+        <input type="date" value="2026-05-29" style="height:28px;padding:0 8px;border:1px solid var(--hd-steel-300);border-radius:6px;font-size:12px;" />
+        <span style="width:1px;height:18px;background:var(--hd-steel-200);"></span>
+        <span class="eyebrow">Event</span>
+        <input type="text" value="ctt_moscow_2026" style="width:200px;height:28px;padding:0 8px;border:1px solid var(--hd-steel-300);border-radius:6px;font-size:12px;" />
+        <span style="margin-left:auto"></span>
+        <button class="btn">↻ Refresh</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px;">
+        <div class="card kpi"><div class="kpi-label">총 응답</div><div class="kpi-val">67</div><div class="meta">2026-05-26 ~ 29</div></div>
+        <div class="card kpi"><div class="kpi-label">NPS 평균</div><div class="kpi-val">8.2</div><div class="meta">52건</div></div>
+        <div class="card kpi"><div class="kpi-label">Promoters</div><div class="kpi-val green">22</div><div class="meta">42%</div></div>
+        <div class="card kpi"><div class="kpi-label">Detractors</div><div class="kpi-val red">8</div><div class="meta">15%</div></div>
+      </div>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div class="card-hd"><span style="font-size:13px">Segment 분포</span><span class="meta" style="margin-left:auto">8 segment · full</span></div>
+        <div style="padding:12px;">
+          <div style="display:grid;grid-template-columns:180px 1fr 60px 80px;gap:10px;align-items:center;padding:6px 0;">
+            <span style="font-weight:600;color:var(--hd-trust)">mining</span>
+            <div style="background:var(--hd-steel-100);height:16px;border-radius:8px;overflow:hidden"><div style="width:100%;height:100%;background:var(--seg-mining)"></div></div>
+            <span class="num" style="text-align:right;color:var(--hd-trust);font-weight:600">17</span>
+            <span class="meta" style="text-align:right">D 12 · V 5</span>
+          </div>
+          <div style="display:grid;grid-template-columns:180px 1fr 60px 80px;gap:10px;align-items:center;padding:6px 0;">
+            <span style="font-weight:600;color:var(--hd-trust)">construction_heavy</span>
+            <div style="background:var(--hd-steel-100);height:16px;border-radius:8px;overflow:hidden"><div style="width:70%;height:100%;background:var(--seg-construction-heavy)"></div></div>
+            <span class="num" style="text-align:right;color:var(--hd-trust);font-weight:600">12</span>
+            <span class="meta" style="text-align:right">D 8 · V 4</span>
+          </div>
+          <div style="display:grid;grid-template-columns:180px 1fr 60px 80px;gap:10px;align-items:center;padding:6px 0;">
+            <span style="font-weight:600;color:var(--hd-trust)">key_account</span>
+            <div style="background:var(--hd-steel-100);height:16px;border-radius:8px;overflow:hidden"><div style="width:48%;height:100%;background:var(--seg-key-account)"></div></div>
+            <span class="num" style="text-align:right;color:var(--hd-trust);font-weight:600">8</span>
+            <span class="meta" style="text-align:right">D 8 · V 0</span>
+          </div>
+          <div style="display:grid;grid-template-columns:180px 1fr 60px 80px;gap:10px;align-items:center;padding:6px 0;">
+            <span style="font-weight:600;color:var(--hd-trust)">agriculture</span>
+            <div style="background:var(--hd-steel-100);height:16px;border-radius:8px;overflow:hidden"><div style="width:42%;height:100%;background:var(--seg-agriculture)"></div></div>
+            <span class="num" style="text-align:right;color:var(--hd-trust);font-weight:600">7</span>
+            <span class="meta" style="text-align:right">D 3 · V 4</span>
+          </div>
+          <div style="display:grid;grid-template-columns:180px 1fr 60px 80px;gap:10px;align-items:center;padding:6px 0;">
+            <span style="font-weight:600;color:var(--hd-trust)">rental</span>
+            <div style="background:var(--hd-steel-100);height:16px;border-radius:8px;overflow:hidden"><div style="width:35%;height:100%;background:var(--seg-rental)"></div></div>
+            <span class="num" style="text-align:right;color:var(--hd-trust);font-weight:600">6</span>
+            <span class="meta" style="text-align:right">D 2 · V 4</span>
+          </div>
+          <div style="display:grid;grid-template-columns:180px 1fr 60px 80px;gap:10px;align-items:center;padding:6px 0;">
+            <span style="font-weight:600;color:var(--hd-trust)">forestry</span>
+            <div style="background:var(--hd-steel-100);height:16px;border-radius:8px;overflow:hidden"><div style="width:30%;height:100%;background:var(--seg-forestry)"></div></div>
+            <span class="num" style="text-align:right;color:var(--hd-trust);font-weight:600">5</span>
+            <span class="meta" style="text-align:right">D 4 · V 1</span>
+          </div>
+          <div style="display:grid;grid-template-columns:180px 1fr 60px 80px;gap:10px;align-items:center;padding:6px 0;">
+            <span style="font-weight:600;color:var(--hd-trust)">general_construction</span>
+            <div style="background:var(--hd-steel-100);height:16px;border-radius:8px;overflow:hidden"><div style="width:25%;height:100%;background:var(--seg-general-construction)"></div></div>
+            <span class="num" style="text-align:right;color:var(--hd-trust);font-weight:600">4</span>
+            <span class="meta" style="text-align:right">D 2 · V 2</span>
+          </div>
+          <div style="display:grid;grid-template-columns:180px 1fr 60px 80px;gap:10px;align-items:center;padding:6px 0;">
+            <span style="font-weight:600;color:var(--hd-trust)">other</span>
+            <div style="background:var(--hd-steel-100);height:16px;border-radius:8px;overflow:hidden"><div style="width:48%;height:100%;background:var(--seg-other)"></div></div>
+            <span class="num" style="text-align:right;color:var(--hd-trust);font-weight:600">8</span>
+            <span class="meta" style="text-align:right">D 3 · V 5</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="card">
+          <div class="card-hd"><span style="font-size:13px">Event</span></div>
+          <table>
+            <tbody>
+              <tr><td>ctt_moscow_2026</td><td class="num" style="text-align:right">67</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="card-hd"><span style="font-size:13px">Language</span></div>
+          <table>
+            <tbody>
+              <tr><td>ru</td><td class="num" style="text-align:right">48</td></tr>
+              <tr><td>en</td><td class="num" style="text-align:right">15</td></tr>
+              <tr><td>ko</td><td class="num" style="text-align:right">4</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="anchor-jump">
+    <a href="#responses">목록</a>
+    <a href="#aggregates">Insight</a>
+    <a href="admin-mock.html#captures">← Captures</a>
+    <a href="index.html">← 갤러리</a>
+  </nav>
+</body>
+</html>

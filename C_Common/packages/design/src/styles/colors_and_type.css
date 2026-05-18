@@ -1,0 +1,197 @@
+/* HD건설기계 PoC — Design Tokens
+ *
+ * 원본: hd-hyundai-poc-harness-v1/hd-design/colors_and_type.css
+ * 정렬: HD건설기계 CI Guidelines 2026 (HCE_CI Guidelines).
+ *
+ * TYPE STRATEGY (사용자 지시 2026-05-18):
+ *   - 본문 디폴트 = 본고딕 / Noto Sans KR
+ *   - HD체 (HD Sans) = 강조 전용 (display headings, brand wordmark)
+ *   - "현대" 표기는 모든 user-facing 문맥에서 금지 — "HD" 또는 "HD건설기계"
+ *
+ * 폰트 파일:
+ *   호스트 앱이 ./fonts/HDSans-{Light|Medium|Bold}.ttf 를 제공해야 함.
+ *   원본은 hd-design/fonts/ 에 있으니 packaging 시 동일 weight 매핑으로 복사.
+ */
+
+@font-face {
+  font-family: 'HD Sans';
+  font-weight: 300;
+  font-style: normal;
+  src: url('./fonts/HDSans-Light.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HD Sans';
+  font-weight: 500;
+  font-style: normal;
+  src: url('./fonts/HDSans-Medium.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'HD Sans';
+  font-weight: 700;
+  font-style: normal;
+  src: url('./fonts/HDSans-Bold.ttf') format('truetype');
+  font-display: swap;
+}
+
+:root {
+  /* ── Brand · Greens ────────────────────────────────────────────── */
+  --hd-eco:               #00E600;
+  --hd-heritage:          #00AD1D;
+  --hd-prosperity:        #008233;
+  --hd-dark-green:        #024638;
+  --hd-bright-green:      #79D97C;
+  --hd-light-green:       #C7E995;
+  --hd-green-gray:        #BFCEC2;
+
+  /* ── Brand · Blues ─────────────────────────────────────────────── */
+  --hd-discovery:         #003087;
+  --hd-trust:             #002554;
+  --hd-light-blue:        #B1E4E3;
+  --hd-blue-gray:         #DBE2E9;
+
+  /* ── Brand · Neutrals ──────────────────────────────────────────── */
+  --hd-gray:              #63666A;   /* HD Gray · 본문 텍스트 */
+  --hd-paper:             #ffffff;
+  --hd-bg:                #f6f8f6;   /* 살짝 그린 워밍 off-white */
+
+  /* ── 호환 alias ────────────────────────────────────────────────── */
+  --hd-ink:               var(--hd-trust);       /* chrome / heading / table header */
+  --hd-ink-2:             var(--hd-discovery);   /* secondary chrome */
+  --hd-ink-text:          var(--hd-gray);        /* body text · per CI 'HD Gray' rule */
+
+  --hd-accent:            var(--hd-heritage);    /* primary brand accent */
+  --hd-accent-2:          var(--hd-prosperity);  /* CTA · darker emphasis */
+  --hd-accent-bright:     var(--hd-eco);         /* brightest — sparingly */
+  --hd-accent-50:         #e8f7eb;
+  --hd-accent-100:        #d2efd6;
+  --hd-accent-700:        var(--hd-prosperity);
+
+  /* ── Steel scale (neutrals) ────────────────────────────────────── */
+  --hd-steel-900:  #2b2f33;
+  --hd-steel-700:  #4f535a;
+  --hd-steel-500:  var(--hd-gray);    /* HD Gray alias */
+  --hd-steel-400:  #91969d;
+  --hd-steel-300:  #b8bcc2;
+  --hd-steel-200:  #d6dadf;
+  --hd-steel-100:  #e9edf0;
+  --hd-steel-50:   #f3f5f7;
+
+  /* ── Semantic — HD 그린과 조화 ─────────────────────────────────── */
+  --hd-blue:       var(--hd-discovery);  --hd-blue-50:  #e8eef9;
+  --hd-green:      var(--hd-heritage);   --hd-green-50: var(--hd-accent-50);
+  --hd-amber:      #b45309;              --hd-amber-50: #fffbeb;
+  --hd-red:        #b91c1c;              --hd-red-50:   #fef2f2;
+
+  /* ── Segment hues — HD 팔레트 재튜닝 ───────────────────────────── */
+  --seg-mining:               var(--hd-trust);
+  --seg-key-account:          var(--hd-prosperity);
+  --seg-construction-heavy:   var(--hd-discovery);
+  --seg-agriculture:          var(--hd-heritage);
+  --seg-forestry:             var(--hd-dark-green);
+  --seg-general-construction: #0891b2;
+  --seg-rental:               #b45309;
+  --seg-other:                var(--hd-gray);
+
+  /* ── Density-driven sizing ─────────────────────────────────────── */
+  --hd-row-h:      36px;
+  --hd-pad-x:      14px;
+  --hd-pad-y:      10px;
+  --hd-fs:         13px;
+  --hd-fs-sm:      11.5px;
+  --hd-fs-xs:      10.5px;
+
+  /* ── Radius ────────────────────────────────────────────────────── */
+  --hd-radius:     6px;
+  --hd-radius-lg:  10px;
+  --hd-radius-pill: 999px;
+
+  /* ── Elevation (3 + 1 brand-accent) ─────────────────────────────── */
+  --hd-shadow-1:   0 2px 6px rgba(0,0,0,0.06);
+  --hd-shadow-2:   0 12px 30px rgba(0,0,0,0.18);
+  --hd-shadow-accent: 0 20px 60px rgba(0,173,29,0.22),
+                      0 0 0 6px rgba(0,173,29,0.10);
+
+  /* ── Borders ───────────────────────────────────────────────────── */
+  --hd-border:      1px solid var(--hd-steel-200);
+  --hd-border-dark: 1px solid rgba(255,255,255,0.10);
+
+  /* ── Type ──────────────────────────────────────────────────────── */
+  --hd-font:         'Noto Sans KR', 'Malgun Gothic',
+                     -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  --hd-font-display: 'HD Sans', 'Noto Sans KR', 'Malgun Gothic',
+                     -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  --hd-mono:         'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --hd-fs-display:  32px;
+  --hd-fs-h1:       22px;
+  --hd-fs-h2:       18px;
+  --hd-fs-h3:       15px;
+  --hd-fs-body:     13px;
+  --hd-fs-meta:     11.5px;
+  --hd-fs-micro:    10.5px;
+
+  --hd-fw-light:    300;
+  --hd-fw-regular:  400;
+  --hd-fw-medium:   500;
+  --hd-fw-semi:     600;
+  --hd-fw-bold:     700;
+  --hd-fw-black:    800;
+
+  --hd-track-tight: -0.01em;
+  --hd-track-snug:  -0.005em;
+  --hd-track-loose: 0.04em;
+  --hd-track-mono:  0;
+}
+
+[data-density="dense"]    { --hd-row-h: 28px; --hd-pad-x: 10px; --hd-pad-y: 6px;  --hd-fs: 12px;   --hd-fs-sm: 11px;   }
+[data-density="balanced"] { --hd-row-h: 36px; --hd-pad-x: 14px; --hd-pad-y: 10px; --hd-fs: 13px;   --hd-fs-sm: 11.5px; }
+[data-density="spacious"] { --hd-row-h: 46px; --hd-pad-x: 18px; --hd-pad-y: 14px; --hd-fs: 13.5px; --hd-fs-sm: 12px;   }
+
+/* ── Semantic helpers ─────────────────────────────────────────── */
+
+.hd-h1 {
+  font-family: var(--hd-font-display);
+  font-size: var(--hd-fs-h1); font-weight: var(--hd-fw-bold);
+  letter-spacing: var(--hd-track-tight);
+  color: var(--hd-heritage);     /* CI: 제목 = HD Heritage Green */
+}
+.hd-h2 {
+  font-family: var(--hd-font-display);
+  font-size: var(--hd-fs-h2); font-weight: var(--hd-fw-bold);
+  letter-spacing: var(--hd-track-snug);
+  color: var(--hd-discovery);    /* CI: 부제목 = HD Discovery Blue */
+}
+.hd-display {
+  font-family: var(--hd-font-display);
+  font-weight: var(--hd-fw-bold);
+  letter-spacing: var(--hd-track-tight);
+}
+.hd-wordmark {
+  font-family: var(--hd-font-display);
+  font-weight: var(--hd-fw-bold);
+  letter-spacing: var(--hd-track-snug);
+}
+.hd-eyebrow {
+  font: var(--hd-fw-semi) var(--hd-fs-micro) var(--hd-font);
+  text-transform: uppercase;
+  letter-spacing: var(--hd-track-loose);
+  color: var(--hd-gray);
+}
+.hd-body {
+  font: var(--hd-fw-medium) var(--hd-fs-body) var(--hd-font);
+  color: var(--hd-gray);         /* CI: 본문 = HD Gray */
+  line-height: 1.45;
+}
+.hd-meta {
+  font: var(--hd-fw-regular) var(--hd-fs-meta) var(--hd-font);
+  color: var(--hd-gray);
+}
+.hd-num { font-variant-numeric: tabular-nums; }
+
+/* heading 태그 자동 HD체 적용 */
+h1, h2, h3, h4 {
+  font-family: var(--hd-font-display);
+  letter-spacing: var(--hd-track-tight);
+}

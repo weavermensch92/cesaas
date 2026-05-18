@@ -1,0 +1,16 @@
+{
+  "name": "HD Survey",
+  "short_name": "HD Survey",
+  "description": "HD건설기계 — Visitor survey",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#002554",
+  "background_color": "#f6f8f6",
+  "lang": "ru",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

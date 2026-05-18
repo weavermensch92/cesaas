@@ -1,0 +1,37 @@
+# R_10.08 — Survey Build Prompt
+# V_60 Studio가 자연어 → 설문 정의(JSON) 생성에 사용.
+# 시스템 프롬프트는 R_10.06 voice_studio_survey_build 와 같은 의도이나,
+# 이 파일은 Studio 전용 schema / validation rule을 분리 관리.
+
+version: 0.1
+updated_at: '2026-05-18'
+
+target_schema:
+  surveys:
+    audience: [dealer, visitor]
+    language: [ko, ru, en]
+    duration_minutes_max: 2  # Visitor PWA 필수 (NF-V03)
+  question_kinds:
+    - single_select
+    - multi_select
+    - scale_1_10
+    - nps
+    - text_short
+    - text_long
+    - consent
+
+validation_rules:
+  - 'NPS(0~10) 1개 필수'
+  - '향후 수신 동의 consent 1개 필수'
+  - 'Visitor 18문항 중 핵심 4 axis 필수 매핑'
+  - '핵심 4 axis: scale·usage·budget·timeline'
+
+defaults:
+  language_primary: ru
+  fallback_languages: [ko, en]
+  dealer_question_count_target: 31
+  visitor_question_count_target: 18
+
+llm_call:
+  rule: R_10.06_PromptTemplates
+  prompt_key: voice_studio_survey_build

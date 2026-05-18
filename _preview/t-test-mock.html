@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>T_Test · E2E Runner — Mock Output</title>
+  <style>
+    :root{
+      --hd-heritage:#00AD1D; --hd-prosperity:#008233; --hd-discovery:#003087; --hd-trust:#002554;
+      --hd-gray:#63666A; --hd-paper:#fff; --hd-bg:#f6f8f6;
+      --hd-steel-200:#d6dadf; --hd-steel-100:#e9edf0; --hd-steel-50:#f3f5f7; --hd-steel-700:#4f535a;
+      --hd-amber:#b45309; --hd-red:#b91c1c; --hd-green-50:#e8f7eb; --hd-blue-50:#e8eef9;
+      --hd-radius:6px; --hd-radius-lg:10px;
+      --hd-font:'Noto Sans KR','Malgun Gothic',-apple-system,Segoe UI,Arial,sans-serif;
+      --hd-font-display:'HD Sans',var(--hd-font);
+      --hd-mono:'JetBrains Mono',ui-monospace,monospace;
+    }
+    *{box-sizing:border-box;}
+    body{margin:0;background:var(--hd-bg);font-family:var(--hd-font);color:#1d1d1f;font-size:13px;}
+    .topbar{background:var(--hd-trust);color:#fff;height:52px;display:flex;align-items:center;gap:14px;padding:0 18px;}
+    .topbar .mark{width:22px;height:22px;border-radius:4px;background:var(--hd-heritage);display:grid;place-items:center;color:#002554;font-weight:900;font-size:12px;}
+    .topbar .logo{font:700 14px var(--hd-font-display);display:flex;align-items:center;gap:9px;}
+    .topbar .crumb{color:rgba(255,255,255,0.62);font-size:12.5px;}
+    main{padding:18px;max-width:1100px;margin:0 auto;}
+    .h1{font:700 22px/1.1 var(--hd-font-display);color:var(--hd-heritage);margin:6px 0 4px;}
+    .meta{font-size:12px;color:var(--hd-gray);}
+    .card{background:#fff;border:1px solid var(--hd-steel-200);border-radius:var(--hd-radius-lg);margin-bottom:14px;}
+    .card-hd{padding:10px 14px;border-bottom:1px solid var(--hd-steel-200);display:flex;align-items:center;gap:10px;font-weight:600;}
+    .console{font:12.5px/1.5 var(--hd-mono);background:#1a1d23;color:#e9edf0;padding:14px;border-radius:0 0 var(--hd-radius-lg) var(--hd-radius-lg);white-space:pre;overflow-x:auto;}
+    .console .ok{color:#34d399;} .console .fail{color:#f87171;} .console .skip{color:#fbbf24;}
+    .console .head{color:#a7f3d0;font-weight:700;}
+    .console .metric{color:#7dd3fc;}
+    .console .dim{color:#9ca3af;}
+    .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:14px;}
+    .kpi .box{background:#fff;border:1px solid var(--hd-steel-200);border-radius:var(--hd-radius-lg);padding:14px;}
+    .kpi .lbl{font:600 10.5px var(--hd-font);text-transform:uppercase;letter-spacing:0.04em;color:var(--hd-gray);}
+    .kpi .val{font:700 26px var(--hd-font-display);color:var(--hd-trust);margin-top:6px;}
+    .kpi .val.green{color:var(--hd-prosperity);}
+    .kpi .val.red{color:var(--hd-red);}
+    table{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;}
+    thead th{background:var(--hd-steel-50);text-align:left;padding:8px 12px;font-weight:600;font-size:11px;color:var(--hd-steel-700);border-bottom:1px solid var(--hd-steel-200);text-transform:uppercase;letter-spacing:0.02em;}
+    tbody td{padding:8px 12px;border-bottom:1px solid var(--hd-steel-100);}
+    tbody tr:hover td{background:var(--hd-steel-50);}
+    .badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10.5px;font-weight:600;}
+    .badge.green{background:var(--hd-green-50);color:var(--hd-prosperity);}
+    .badge.amber{background:#fffbeb;color:var(--hd-amber);}
+    .badge.red{background:#fef2f2;color:var(--hd-red);}
+    .badge.blue{background:var(--hd-blue-50);color:var(--hd-discovery);}
+    .badge.ghost{background:transparent;border:1px solid var(--hd-steel-200);color:var(--hd-steel-700);}
+    code.id{background:var(--hd-steel-50);padding:1px 5px;border-radius:3px;font-family:var(--hd-mono);font-size:11px;}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <span class="logo"><span class="mark">H</span> HD건설기계 · T_Test Runner</span>
+    <span class="crumb">E2E 측정 · <b>가설 → 정량 통과 판정</b></span>
+  </div>
+
+  <main>
+    <h1 class="h1">T_Test · E2E Runner</h1>
+    <p class="meta" style="margin:0 0 14px">T_04 Sensor + T_05 Voice 자동 측정 · test_runs + test_assertions DB 누적</p>
+
+    <div class="kpi">
+      <div class="box"><div class="lbl">최근 runs</div><div class="val">14</div><div class="meta">24h</div></div>
+      <div class="box"><div class="lbl">통과율</div><div class="val green">93%</div><div class="meta">13/14 passed</div></div>
+      <div class="box"><div class="lbl">H1 success_rate</div><div class="val green">100%</div><div class="meta">chunks pass — &gt;98% 기준</div></div>
+      <div class="box"><div class="lbl">H3 attempt</div><div class="val green">100%</div><div class="meta">all clusters → queue</div></div>
+      <div class="box"><div class="lbl">H_채널통합</div><div class="val green">100%</div><div class="meta">5/5 unified</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><span>Console — `npm run all -w @hd/t-test`</span></div>
+      <pre class="console"><span class="head">=== T_04 · sensor_full · run a1b2c3d4 ===</span>
+  <span class="ok">✓</span> provision · sensor_api_keys INSERT <span class="dim">(45ms)</span>
+  <span class="ok">✓</span> send · capture 9f2e3a delivered <span class="metric">[finalize_ms=842]</span> <span class="dim">(842ms)</span>
+  <span class="ok">✓</span> send · capture 4b1c8d delivered <span class="metric">[finalize_ms=731]</span> <span class="dim">(731ms)</span>
+  <span class="ok">✓</span> send · capture 2e7a5b delivered <span class="metric">[finalize_ms=798]</span> <span class="dim">(798ms)</span>
+  <span class="ok">✓</span> metric_h1 · chunk success_rate ≥ 98% <span class="metric">[success_rate=100]</span>
+  <span class="ok">✓</span> metric_h1 · finalize P95 latency <span class="metric">[p95_ms=842]</span>
+  <span class="ok">✓</span> cluster · entity_clusters image_count ≥ 3 <span class="metric">[image_count=3]</span>
+  <span class="ok">✓</span> normalize_attempt · normalize_queue 진입 확인 (H3 attempt 100%)
+
+→ T_04·sensor_full: <span class="ok">passed</span> (pass 8 · fail 0 · skip 0 · 12340ms)
+
+<span class="head">=== T_05 · voice_full · run b5e8f9c1 ===</span>
+  <span class="ok">✓</span> auth · Dealer JWT 발급
+  <span class="ok">✓</span> dealer · POST /responses-receive (dealer) 200 <span class="metric">[latency_ms=312]</span>
+  <span class="ok">✓</span> dealer_segment · 서버 segment === key_account
+  <span class="ok">✓</span> dealer_db · responses + answers row 정합성 <span class="metric">[answers_count=13]</span>
+  <span class="ok">✓</span> visitor · POST /responses-receive (visitor) 200 <span class="metric">[latency_ms=287]</span>
+  <span class="ok">✓</span> visitor_segment · 서버 segment === construction_heavy
+  <span class="ok">✓</span> visitor_pii · opt-in=false → contact_* NULL
+  <span class="skip">↷</span> visitor_quota · 24h quota 테스트 skip (T_TEST_QUOTA=true로 활성)
+
+→ T_05·voice_full: <span class="ok">passed</span> (pass 7 · fail 0 · skip 1 · 4820ms)
+
+<span class="head">=== T_06 · unified_same_entity · run c9d2e1f4 ===</span>
+  <span class="ok">✓</span> provision · sensor_api_keys INSERT
+  <span class="ok">✓</span> send · finalize 5b1c9a <span class="dim">(742ms)</span>
+  <span class="ok">✓</span> send · finalize d4e8a2 <span class="dim">(715ms)</span>
+  <span class="ok">✓</span> send · finalize 9f3b71 <span class="dim">(688ms)</span>
+  <span class="ok">✓</span> sensor_metric · chunk success <span class="metric">[success_rate=100]</span>
+  <span class="ok">✓</span> cluster · entity_clusters row exists <span class="metric">[image_count=3]</span>
+  <span class="ok">✓</span> upsert_lead · upsert_lead_from_cluster RPC (skip-llm)
+  <span class="ok">✓</span> voice · POST /responses-receive (dealer) 200 <span class="metric">[latency_ms=298]</span>
+  <span class="ok">✓</span> unified · sensor_count ≥ 1 AND voice_count ≥ 1 (H_채널통합) <span class="metric">[channels=2]</span>
+  <span class="ok">✓</span> score · leads.score &gt; 0 (R_10.01 적용) <span class="metric">[score=92]</span>
+  <span class="ok">✓</span> segment · lead.segment === key_account
+  <span class="ok">✓</span> output · dealer_outputs active row = 1
+  <span class="ok">✓</span> linkage · lead_links has both entity_clusters + responses
+
+→ T_06·unified_same_entity: <span class="ok">passed</span> (pass 13 · fail 0 · skip 0 · 8920ms)
+
+================================
+<span class="ok">✓</span> run-t04 — exit 0 (12340ms)
+<span class="ok">✓</span> run-t05 — exit 0 (4820ms)
+<span class="ok">✓</span> run-t06 — exit 0 (8920ms)</pre>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><span>가설별 통과 — test_assertions GROUP BY hypothesis</span></div>
+      <table>
+        <thead><tr><th>가설</th><th>설명</th><th>통과</th><th>실패</th><th>스킵</th><th>정량 metric</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>H1</b></td><td>송출 성공률</td>
+            <td><span class="badge green">42</span></td><td>0</td><td>0</td>
+            <td><span class="badge blue">success_rate avg = 99.2%</span> <span class="badge ghost">p95 = 842ms</span></td>
+          </tr>
+          <tr>
+            <td><b>H3</b></td><td>정규화 시도</td>
+            <td><span class="badge green">14</span></td><td>0</td><td>0</td>
+            <td><span class="badge blue">attempt_rate = 100%</span></td>
+          </tr>
+          <tr>
+            <td><b>H_LLM</b></td><td>multi-image 정확도</td>
+            <td><span class="badge green">3</span></td><td>1</td><td>10</td>
+            <td><span class="badge amber">opt-in (--llm) 필요</span></td>
+          </tr>
+          <tr>
+            <td><b>V_가설</b></td><td>응답 자산화</td>
+            <td><span class="badge green">28</span></td><td>0</td><td>2</td>
+            <td><span class="badge blue">segment match = 100%</span> <span class="badge ghost">latency avg = 298ms</span></td>
+          </tr>
+          <tr>
+            <td><b>H_채널통합</b></td><td>Sensor + Voice → 1 Lead</td>
+            <td><span class="badge green">5</span></td><td>0</td><td>0</td>
+            <td><span class="badge blue">unified rate = 100%</span> <span class="badge ghost">score avg = 84</span></td>
+          </tr>
+          <tr>
+            <td><b>H_도달성</b></td><td>러시아 4노드</td>
+            <td>–</td><td>–</td><td>–</td>
+            <td><span class="badge ghost">T_01 (별도 — 외부 측정)</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><span>최근 14 runs</span></div>
+      <table>
+        <thead><tr><th>시각</th><th>suite</th><th>scenario</th><th>actor</th><th>status</th><th>pass</th><th>fail</th><th>ms</th></tr></thead>
+        <tbody>
+          <tr><td>05-26 14:32</td><td>T_05</td><td>voice_full</td><td>weaver@gridge.co.kr</td><td><span class="badge green">passed</span></td><td>7</td><td>0</td><td>4820</td></tr>
+          <tr><td>05-26 14:31</td><td>T_04</td><td>sensor_full</td><td>weaver@gridge.co.kr</td><td><span class="badge green">passed</span></td><td>8</td><td>0</td><td>12340</td></tr>
+          <tr><td>05-26 12:15</td><td>T_04</td><td>sensor_full</td><td>weaver@gridge.co.kr</td><td><span class="badge green">passed</span></td><td>8</td><td>0</td><td>11890</td></tr>
+          <tr><td>05-26 12:14</td><td>T_05</td><td>voice_full</td><td>weaver@gridge.co.kr</td><td><span class="badge red">failed</span></td><td>5</td><td>2</td><td>3420</td></tr>
+          <tr><td>05-26 10:02</td><td>T_04</td><td>sensor_full</td><td>weaver@gridge.co.kr</td><td><span class="badge green">passed</span></td><td>8</td><td>0</td><td>13120</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="meta" style="text-align:center;margin-top:18px;">
+      <a href="index.html">← 갤러리</a> ·
+      <a href="../T_Test/runner/README.md" target="_blank">runner README</a> ·
+      <a href="../T_Test/CLAUDE.md" target="_blank">T_Test 인덱스</a>
+    </p>
+  </main>
+</body>
+</html>

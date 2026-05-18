@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HD Sensor Admin — Static Mock</title>
+  <style>
+    :root {
+      --hd-eco:#00E600; --hd-heritage:#00AD1D; --hd-prosperity:#008233;
+      --hd-discovery:#003087; --hd-trust:#002554;
+      --hd-gray:#63666A; --hd-paper:#fff; --hd-bg:#f6f8f6;
+      --hd-steel-200:#d6dadf; --hd-steel-300:#b8bcc2;
+      --hd-steel-100:#e9edf0; --hd-steel-50:#f3f5f7; --hd-steel-700:#4f535a;
+      --hd-amber:#b45309; --hd-red:#b91c1c;
+      --hd-green:var(--hd-heritage); --hd-green-50:#e8f7eb;
+      --hd-blue:var(--hd-discovery); --hd-blue-50:#e8eef9;
+      --hd-amber-50:#fffbeb; --hd-red-50:#fef2f2;
+      --hd-radius:6px; --hd-radius-lg:10px;
+      --hd-font:'Noto Sans KR','Malgun Gothic',-apple-system,Segoe UI,Arial,sans-serif;
+      --hd-font-display:'HD Sans',var(--hd-font);
+      --hd-fs:13px; --hd-fs-sm:11.5px;
+    }
+    *{box-sizing:border-box;}
+    body{margin:0;background:var(--hd-bg);font-family:var(--hd-font);color:#1d1d1f;font-size:var(--hd-fs);}
+    a{color:var(--hd-discovery);text-decoration:none;}
+    a:hover{text-decoration:underline;}
+
+    /* topbar */
+    .topbar{background:var(--hd-trust);color:#fff;height:52px;display:flex;align-items:center;gap:16px;padding:0 18px;}
+    .topbar .mark{width:22px;height:22px;border-radius:4px;background:var(--hd-heritage);display:grid;place-items:center;color:#002554;font-weight:900;font-size:12px;font-family:var(--hd-font-display);}
+    .topbar .logo{font:700 14px var(--hd-font-display);letter-spacing:-0.01em;display:flex;align-items:center;gap:9px;}
+    .topbar .crumb{color:rgba(255,255,255,0.62);font-size:12.5px;}
+    .topbar .crumb b{color:#fff;font-weight:600;}
+    .topbar .spacer{flex:1;}
+    .topbar .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,0.1);font-size:11px;color:rgba(255,255,255,0.82);}
+    .topbar .dot{width:6px;height:6px;border-radius:50%;background:#34d399;box-shadow:0 0 0 3px rgba(52,211,153,0.18);}
+    .topbar .user{display:flex;align-items:center;gap:8px;font-size:12px;}
+    .topbar .avatar{width:26px;height:26px;border-radius:50%;background:#003087;display:grid;place-items:center;font-size:11px;font-weight:700;}
+
+    /* sub-nav */
+    .subnav{height:40px;display:flex;align-items:center;gap:4px;padding:0 18px;background:#fff;border-bottom:1px solid var(--hd-steel-200);}
+    .snav{padding:6px 10px;font-size:12.5px;color:var(--hd-steel-700);border-radius:6px;cursor:pointer;}
+    .snav.active{color:var(--hd-trust);background:var(--hd-steel-100);font-weight:600;}
+
+    main{padding:18px;max-width:1280px;margin:0 auto;}
+    section{margin-bottom:32px;}
+    .anchor{display:block;height:0;visibility:hidden;}
+
+    /* card */
+    .card{background:#fff;border:1px solid var(--hd-steel-200);border-radius:var(--hd-radius-lg);overflow:hidden;}
+    .card-hd{padding:10px 14px;border-bottom:1px solid var(--hd-steel-200);display:flex;align-items:center;gap:10px;font-weight:600;}
+    .card-title{font-size:var(--hd-fs);}
+    .card-sub{font-size:var(--hd-fs-sm);color:var(--hd-steel-700);font-weight:400;}
+
+    /* table */
+    table{width:100%;border-collapse:separate;border-spacing:0;font-size:var(--hd-fs);}
+    thead th{position:sticky;top:0;background:var(--hd-steel-50);text-align:left;padding:8px 14px;font-weight:600;font-size:var(--hd-fs-sm);color:var(--hd-steel-700);border-bottom:1px solid var(--hd-steel-200);white-space:nowrap;letter-spacing:0.02em;text-transform:uppercase;}
+    tbody td{padding:10px 14px;border-bottom:1px solid var(--hd-steel-100);vertical-align:middle;height:36px;}
+    tbody tr:hover td{background:var(--hd-steel-50);}
+    tbody tr.selected td{background:#eef4ff;}
+    .num{font-variant-numeric:tabular-nums;}
+
+    /* badge */
+    .badge{display:inline-flex;align-items:center;gap:5px;padding:2px 7px;border-radius:4px;font-size:10.5px;font-weight:600;letter-spacing:0.02em;background:var(--hd-steel-100);color:var(--hd-steel-700);white-space:nowrap;}
+    .badge.green{background:var(--hd-green-50);color:var(--hd-green);}
+    .badge.blue{background:var(--hd-blue-50);color:var(--hd-blue);}
+    .badge.amber{background:var(--hd-amber-50);color:var(--hd-amber);}
+    .badge.red{background:var(--hd-red-50);color:var(--hd-red);}
+    .badge.ghost{background:transparent;border:1px solid var(--hd-steel-200);color:var(--hd-steel-700);}
+
+    /* btn */
+    .btn{height:30px;padding:0 12px;border-radius:6px;font-size:12.5px;font-weight:500;display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:1px solid var(--hd-steel-300);background:#fff;color:var(--hd-trust);white-space:nowrap;}
+    .btn:hover{background:var(--hd-steel-50);}
+    .btn.primary{background:var(--hd-trust);color:#fff;border-color:var(--hd-trust);}
+    .btn.accent{background:var(--hd-heritage);color:#002554;border-color:var(--hd-heritage);font-weight:600;}
+    .btn.ghost{background:transparent;border-color:transparent;color:var(--hd-steel-700);}
+    .btn.sm{height:26px;padding:0 8px;font-size:11.5px;}
+
+    /* confidence */
+    .conf{display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums;font-size:var(--hd-fs-sm);}
+    .conf-track{width:56px;height:4px;border-radius:2px;background:var(--hd-steel-200);overflow:hidden;}
+    .conf-fill{height:100%;border-radius:2px;}
+    .conf.high .conf-fill{background:var(--hd-green);}
+    .conf.mid  .conf-fill{background:var(--hd-amber);}
+    .conf.low  .conf-fill{background:var(--hd-red);}
+
+    /* field row */
+    .field{display:grid;grid-template-columns:140px 1fr auto;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--hd-steel-100);}
+    .field-label{font-size:var(--hd-fs-sm);color:var(--hd-steel-700);letter-spacing:0.01em;}
+    .field-val{font-size:var(--hd-fs);color:var(--hd-trust);font-weight:500;}
+    .field-val.muted{color:var(--hd-steel-700);font-weight:400;}
+    .field-val.edited{color:var(--hd-discovery);}
+
+    /* thumb */
+    .thumbs{padding:12px;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+    .thumb{aspect-ratio:16/10;border-radius:6px;background:linear-gradient(135deg,#dbe2e9,#e9edf0);border:1px solid var(--hd-steel-200);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--hd-steel-700);font-size:10px;}
+    .thumb .tag{position:absolute;top:5px;left:5px;padding:2px 6px;border-radius:4px;font-size:9px;font-weight:600;background:rgba(0,37,84,0.85);color:#fff;letter-spacing:0.04em;}
+    .thumb .time{position:absolute;bottom:5px;right:5px;padding:1px 5px;border-radius:3px;font-size:9px;background:rgba(255,255,255,0.95);color:var(--hd-steel-700);font-variant-numeric:tabular-nums;}
+
+    /* layout */
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    .full{grid-column:1 / -1;}
+    .toolbar{display:flex;align-items:center;gap:8px;padding:10px 14px;background:#fff;border-bottom:1px solid var(--hd-steel-200);}
+    .h1{font:700 22px/1.1 var(--hd-font-display);color:var(--hd-heritage);letter-spacing:-0.01em;margin:0 0 4px;}
+    .h2{font:600 15px var(--hd-font-display);color:var(--hd-discovery);margin:0 0 14px;}
+    .ghost{color:var(--hd-gray);font-size:12px;}
+    .note{margin:12px 0;padding:8px 12px;border-left:3px solid var(--hd-heritage);background:#e8f7eb;font-size:12px;color:var(--hd-trust);border-radius:0 6px 6px 0;}
+
+    .anchor-jump{position:fixed;bottom:20px;right:20px;display:flex;gap:6px;background:#fff;padding:6px;border:1px solid var(--hd-steel-200);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.08);font-size:12px;z-index:9;}
+    .anchor-jump a{padding:4px 10px;border-radius:4px;color:var(--hd-trust);}
+    .anchor-jump a:hover{background:var(--hd-steel-100);text-decoration:none;}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <span class="logo"><span class="mark">H</span> HD건설기계 · Sensor Admin</span>
+    <span class="crumb">러시아 채널 · <b>CRM 자동 캡쳐</b></span>
+    <span class="spacer"></span>
+    <span class="pill"><span class="dot"></span>러시아 4노드 정상</span>
+    <span class="user"><span class="avatar">K</span> kim@hd.com</span>
+    <button class="btn sm">Sign out</button>
+  </div>
+
+  <div class="subnav">
+    <span class="snav active">캡쳐 목록</span>
+    <span class="snav">EntityCluster</span>
+    <span class="snav">정규화 큐</span>
+    <span class="snav">하네스 2 룰</span>
+  </div>
+
+  <main>
+    <!-- ============================================================ -->
+    <a class="anchor" id="captures"></a>
+    <section>
+      <h1 class="h1">캡쳐 목록</h1>
+      <p class="h2 ghost">필터·정렬·cursor pagination · S_50.01</p>
+
+      <div class="card" style="margin-bottom:14px;">
+        <div class="toolbar">
+          <span class="snav active">전체</span>
+          <span class="snav">미검토</span>
+          <span class="snav">저신뢰 (&lt;70%)</span>
+          <span class="snav">편집됨</span>
+          <span class="snav">실패·재시도</span>
+          <span style="margin-left:auto;" class="ghost">최근 24h · 67건</span>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>캡쳐 시각</th><th>딜러</th><th>CRM</th><th>화면</th><th>Entity</th><th>상태</th><th>분류 신뢰</th><th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="num">08:00:00 · 2026-05-26</td>
+              <td>dealer_001</td><td>bitrix24</td><td>deal_detail</td><td class="num">12345</td>
+              <td><span class="badge green">normalized</span></td>
+              <td><span class="conf high"><span class="conf-track"><span class="conf-fill" style="width:98%"></span></span>98%</span></td>
+              <td><a href="#cluster">열기</a></td>
+            </tr>
+            <tr>
+              <td class="num">08:01:30 · 2026-05-26</td>
+              <td>dealer_001</td><td>bitrix24</td><td>company</td><td class="num">8765</td>
+              <td><span class="badge blue">classified</span></td>
+              <td><span class="conf high"><span class="conf-track"><span class="conf-fill" style="width:92%"></span></span>92%</span></td>
+              <td><a href="#cluster">열기</a></td>
+            </tr>
+            <tr>
+              <td class="num">08:03:12 · 2026-05-26</td>
+              <td>dealer_002</td><td>bitrix24</td><td>contact</td><td class="num">4421</td>
+              <td><span class="badge amber">clustered</span></td>
+              <td><span class="conf mid"><span class="conf-track"><span class="conf-fill" style="width:78%"></span></span>78%</span></td>
+              <td><a href="#cluster">열기</a></td>
+            </tr>
+            <tr class="selected">
+              <td class="num">08:05:45 · 2026-05-26</td>
+              <td>dealer_001</td><td>bitrix24</td><td>deal_detail</td><td class="num">12345</td>
+              <td><span class="badge green">normalized</span></td>
+              <td><span class="conf high"><span class="conf-track"><span class="conf-fill" style="width:95%"></span></span>95%</span></td>
+              <td><a href="#cluster">열기</a></td>
+            </tr>
+            <tr>
+              <td class="num">08:07:01 · 2026-05-26</td>
+              <td>dealer_001</td><td>bitrix24</td><td>activity</td><td>–</td>
+              <td><span class="badge ghost">finalized</span></td>
+              <td><span class="ghost">–</span></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td class="num">08:10:23 · 2026-05-26</td>
+              <td>dealer_003</td><td>bitrix24</td><td>deal_detail</td><td class="num">7782</td>
+              <td><span class="badge red">failed</span></td>
+              <td><span class="conf low"><span class="conf-track"><span class="conf-fill" style="width:42%"></span></span>42%</span></td>
+              <td><a href="#cluster">열기</a></td>
+            </tr>
+            <tr>
+              <td class="num">08:12:55 · 2026-05-26</td>
+              <td>dealer_002</td><td>bitrix24</td><td>funnel</td><td>–</td>
+              <td><span class="badge blue">classified</span></td>
+              <td><span class="conf high"><span class="conf-track"><span class="conf-fill" style="width:88%"></span></span>88%</span></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="display:flex;gap:8px;">
+        <button class="btn">더 보기</button>
+        <span style="margin-left:auto;" class="ghost">표시 중 7 / 67</span>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <a class="anchor" id="cluster"></a>
+    <section>
+      <h1 class="h1">클러스터 상세</h1>
+      <p class="h2 ghost">Entity Cluster · 5장 multi-image · 13 필드 · audit · S_50.02</p>
+
+      <div class="grid-2">
+        <article class="card">
+          <div class="card-hd">
+            <span class="card-title">메타</span>
+            <span class="spacer" style="flex:1"></span>
+            <button class="btn accent">재정규화</button>
+          </div>
+          <div class="field">
+            <span class="field-label">Cluster ID</span>
+            <span class="field-val num">3f4d9a1c-8b2e-4a17-9d62-c1e8f0b73a2d</span>
+            <span></span>
+          </div>
+          <div class="field">
+            <span class="field-label">Entity</span>
+            <span class="field-val">12345 (bitrix24)</span>
+            <span></span>
+          </div>
+          <div class="field">
+            <span class="field-label">상태</span>
+            <span class="field-val"><span class="badge green">normalized</span></span>
+            <span></span>
+          </div>
+          <div class="field">
+            <span class="field-label">이미지</span>
+            <span class="field-val">5장</span>
+            <span></span>
+          </div>
+          <div class="field">
+            <span class="field-label">model</span>
+            <span class="field-val">claude-opus-4-7</span>
+            <span></span>
+          </div>
+          <div class="field">
+            <span class="field-label">프롬프트 버전</span>
+            <span class="field-val">2026-05-18.002</span>
+            <span></span>
+          </div>
+          <div class="field">
+            <span class="field-label">정규화 큐</span>
+            <span class="field-val"><span class="badge green">done</span>  <span class="ghost">prio normal · 시도 1</span></span>
+            <span></span>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="card-hd">
+            <span class="card-title">Entity Cluster · 캡쳐 5장</span>
+          </div>
+          <div class="thumbs">
+            <div class="thumb"><span class="tag">DEAL</span><span>08:00</span><span class="time">08:00</span></div>
+            <div class="thumb"><span class="tag">DEAL</span><span>08:01</span><span class="time">08:01</span></div>
+            <div class="thumb"><span class="tag">COMPANY</span><span>08:03</span><span class="time">08:03</span></div>
+            <div class="thumb"><span class="tag">DEAL</span><span>08:05</span><span class="time">08:05</span></div>
+            <div class="thumb"><span class="tag">ACTIVITY</span><span>08:07</span><span class="time">08:07</span></div>
+          </div>
+        </article>
+
+        <article class="card full">
+          <div class="card-hd">
+            <span class="card-title">정규화 결과 · 13 필드</span>
+            <span class="card-sub">최근 편집: kim@hd.com · 2026-05-26 08:42</span>
+          </div>
+          <div class="field"><span class="field-label">Deal ID</span><span class="field-val num">12345</span>
+            <span><span class="conf high"><span class="conf-track"><span class="conf-fill" style="width:100%"></span></span>100%</span> <button class="btn ghost sm">편집</button></span></div>
+          <div class="field"><span class="field-label">회사명</span><span class="field-val edited">ООО Метеор</span>
+            <span><span class="conf high"><span class="conf-track"><span class="conf-fill" style="width:92%"></span></span>92%</span> <button class="btn ghost sm">편집</button></span></div>
+          <div class="field"><span class="field-label">담당자</span><span class="field-val">Иванов И. И.</span>
+            <span><span class="conf high"><span class="conf-track"><span class="conf-fill" style="width:85%"></span></span>85%</span> <button class="btn ghost sm">편집</button></span></div>
+          <div class="field"><span class="field-label">연락처</span><span class="field-val">+7 921 123-4567</span>
+            <span><span class="conf mid"><span class="conf-track"><span class="conf-fill" style="width:78%"></span></span>78%</span> <button class="btn ghost sm">편집</button></span></div>
+          <div class="field"><span class="field-label">이메일</span><span class="field-val muted">∅</span>
+            <span><span class="ghost">–</span> <button class="btn ghost sm">편집</button></span></div>
+          <div class="field"><span class="field-label">예상 금액</span><span class="field-val num">15,000,000 RUB</span>
+            <span><span class="conf high"><span class="conf-track"><span class="conf-fill" style="width:95%"></span></span>95%</span> <button class="btn ghost sm">편집</button></span></div>
+          <div class="field"><span class="field-label">단계</span><span class="field-val">negotiation</span>
+            <span><span class="conf high"><span class="conf-track"><span class="conf-fill" style="width:88%"></span></span>88%</span> <button class="btn ghost sm">편집</button></span></div>
+          <div class="field"><span class="field-label">관심 장비</span><span class="field-val">HD HX1000L</span>
+            <span><span class="conf mid"><span class="conf-track"><span class="conf-fill" style="width:72%"></span></span>72%</span> <button class="btn ghost sm">편집</button></span></div>
+          <div class="field"><span class="field-label">지역</span><span class="field-val">Saint Petersburg</span>
+            <span><span class="conf low"><span class="conf-track"><span class="conf-fill" style="width:65%"></span></span>65%</span> <button class="btn ghost sm">편집</button></span></div>
+          <div class="field"><span class="field-label">담당 딜러</span><span class="field-val">dealer_001</span>
+            <span><span class="conf high"><span class="conf-track"><span class="conf-fill" style="width:90%"></span></span>90%</span> <button class="btn ghost sm">편집</button></span></div>
+        </article>
+
+        <article class="card full">
+          <div class="card-hd"><span class="card-title">편집 이력</span></div>
+          <table>
+            <thead>
+              <tr><th>시각</th><th>필드</th><th>LLM 원본</th><th>편집값</th><th>편집자</th><th>사유</th><th>prompt</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="num">2026-05-26 08:42</td>
+                <td>회사명</td>
+                <td class="num">OOO Meteor</td>
+                <td class="num">ООО Метеор</td>
+                <td>kim@hd.com</td>
+                <td class="ghost">cyrillic 원문 보정</td>
+                <td class="ghost">2026-05-18.002</td>
+              </tr>
+              <tr>
+                <td class="num">2026-05-26 08:38</td>
+                <td>지역</td>
+                <td class="num">SPb</td>
+                <td class="num">Saint Petersburg</td>
+                <td>kim@hd.com</td>
+                <td class="ghost">약어 → 풀네임</td>
+                <td class="ghost">2026-05-18.002</td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </div>
+
+      <div class="note">
+        💡 <strong>정확도 사이클</strong> · 편집 이력이 누적되면 위버가 R_10.06 프롬프트를 정정 (`publish_rule()`) →
+        Admin '재정규화' 버튼으로 일괄 재실행 → 새 prompt_version으로 적재.
+      </div>
+    </section>
+  </main>
+
+  <nav class="anchor-jump">
+    <a href="#captures">목록</a>
+    <a href="#cluster">상세</a>
+    <a href="index.html">← 갤러리</a>
+  </nav>
+</body>
+</html>

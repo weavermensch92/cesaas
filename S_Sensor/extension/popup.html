@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>Gridge Sensor</title>
+  <style>
+    :root {
+      --hd-trust: #002554;
+      --hd-heritage: #00AD1D;
+      --hd-prosperity: #008233;
+      --hd-gray: #63666A;
+      --hd-bg: #f6f8f6;
+      --hd-paper: #ffffff;
+      --hd-steel-200: #d6dadf;
+      --hd-amber: #b45309;
+      --hd-red: #b91c1c;
+    }
+    body {
+      width: 320px;
+      margin: 0;
+      padding: 12px 14px;
+      font: 13px 'Noto Sans KR', 'Malgun Gothic', Arial, sans-serif;
+      color: var(--hd-gray);
+      background: var(--hd-bg);
+    }
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--hd-heritage);
+      letter-spacing: -0.01em;
+    }
+    .row { display: flex; justify-content: space-between; padding: 4px 0; }
+    .row b { color: var(--hd-trust); font-weight: 600; }
+    .actions { display: flex; gap: 6px; margin-top: 10px; }
+    button {
+      flex: 1; height: 28px; border-radius: 6px; border: 1px solid var(--hd-steel-200);
+      background: #fff; color: var(--hd-trust); font: inherit; cursor: pointer;
+    }
+    button.primary { background: var(--hd-prosperity); color: #fff; border-color: var(--hd-prosperity); }
+    .logs { margin-top: 10px; max-height: 140px; overflow: auto;
+            font-size: 11px; background: var(--hd-paper); border: 1px solid var(--hd-steel-200);
+            border-radius: 6px; padding: 6px; }
+    .logs .lv-error { color: var(--hd-red); }
+    .logs .lv-warn  { color: var(--hd-amber); }
+  </style>
+</head>
+<body>
+  <h1>HD건설기계 · Sensor</h1>
+  <div class="row"><span>Dealer</span><b id="dealer">…</b></div>
+  <div class="row"><span>큐 (pending)</span><b id="pending">…</b></div>
+  <div class="row"><span>실패</span><b id="failed">…</b></div>
+  <div class="row"><span>완료 (24h)</span><b id="done">…</b></div>
+
+  <div class="actions">
+    <button id="drain" class="primary">Drain</button>
+    <button id="export">Logs</button>
+    <button id="clear">Clear</button>
+  </div>
+
+  <div class="logs" id="logs"></div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

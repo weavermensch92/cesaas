@@ -1,0 +1,58 @@
+{
+  "manifest_version": 3,
+  "name": "Gridge Sensor",
+  "version": "0.1.0",
+  "description": "CRM 화면 자동 캡쳐 (HD건설기계 PoC)",
+
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "alarms"
+  ],
+
+  "host_permissions": [
+    "https://bitrix.gkcompany.pro/*",
+    "https://*.bitrix24.com/*",
+    "https://*.bitrix24.ru/*"
+  ],
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://bitrix.gkcompany.pro/crm/*",
+        "https://*.bitrix24.com/crm/*",
+        "https://*.bitrix24.ru/crm/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/16.png",
+      "48": "icons/48.png",
+      "128": "icons/128.png"
+    }
+  },
+
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": ["crm_definitions.json"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

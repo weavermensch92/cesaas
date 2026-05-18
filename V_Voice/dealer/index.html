@@ -1,0 +1,831 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="theme-color" content="#002554" />
+  <title>HD건설기계 — Dealer Survey</title>
+  <style>
+    /* HD CI 2026 — subset for single-HTML Dealer. 본질은 packages/design. */
+    :root {
+      --hd-eco:#00E600; --hd-heritage:#00AD1D; --hd-prosperity:#008233; --hd-dark-green:#024638;
+      --hd-discovery:#003087; --hd-trust:#002554;
+      --hd-gray:#63666A; --hd-paper:#fff; --hd-bg:#f6f8f6;
+      --hd-steel-200:#d6dadf; --hd-steel-300:#b8bcc2; --hd-steel-100:#e9edf0; --hd-steel-50:#f3f5f7;
+      --hd-amber:#b45309; --hd-red:#b91c1c;
+      --hd-radius:6px; --hd-radius-lg:10px;
+      --hd-font:'Noto Sans KR','Malgun Gothic',-apple-system,Segoe UI,Arial,sans-serif;
+      --hd-font-display:'HD Sans',var(--hd-font);
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;background:var(--hd-bg);font-family:var(--hd-font);color:#1d1d1f;-webkit-font-smoothing:antialiased;}
+    body{min-height:100dvh;}
+    a{color:var(--hd-discovery);}
+
+    .hd-app{display:flex;flex-direction:column;min-height:100dvh;}
+    header.topbar{background:var(--hd-trust);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;}
+    header .mark{width:28px;height:28px;border-radius:6px;background:var(--hd-heritage);display:grid;place-items:center;color:#002554;font-weight:900;font-family:var(--hd-font-display);}
+    header h1{margin:0;font:700 16px/1.2 var(--hd-font-display);letter-spacing:-0.01em;}
+    header .sub{font-size:12.5px;color:rgba(255,255,255,0.62);}
+    header .spacer{flex:1;}
+    header select{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:4px 8px;font:inherit;font-size:12px;}
+    header .badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#fff;background:rgba(255,255,255,0.1);padding:3px 8px;border-radius:999px;}
+    header .dot{width:7px;height:7px;border-radius:50%;background:#34d399;}
+    header .dot.off{background:#fbbf24;}
+    header .dot.err{background:var(--hd-red);}
+
+    main{flex:1;padding:18px;max-width:760px;width:100%;margin:0 auto;}
+    .card{background:var(--hd-paper);border:1px solid var(--hd-steel-200);border-radius:var(--hd-radius-lg);padding:18px;margin-bottom:14px;}
+    .step-h{font:700 22px/1.1 var(--hd-font-display);color:var(--hd-heritage);letter-spacing:-0.01em;margin:0 0 4px;}
+    .step-sub{font:600 15px/1.3 var(--hd-font-display);color:var(--hd-discovery);margin:0 0 14px;}
+
+    .q{margin-bottom:18px;}
+    .q-title{font-weight:600;font-size:15px;margin-bottom:8px;color:#1d1d1f;}
+    .q-meta{color:var(--hd-gray);font-size:12px;margin-left:6px;font-weight:400;}
+
+    /* big touch radios */
+    .opts{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));}
+    .opts.cols-3{grid-template-columns:repeat(3,1fr);}
+    .opt{display:block;padding:14px 12px;border:1px solid var(--hd-steel-300);background:#fff;border-radius:8px;cursor:pointer;text-align:center;font-size:14px;line-height:1.2;min-height:54px;display:flex;align-items:center;justify-content:center;}
+    .opt:active{transform:scale(0.98);}
+    .opt.sel{border-color:var(--hd-heritage);background:#e8f7eb;color:#002554;font-weight:600;box-shadow:inset 0 0 0 1px var(--hd-heritage);}
+    .opts.scale .opt{min-width:48px;font-variant-numeric:tabular-nums;font-weight:600;}
+
+    /* nps row */
+    .nps{display:grid;grid-template-columns:repeat(11,1fr);gap:6px;}
+    .nps .opt{padding:12px 0;font-weight:700;font-size:14px;min-height:42px;}
+    .nps .opt.lo{color:var(--hd-red);}
+    .nps .opt.mid{color:var(--hd-amber);}
+    .nps .opt.hi{color:var(--hd-prosperity);}
+    .nps .opt.sel{color:#fff !important;background:var(--hd-prosperity);border-color:var(--hd-prosperity);}
+
+    /* slider */
+    input[type=range]{width:100%;}
+    .slider-vals{display:flex;justify-content:space-between;font-size:12px;color:var(--hd-gray);}
+
+    /* consent */
+    .consent{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--hd-steel-200);border-radius:8px;background:var(--hd-steel-50);}
+    .consent input{width:20px;height:20px;}
+    .consent label{cursor:pointer;font-size:14px;}
+
+    /* nav */
+    .nav{display:flex;gap:8px;margin-top:18px;}
+    .btn{padding:12px 20px;border-radius:8px;border:1px solid var(--hd-steel-300);background:#fff;color:#1d1d1f;font:600 14px var(--hd-font);cursor:pointer;}
+    .btn:active{transform:scale(0.98);}
+    .btn.primary{background:var(--hd-prosperity);color:#fff;border-color:var(--hd-prosperity);}
+    .btn.primary:disabled{background:var(--hd-steel-300);border-color:var(--hd-steel-300);color:#fff;cursor:not-allowed;opacity:0.7;}
+    .btn.full{flex:1;}
+
+    /* playbook */
+    .pb{border:1px solid var(--hd-heritage);background:#e8f7eb;border-radius:12px;padding:18px;}
+    .pb h2{margin:0 0 6px;font:700 20px var(--hd-font-display);color:var(--hd-prosperity);}
+    .pb .seg{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:var(--hd-trust);color:#fff;font-size:12px;font-weight:600;letter-spacing:0.02em;}
+    .pb h3{font:600 14px var(--hd-font);color:var(--hd-trust);margin:14px 0 4px;text-transform:uppercase;letter-spacing:0.04em;}
+    .pb ul{margin:0;padding-left:18px;}
+    .pb li{margin-bottom:4px;font-size:14px;}
+    .pb .pitch{background:#fff;border:1px solid var(--hd-prosperity);border-radius:8px;padding:12px;margin-top:6px;font-style:italic;color:var(--hd-trust);}
+    .pb .prio{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:14px;margin-bottom:8px;}
+    .pb .prio.p1{color:var(--hd-red);}
+    .pb .prio.p2{color:var(--hd-amber);}
+    .pb .prio.p3{color:var(--hd-discovery);}
+    .pb .prio.p4,.pb .prio.p5{color:var(--hd-gray);}
+
+    .progress{height:4px;background:var(--hd-steel-100);border-radius:2px;overflow:hidden;margin-bottom:16px;}
+    .progress > i{display:block;height:100%;background:var(--hd-heritage);transition:width 0.2s;}
+
+    .hidden{display:none !important;}
+    .ghost{color:var(--hd-gray);font-size:12px;}
+  </style>
+</head>
+<body>
+  <div class="hd-app">
+    <header class="topbar">
+      <span class="mark">H</span>
+      <div>
+        <h1 id="brand">HD건설기계</h1>
+        <span class="sub" id="surveyTitle">Dealer Interview</span>
+      </div>
+      <span class="spacer"></span>
+      <span class="badge"><span id="netDot" class="dot"></span><span id="netLabel">Online</span></span>
+      <span class="badge" id="queueBadge" title="송출 대기">큐 0</span>
+      <select id="langSel" aria-label="lang">
+        <option value="ru">RU</option><option value="en">EN</option><option value="ko">KO</option>
+      </select>
+    </header>
+
+    <main id="root"></main>
+  </div>
+
+  <script>
+  // ============================================================================
+  // i18n — top-level UI strings (V_50.07 미러). 설문 문항은 SURVEY에 별도.
+  // ============================================================================
+  const I18N = {
+    ru: {
+      product:'Опрос дилера',
+      step_axis:'Часть 1 — Профиль компании',
+      step_market:'Часть 2 — Маркетинг',
+      step_final:'Часть 3 — NPS и согласие',
+      back:'Назад', next:'Далее', submit:'Готово',
+      result_h:'Готово — Playbook',
+      result_sub:'Сегмент определён · следуйте подсказке ниже',
+      net_online:'Online', net_offline:'Offline',
+      queue_label:'В очереди',
+      nps_q:'Готовы рекомендовать HD коллегам (0—10)',
+      required_hint:'Все обязательные поля',
+      enter_again:'Новый респондент',
+      sent_ok:'Отправлено',
+      saved_offline:'Сохранено локально (offline)',
+      prio:{p1:'P1 · Высш. приоритет', p2:'P2 · Срочно', p3:'P3 · Стандарт', p4:'P4 · Низк.', p5:'P5 · Только в CRM'},
+      pb_weapons:'Инструменты продаж', pb_pitch:'Пример речи', pb_models:'Модели', pb_next:'Следующий шаг',
+      consent_q1:'Подписка на дальнейшие обновления',
+      consent_q2:'Согласие на обработку данных (обязательно)',
+    },
+    en: {
+      product:'Dealer Survey',
+      step_axis:'Part 1 — Company profile',
+      step_market:'Part 2 — Marketing',
+      step_final:'Part 3 — NPS & consent',
+      back:'Back', next:'Next', submit:'Submit',
+      result_h:'Done — Playbook',
+      result_sub:'Segment matched · use the guide below',
+      net_online:'Online', net_offline:'Offline',
+      queue_label:'Queue',
+      nps_q:'Willing to recommend HD to peers (0—10)',
+      required_hint:'All required',
+      enter_again:'New respondent',
+      sent_ok:'Sent',
+      saved_offline:'Saved locally (offline)',
+      prio:{p1:'P1 · Top priority', p2:'P2 · Urgent', p3:'P3 · Standard', p4:'P4 · Low', p5:'P5 · CRM only'},
+      pb_weapons:'Sales weapons', pb_pitch:'Pitch example', pb_models:'Related models', pb_next:'Next action',
+      consent_q1:'Subscribe to future updates',
+      consent_q2:'Data processing consent (required)',
+    },
+    ko: {
+      product:'딜러 설문',
+      step_axis:'1단계 — 회사 프로필',
+      step_market:'2단계 — 마케팅',
+      step_final:'3단계 — NPS·동의',
+      back:'이전', next:'다음', submit:'제출',
+      result_h:'완료 — Playbook',
+      result_sub:'세그먼트 매칭 완료 · 아래 가이드 사용',
+      net_online:'Online', net_offline:'Offline',
+      queue_label:'큐',
+      nps_q:'HD를 동료에게 추천 (0~10)',
+      required_hint:'필수 항목',
+      enter_again:'새 응답자',
+      sent_ok:'송출 완료',
+      saved_offline:'오프라인 저장됨',
+      prio:{p1:'P1 · 최고 우선', p2:'P2 · 긴급', p3:'P3 · 표준', p4:'P4 · 낮음', p5:'P5 · CRM 갱신만'},
+      pb_weapons:'영업 무기', pb_pitch:'멘트 시안', pb_models:'관련 모델', pb_next:'다음 단계',
+      consent_q1:'향후 업데이트 수신 동의',
+      consent_q2:'개인정보 처리 동의 (필수)',
+    },
+  };
+
+  // ============================================================================
+  // SURVEY — v1 dealer 시드 (DB 003_voice.sql 와 동기).
+  // R_10.05 segments + R_10.07 playbooks 데이터-드리븐.
+  // ============================================================================
+  const SURVEY = {
+    id:'survey_v1_dealer',
+    estimated_minutes:5,
+    steps: [
+      {
+        title_key:'step_axis',
+        questions: [
+          {id:'q_v1d_scale', axis:'scale', type:'single_select', required:true,
+            title:{ru:'Размер компании', en:'Company size', ko:'회사 규모'},
+            options:[
+              {value:'S', ru:'до 50', en:'≤50', ko:'~50인'},
+              {value:'M', ru:'51—200', en:'51—200', ko:'51~200'},
+              {value:'L', ru:'201—1000', en:'201—1000', ko:'201~1000'},
+              {value:'XL', ru:'1000+', en:'1000+', ko:'1000+'},
+            ]},
+          {id:'q_v1d_usage', axis:'usage', type:'single_select', required:true,
+            title:{ru:'Основное применение', en:'Primary usage', ko:'주요 용도'},
+            options:[
+              {value:'mining', ru:'Горнодобыча', en:'Mining', ko:'광업'},
+              {value:'construction_heavy', ru:'Крупное строит.', en:'Heavy construction', ko:'대형 건설'},
+              {value:'agriculture', ru:'С/х', en:'Agriculture', ko:'농업'},
+              {value:'forestry', ru:'Лесное хоз-во', en:'Forestry', ko:'임업'},
+              {value:'general_construction', ru:'Общ. строит.', en:'General constr.', ko:'일반 건설'},
+              {value:'rental', ru:'Аренда', en:'Rental', ko:'렌탈'},
+              {value:'other', ru:'Другое', en:'Other', ko:'기타'},
+            ]},
+          {id:'q_v1d_hours', axis:'annual_operating_hours', type:'single_select', required:true,
+            title:{ru:'Часы эксплуатации в год', en:'Annual operating hours', ko:'연간 가동 시간'},
+            options:[
+              {value:'low', ru:'<1000ч', en:'<1000h', ko:'<1000h'},
+              {value:'mid', ru:'1000—3000ч', en:'1000—3000h', ko:'1000~3000h'},
+              {value:'high', ru:'>3000ч', en:'>3000h', ko:'>3000h'},
+            ]},
+          {id:'q_v1d_deal_rub', axis:'annual_deal_rub', type:'single_select', required:true,
+            title:{ru:'Годовой объём сделок (₽)', en:'Annual deal volume (RUB)', ko:'연간 거래액 (₽)'},
+            options:[
+              {value:'small', ru:'<5 млн', en:'<5M', ko:'<5M'},
+              {value:'mid', ru:'5—50 млн', en:'5—50M', ko:'5~50M'},
+              {value:'large', ru:'>50 млн', en:'>50M', ko:'>50M'},
+            ]},
+          {id:'q_v1d_fleet', axis:'fleet_size', type:'single_select', required:true,
+            title:{ru:'Парк техники', en:'Fleet size', ko:'보유 장비'},
+            options:[
+              {value:'0', ru:'0', en:'0', ko:'0'},
+              {value:'1-3', ru:'1—3', en:'1—3', ko:'1~3'},
+              {value:'4-10', ru:'4—10', en:'4—10', ko:'4~10'},
+              {value:'11+', ru:'11+', en:'11+', ko:'11+'},
+            ]},
+          {id:'q_v1d_role', axis:'decision_role', type:'single_select', required:true,
+            title:{ru:'Ваша роль в решении', en:'Decision role', ko:'의사결정 역할'},
+            options:[
+              {value:'owner', ru:'Владелец', en:'Owner', ko:'오너'},
+              {value:'purchaser', ru:'Закупщик', en:'Purchaser', ko:'구매'},
+              {value:'influencer', ru:'Влияющий', en:'Influencer', ko:'영향자'},
+              {value:'user', ru:'Оператор', en:'User', ko:'사용자'},
+            ]},
+        ],
+      },
+      {
+        title_key:'step_market',
+        questions: [
+          {id:'q_v1d_sat', type:'scale_1_5', required:true,
+            title:{ru:'Удовлетворённость текущей техникой', en:'Satisfaction with current equipment', ko:'현재 장비 만족도'}},
+          {id:'q_v1d_plan', type:'single_select', required:true,
+            title:{ru:'План закупки в течение года', en:'1-year purchase plan', ko:'1년 내 구매 계획'},
+            options:[
+              {value:'yes', ru:'Да', en:'Yes', ko:'예'},
+              {value:'no',  ru:'Нет', en:'No', ko:'아니오'},
+              {value:'maybe', ru:'Возможно', en:'Maybe', ko:'미정'},
+            ]},
+          {id:'q_v1d_factors', type:'multi_select', required:true, max:3,
+            title:{ru:'Важнейшие факторы выбора (до 3)', en:'Top factors (up to 3)', ko:'구매 결정 요소 (3개)'},
+            options:[
+              {value:'price', ru:'Цена', en:'Price', ko:'가격'},
+              {value:'reliability', ru:'Надёжность', en:'Reliability', ko:'내구성'},
+              {value:'service', ru:'Сервис', en:'Service', ko:'서비스'},
+              {value:'parts', ru:'Запчасти', en:'Parts', ko:'부품'},
+              {value:'financing', ru:'Финансирование', en:'Financing', ko:'파이낸싱'},
+              {value:'residual', ru:'Остат. стоим.', en:'Resale', ko:'잔존가치'},
+            ]},
+          {id:'q_v1d_competitor', type:'single_select', required:true,
+            title:{ru:'Какой конкурент рассматривается', en:'Competitor considered', ko:'경쟁사 검토'},
+            options:[
+              {value:'caterpillar', ru:'Caterpillar', en:'Caterpillar', ko:'Caterpillar'},
+              {value:'komatsu', ru:'Komatsu', en:'Komatsu', ko:'Komatsu'},
+              {value:'volvo', ru:'Volvo', en:'Volvo', ko:'Volvo'},
+              {value:'other', ru:'Другое', en:'Other', ko:'기타'},
+              {value:'none', ru:'Никто', en:'None', ko:'없음'},
+            ]},
+          {id:'q_v1d_value', type:'slider', required:true,
+            title:{ru:'Цена ↔ Качество (1 цена / 5 качество)', en:'Price ↔ Quality (1 price / 5 quality)', ko:'가격 ↔ 품질 (1 가격 / 5 품질)'}},
+          {id:'q_v1d_service', type:'multi_select', required:false, max:4,
+            title:{ru:'Ожидания от сервиса', en:'Service expectations', ko:'서비스 기대'},
+            options:[
+              {value:'uptime', ru:'Без простоя', en:'Uptime', ko:'가동률'},
+              {value:'parts_speed', ru:'Скорость запч.', en:'Parts speed', ko:'부품 속도'},
+              {value:'24_7', ru:'24/7', en:'24/7', ko:'24/7'},
+              {value:'training', ru:'Обучение', en:'Training', ko:'교육'},
+            ]},
+        ],
+      },
+      {
+        title_key:'step_final',
+        questions: [
+          {id:'q_v1d_nps', type:'nps', required:true,
+            title:{ru:'Готовы рекомендовать HD коллегам (0—10)', en:'Recommend HD to peers (0—10)', ko:'HD를 동료에게 추천 (0~10)'}},
+          {id:'q_v1d_subscribe', type:'consent', required:false, label_key:'consent_q1'},
+          {id:'q_v1d_consent', type:'consent', required:true, label_key:'consent_q2'},
+        ],
+      },
+    ],
+  };
+
+  // ============================================================================
+  // R_10.05 — segment 매칭 (클라이언트 deterministic).
+  // 우선순위 순으로 평가 → 첫 매칭 적용.
+  // ============================================================================
+  const SEGMENT_RULES = [
+    {segment:'key_account',        match:(a) => a.annual_deal_rub === 'large'},
+    {segment:'mining',              match:(a) => a.usage === 'mining' && ['L','XL'].includes(a.scale)},
+    {segment:'construction_heavy',  match:(a) => a.usage === 'construction_heavy' && ['M','L','XL'].includes(a.scale)},
+    {segment:'forestry',            match:(a) => a.usage === 'forestry'},
+    {segment:'agriculture',         match:(a) => a.usage === 'agriculture'},
+    {segment:'general_construction',match:(a) => a.usage === 'general_construction'},
+    {segment:'rental',              match:(a) => a.usage === 'rental'},
+    {segment:'other',               match:() => true},
+  ];
+
+  function classifySegment(axisData) {
+    for (const rule of SEGMENT_RULES) {
+      if (rule.match(axisData)) return { segment: rule.segment, confidence: 1.0, method: 'client_rule' };
+    }
+    return { segment: 'other', confidence: 0.5, method: 'client_rule' };
+  }
+
+  function priorityForResponse(axisData, npsValue) {
+    const weights = {
+      large:35, mid:20, small:10,
+      high:25, mid_h:15, low_h:5,
+      owner:20, purchaser:15, influencer:10, user:5,
+    };
+    let score = 0;
+    score += weights[axisData.annual_deal_rub] || 0;
+    if (axisData.annual_operating_hours === 'high') score += weights.high;
+    else if (axisData.annual_operating_hours === 'mid') score += weights.mid_h;
+    else if (axisData.annual_operating_hours === 'low') score += weights.low_h;
+    score += weights[axisData.decision_role] || 0;
+    if (typeof npsValue === 'number') score += Math.min(npsValue, 9);
+    if (score >= 70) return 'p1';
+    if (score >= 55) return 'p2';
+    if (score >= 40) return 'p3';
+    if (score >= 25) return 'p4';
+    return 'p5';
+  }
+
+  // ============================================================================
+  // R_10.07 — Playbook (각 segment + priority).
+  // ============================================================================
+  const PLAYBOOKS = {
+    mining: {
+      title:{ru:'Горнодобыча — крупные экскаваторы', en:'Mining — big excavators', ko:'광업 — 대형 굴착기'},
+      weapons:{
+        ru:['Долговечность · моточасы под нагрузкой','Долгосрочный пакет ТО','Локальные комплекты запчастей'],
+        en:['Durability · operating hours under load','Long-term maintenance package','Regional parts kits'],
+        ko:['내구성·고부하 가동시간','장기 유지보수 패키지','권역별 부품 키트'],
+      },
+      pitch:{
+        ru:'При 6000+ ч/год HD выгоднее на ~12% в 5-летнем TCO.',
+        en:'At 6000+h/year HD wins ~12% on 5-year TCO.',
+        ko:'연 6000h+에서 HD가 5년 TCO 기준 약 12% 우위입니다.',
+      },
+      models:['HD HX1000L', 'HD HX1400L'],
+      next:{ru:'Демонстрация в карьере · 7 дней', en:'On-site quarry demo · 7 days', ko:'7일 내 광산 데모'},
+    },
+    key_account: {
+      title:{ru:'Ключевой клиент — визит из HQ', en:'Key account — HQ visit', ko:'키 어카운트 — 본사 동행'},
+      weapons:{
+        ru:['Прямой контакт KAM HQ','Скидка пакета 50+ ед.','Условия финансирования из HQ'],
+        en:['Direct KAM contact from HQ','Bulk discount 50+ units','HQ financing terms'],
+        ko:['본사 KAM 직접 연결','50대+ 패키지 할인','본사 파이낸싱 조건'],
+      },
+      pitch:{
+        ru:'При заказе 50+ единиц HD HQ направит KAM лично.',
+        en:'On 50+ unit orders HD HQ sends KAM in person.',
+        ko:'50대 이상 발주 시 HD 본사 KAM이 직접 방문.',
+      },
+      models:['HD HX series', 'HD HW series'],
+      next:{ru:'Встреча с KAM в 72 ч', en:'KAM meeting in 72h', ko:'72시간 내 KAM 미팅'},
+    },
+    construction_heavy: {
+      title:{ru:'Крупное строит. — пакет + финансирование', en:'Heavy construction — package + financing', ko:'대형 건설 — 패키지+파이낸싱'},
+      weapons:{
+        ru:['Пакет экскаватор + погрузчик','Лизинг 36 мес.','Сервис 24/7'],
+        en:['Excavator + loader package','36-month leasing','24/7 service'],
+        ko:['굴착기+휠로더 패키지','36개월 리스','24/7 서비스'],
+      },
+      pitch:{
+        ru:'Пакет даёт 8% скидки + 30 дней сервиса бесплатно.',
+        en:'Package gives 8% discount + 30 days free service.',
+        ko:'패키지로 8% 할인 + 30일 무료 서비스.',
+      },
+      models:['HD HX380L', 'HD HL955'],
+      next:{ru:'Расчёт TCO + лизинг — 5 дней', en:'TCO+lease quote in 5 days', ko:'TCO+리스 견적 5일 내'},
+    },
+    agriculture: {
+      title:{ru:'С/х — сезонная аренда', en:'Agri — seasonal rental', ko:'농업 — 시즌·렌탈'},
+      weapons:{ru:['Сезонная аренда','Малотоннажные модели'], en:['Seasonal rental','Compact models'], ko:['시즌 렌탈','소형 모델']},
+      pitch:{ru:'Сезонная аренда покрывает 90% операций без капвложений.', en:'Seasonal rental covers 90% ops with no CAPEX.', ko:'시즌 렌탈로 CAPEX 없이 90% 작업 커버.'},
+      models:['HD HX55N', 'HD HX85'],
+      next:{ru:'Календарь аренды', en:'Rental calendar', ko:'렌탈 캘린더 제안'},
+    },
+    forestry: {
+      title:{ru:'Лесное хоз-во — пакет защиты', en:'Forestry — protection package', ko:'임업 — 산림 패키지'},
+      weapons:{ru:['Защита кабины','Forestry guards','Цепной комплект'], en:['Cab guarding','Forestry guards','Chain kit'], ko:['캐빈 가드','산림 가드','체인 키트']},
+      pitch:{ru:'Forestry-пакет добавляет 30% к сроку службы.', en:'Forestry pack adds 30% lifespan.', ko:'산림 패키지로 수명 30% 연장.'},
+      models:['HD HX300L Forestry'],
+      next:{ru:'Демо в лесу — 14 дней', en:'On-site forest demo · 14d', ko:'산림 데모 14일 내'},
+    },
+    general_construction: {
+      title:{ru:'Общ. строит. — средний класс', en:'General constr. — mid-range', ko:'일반 건설 — 중급'},
+      weapons:{ru:['Универсальные модели','Сервис в регионе'], en:['Versatile models','Regional service'], ko:['범용 모델','지역 서비스']},
+      pitch:{ru:'Один экскаватор покрывает 70% задач.', en:'One excavator handles 70% of work.', ko:'한 대로 70% 작업 커버.'},
+      models:['HD HX140L', 'HD HX220L'],
+      next:{ru:'Тест-драйв 1 неделя', en:'1-week test drive', ko:'1주 시승'},
+    },
+    rental: {
+      title:{ru:'Аренда — пакет ТО', en:'Rental — maintenance pack', ko:'렌탈 — 유지보수 패키지'},
+      weapons:{ru:['ТО на 1500 ч','Подмена при простое'], en:['1500h maintenance','Standby unit'], ko:['1500h 유지보수','대체기']},
+      pitch:{ru:'ТО-пакет снижает простой на 40%.', en:'Maintenance pack cuts downtime 40%.', ko:'유지보수 패키지로 가동 정지 40% 감소.'},
+      models:['HD HX series rental'],
+      next:{ru:'Контракт ТО — 5 дней', en:'Maintenance contract · 5d', ko:'유지보수 계약 5일 내'},
+    },
+    other: {
+      title:{ru:'Доп. диагностика', en:'Further qualification', ko:'추가 진단'},
+      weapons:{ru:['Уточнить 6 axis','Каталог общего назначения'], en:['Clarify 6 axis','General catalog'], ko:['6 axis 보완 질문','일반 카탈로그']},
+      pitch:{ru:'Уточняющие вопросы помогут подобрать сегмент.', en:'Follow-up Qs will refine the segment.', ko:'후속 질문으로 segment 변별.'},
+      models:['HD general portfolio'],
+      next:{ru:'Follow-up в 24 ч', en:'Follow-up in 24h', ko:'24h 내 follow-up'},
+    },
+  };
+
+  // ============================================================================
+  // 상태
+  // ============================================================================
+  const state = {
+    lang:'ru',
+    step:0,                    // 0,1,2  → result 4
+    answers:{},                // {q_id: value}
+    showResult:false,
+    result:null,
+    queueCount:0,
+    online: navigator.onLine,
+    token: null,
+    dealerId: null,
+    event: null,
+  };
+
+  // ============================================================================
+  // QR/URL — Bearer token 파싱 + 저장
+  // ============================================================================
+  (function bootIdentity(){
+    const usp = new URLSearchParams(location.search);
+    const tok = usp.get('token');
+    if (tok) {
+      try { localStorage.setItem('hd_dealer_token', tok); } catch(_) {}
+      // dealer_id, event는 JWT 페이로드에서 추출
+      const payload = decodeJwtPayload(tok);
+      if (payload) {
+        if (payload.sub)   try { localStorage.setItem('hd_dealer_id', payload.sub); } catch(_){}
+        if (payload.event) try { localStorage.setItem('hd_event',     payload.event); } catch(_){}
+      }
+      // URL 정리 (token 노출 방지)
+      history.replaceState({}, '', location.pathname);
+    }
+    state.token    = localStorage.getItem('hd_dealer_token');
+    state.dealerId = localStorage.getItem('hd_dealer_id');
+    state.event    = localStorage.getItem('hd_event');
+  })();
+
+  function decodeJwtPayload(tok){
+    try{
+      const parts = tok.split('.');
+      if (parts.length < 2) return null;
+      const json = atob(parts[1].replace(/-/g,'+').replace(/_/g,'/'));
+      return JSON.parse(json);
+    }catch(_){ return null; }
+  }
+
+  // ============================================================================
+  // IndexedDB 큐
+  // ============================================================================
+  const DB_NAME='hd_voice_dealer', DB_VER=1, STORE='responses_queue';
+  function openDb(){
+    return new Promise((res, rej) => {
+      const req = indexedDB.open(DB_NAME, DB_VER);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE)) {
+          const s = db.createObjectStore(STORE, { keyPath:'id' });
+          s.createIndex('status', 'status');
+        }
+      };
+      req.onsuccess = () => res(req.result);
+      req.onerror = () => rej(req.error);
+    });
+  }
+  async function queueAdd(rec){
+    const db = await openDb();
+    rec.id = rec.id || crypto.randomUUID();
+    rec.status = 'pending';
+    rec.attempts = 0;
+    rec.enqueued_at = new Date().toISOString();
+    await new Promise((res, rej) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).add(rec);
+      tx.oncomplete = res;
+      tx.onerror = () => rej(tx.error);
+    });
+    return rec.id;
+  }
+  async function queueListPending(){
+    const db = await openDb();
+    return new Promise((res) => {
+      const out=[];
+      const tx = db.transaction(STORE, 'readonly');
+      const idx = tx.objectStore(STORE).index('status');
+      const cur = idx.openCursor(IDBKeyRange.only('pending'));
+      cur.onsuccess = (e) => { const c = e.target.result; if (c) { out.push(c.value); c.continue(); } else res(out); };
+      cur.onerror = () => res(out);
+    });
+  }
+  async function queueUpdate(id, patch){
+    const db = await openDb();
+    return new Promise((res) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      const st = tx.objectStore(STORE);
+      const get = st.get(id);
+      get.onsuccess = () => { const r = get.result; if (r){ Object.assign(r, patch); st.put(r); } res(); };
+      get.onerror = () => res();
+    });
+  }
+  async function queueCount(){
+    const db = await openDb();
+    return new Promise((res) => {
+      const tx = db.transaction(STORE, 'readonly');
+      const idx = tx.objectStore(STORE).index('status');
+      const r = idx.count(IDBKeyRange.only('pending'));
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => res(0);
+    });
+  }
+
+  // ============================================================================
+  // 송출 — POST {API_BASE}/responses-receive
+  // ============================================================================
+  // API_BASE는 window.HD_API_BASE 또는 빌드 시 주입.
+  const API_BASE = (window.HD_API_BASE || '').replace(/\/$/, '');
+
+  async function postOne(rec){
+    if (!API_BASE) throw new Error('API_BASE 미설정');
+    const res = await fetch(`${API_BASE}/responses-receive`, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        ...(state.token ? { 'Authorization': `Bearer ${state.token}` } : {}),
+        'Idempotency-Key': rec.idempotency_key || rec.id,
+      },
+      body: JSON.stringify(rec.payload),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      if (res.status >= 400 && res.status < 500 && res.status !== 429) {
+        throw Object.assign(new Error(`http_${res.status}`), { terminal:true, body:text });
+      }
+      throw new Error(`http_${res.status}`);
+    }
+    return await res.json();
+  }
+
+  async function drainQueue(){
+    if (!state.online) return;
+    const items = await queueListPending();
+    for (const it of items) {
+      try {
+        await queueUpdate(it.id, { status:'sending', attempts: (it.attempts||0)+1 });
+        await postOne(it);
+        await queueUpdate(it.id, { status:'done', completed_at: new Date().toISOString() });
+      } catch (e) {
+        if (e && e.terminal) {
+          await queueUpdate(it.id, { status:'failed', last_error: String(e.message || e) });
+        } else {
+          await queueUpdate(it.id, { status:'pending', last_error: String(e.message || e) });
+          break; // 다음 주기 재시도
+        }
+      }
+    }
+    refreshQueueBadge();
+  }
+  setInterval(drainQueue, 30 * 1000);
+
+  async function refreshQueueBadge(){
+    state.queueCount = await queueCount().catch(() => 0);
+    const el = document.getElementById('queueBadge');
+    if (el) el.textContent = `${t('queue_label')} ${state.queueCount}`;
+  }
+
+  // ============================================================================
+  // 렌더
+  // ============================================================================
+  const root = document.getElementById('root');
+  const langSel = document.getElementById('langSel');
+  langSel.value = state.lang;
+  langSel.addEventListener('change', () => { state.lang = langSel.value; document.documentElement.lang = state.lang; render(); });
+
+  function t(key){
+    const dict = I18N[state.lang] || I18N.ru;
+    return dict[key] || key;
+  }
+  function tx(obj){
+    if (!obj) return '';
+    return obj[state.lang] || obj.ru || obj.en || obj.ko || '';
+  }
+
+  function setNet(){
+    state.online = navigator.onLine;
+    const dot = document.getElementById('netDot');
+    const lbl = document.getElementById('netLabel');
+    dot.classList.toggle('off', !state.online);
+    lbl.textContent = state.online ? t('net_online') : t('net_offline');
+    if (state.online) drainQueue();
+  }
+  window.addEventListener('online', setNet);
+  window.addEventListener('offline', setNet);
+
+  function isAnsweredQ(q){
+    const v = state.answers[q.id];
+    if (!q.required) return true;
+    if (q.type === 'consent') return !!v;
+    if (q.type === 'multi_select') return Array.isArray(v) && v.length > 0;
+    return v !== undefined && v !== null && v !== '';
+  }
+  function isStepValid(){
+    const step = SURVEY.steps[state.step];
+    return step.questions.every(isAnsweredQ);
+  }
+
+  function render(){
+    document.getElementById('surveyTitle').textContent = t('product');
+    refreshQueueBadge();
+    setNet();
+
+    if (state.showResult) return renderResult();
+    const step = SURVEY.steps[state.step];
+    const pct = ((state.step + 1) / SURVEY.steps.length) * 100;
+    root.innerHTML = `
+      <div class="progress"><i style="width:${pct}%"></i></div>
+      <div class="card">
+        <h2 class="step-h">${t(step.title_key)}</h2>
+        <p class="step-sub ghost">${t('required_hint')}</p>
+        ${step.questions.map(renderQuestion).join('')}
+      </div>
+      <div class="nav">
+        <button class="btn" id="navBack" ${state.step === 0 ? 'disabled' : ''}>${t('back')}</button>
+        <button class="btn primary full" id="navNext" ${isStepValid() ? '' : 'disabled'}>
+          ${state.step === SURVEY.steps.length - 1 ? t('submit') : t('next')}
+        </button>
+      </div>
+    `;
+    bindQuestionHandlers();
+    document.getElementById('navBack').onclick = () => { if (state.step > 0) { state.step--; render(); } };
+    document.getElementById('navNext').onclick = () => onAdvance();
+  }
+
+  function renderQuestion(q){
+    const title = tx(q.title) || (q.label_key ? t(q.label_key) : q.id);
+    const v = state.answers[q.id];
+    let inner = '';
+    if (q.type === 'single_select') {
+      inner = `<div class="opts">${q.options.map((o) => `
+        <span class="opt ${v === o.value ? 'sel' : ''}" data-q="${q.id}" data-v="${o.value}" data-type="single">${tx(o)}</span>
+      `).join('')}</div>`;
+    } else if (q.type === 'multi_select') {
+      const arr = Array.isArray(v) ? v : [];
+      inner = `<div class="opts">${q.options.map((o) => `
+        <span class="opt ${arr.includes(o.value) ? 'sel' : ''}" data-q="${q.id}" data-v="${o.value}" data-type="multi" data-max="${q.max ?? 999}">${tx(o)}</span>
+      `).join('')}</div>`;
+    } else if (q.type === 'scale_1_5') {
+      inner = `<div class="opts scale">${[1,2,3,4,5].map((n) => `
+        <span class="opt ${v === n ? 'sel' : ''}" data-q="${q.id}" data-v="${n}" data-type="single-num">${n}</span>
+      `).join('')}</div>`;
+    } else if (q.type === 'nps') {
+      const vN = typeof v === 'number' ? v : null;
+      inner = `<div class="nps">${[0,1,2,3,4,5,6,7,8,9,10].map((n) => `
+        <span class="opt ${n<=6?'lo':n<=8?'mid':'hi'} ${vN === n ? 'sel' : ''}" data-q="${q.id}" data-v="${n}" data-type="single-num">${n}</span>
+      `).join('')}</div>`;
+    } else if (q.type === 'slider') {
+      const cur = typeof v === 'number' ? v : 3;
+      inner = `
+        <input type="range" min="1" max="5" step="1" value="${cur}" data-q="${q.id}" data-type="slider" />
+        <div class="slider-vals"><span>1</span><span>5</span></div>
+      `;
+    } else if (q.type === 'consent') {
+      const label = q.label_key ? t(q.label_key) : title;
+      inner = `
+        <label class="consent">
+          <input type="checkbox" ${v ? 'checked' : ''} data-q="${q.id}" data-type="consent" />
+          <span>${label}</span>
+        </label>
+      `;
+      return `<div class="q">${inner}</div>`;
+    }
+    return `<div class="q"><div class="q-title">${title}${q.required ? '' : ' <span class="q-meta">(optional)</span>'}</div>${inner}</div>`;
+  }
+
+  function bindQuestionHandlers(){
+    root.querySelectorAll('.opt').forEach((el) => {
+      el.addEventListener('click', (ev) => {
+        const q = el.dataset.q, type = el.dataset.type;
+        const raw = el.dataset.v;
+        if (type === 'single') state.answers[q] = raw;
+        else if (type === 'single-num') state.answers[q] = Number(raw);
+        else if (type === 'multi') {
+          const max = Number(el.dataset.max || 999);
+          const cur = Array.isArray(state.answers[q]) ? state.answers[q].slice() : [];
+          const idx = cur.indexOf(raw);
+          if (idx >= 0) cur.splice(idx, 1);
+          else if (cur.length < max) cur.push(raw);
+          state.answers[q] = cur;
+        }
+        render();
+      });
+    });
+    root.querySelectorAll('input[type=range]').forEach((el) => {
+      el.addEventListener('input', () => { state.answers[el.dataset.q] = Number(el.value); });
+      el.addEventListener('change', () => render());
+    });
+    root.querySelectorAll('input[type=checkbox]').forEach((el) => {
+      el.addEventListener('change', () => {
+        state.answers[el.dataset.q] = el.checked;
+        render();
+      });
+    });
+  }
+
+  function onAdvance(){
+    if (!isStepValid()) return;
+    if (state.step < SURVEY.steps.length - 1) {
+      state.step++;
+      render();
+      return;
+    }
+    finalizeAndShowResult().catch((e) => alert('Error: ' + (e?.message || e)));
+  }
+
+  async function finalizeAndShowResult(){
+    const axis = collectAxis(state.answers);
+    const seg = classifySegment(axis);
+    const npsVal = state.answers['q_v1d_nps'];
+    const prio = priorityForResponse(axis, npsVal);
+    state.result = { axis, segment: seg.segment, segment_confidence: seg.confidence, priority: prio, npsVal };
+
+    // 응답 payload 조립
+    const payload = {
+      survey_id: SURVEY.id,
+      respondent_type: 'dealer',
+      dealer_id: state.dealerId,
+      event: state.event,
+      language: state.lang,
+      nps: typeof npsVal === 'number' ? npsVal : null,
+      future_subscription: state.answers['q_v1d_subscribe'] === true,
+      consent_data_collection: state.answers['q_v1d_consent'] === true,
+      segment: seg.segment,
+      segment_method: seg.method,
+      segment_confidence: seg.confidence,
+      axis_data: axis,
+      captured_at: new Date().toISOString(),
+      answers: Object.entries(state.answers).map(([qid, val]) => ({ question_id: qid, answer: val })),
+    };
+
+    const id = crypto.randomUUID();
+    await queueAdd({ idempotency_key: id, payload });
+
+    state.showResult = true;
+    render();
+    drainQueue();
+  }
+
+  function collectAxis(a){
+    return {
+      scale: a['q_v1d_scale'],
+      usage: a['q_v1d_usage'],
+      annual_operating_hours: a['q_v1d_hours'],
+      annual_deal_rub: a['q_v1d_deal_rub'],
+      fleet_size: a['q_v1d_fleet'],
+      decision_role: a['q_v1d_role'],
+    };
+  }
+
+  function renderResult(){
+    const r = state.result;
+    const pb = PLAYBOOKS[r.segment] || PLAYBOOKS.other;
+    const prioLbl = t('prio')[r.priority] || r.priority.toUpperCase();
+    root.innerHTML = `
+      <div class="card pb">
+        <span class="prio ${r.priority}">${prioLbl}</span>
+        <span class="seg">${r.segment.toUpperCase()}</span>
+        <h2>${tx(pb.title)}</h2>
+        <p class="ghost">${t('result_sub')}</p>
+
+        <h3>${t('pb_weapons')}</h3>
+        <ul>${(pb.weapons[state.lang] || pb.weapons.ru).map((w) => `<li>${w}</li>`).join('')}</ul>
+
+        <h3>${t('pb_pitch')}</h3>
+        <div class="pitch">${tx(pb.pitch)}</div>
+
+        <h3>${t('pb_models')}</h3>
+        <ul>${pb.models.map((m) => `<li>${m}</li>`).join('')}</ul>
+
+        <h3>${t('pb_next')}</h3>
+        <ul><li>${tx(pb.next)}</li></ul>
+      </div>
+
+      <div class="ghost" style="text-align:center;padding:8px;">
+        ${state.online ? `✓ ${t('sent_ok')}` : `⏳ ${t('saved_offline')}`}
+      </div>
+
+      <div class="nav">
+        <button class="btn primary full" id="navReset">${t('enter_again')}</button>
+      </div>
+    `;
+    document.getElementById('navReset').onclick = () => {
+      state.step = 0; state.answers = {}; state.showResult = false; state.result = null;
+      render();
+    };
+  }
+
+  // 시작
+  render();
+  drainQueue();
+  </script>
+</body>
+</html>

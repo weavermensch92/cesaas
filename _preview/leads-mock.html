@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>U_Unified · Leads — Static Mock</title>
+  <style>
+    :root{
+      --hd-heritage:#00AD1D; --hd-prosperity:#008233; --hd-discovery:#003087; --hd-trust:#002554;
+      --hd-gray:#63666A; --hd-paper:#fff; --hd-bg:#f6f8f6;
+      --hd-steel-200:#d6dadf; --hd-steel-100:#e9edf0; --hd-steel-50:#f3f5f7; --hd-steel-700:#4f535a;
+      --hd-amber:#b45309; --hd-red:#b91c1c; --hd-green-50:#e8f7eb; --hd-blue-50:#e8eef9;
+      --hd-amber-50:#fffbeb; --hd-red-50:#fef2f2;
+      --hd-radius:6px; --hd-radius-lg:10px;
+      --hd-font:'Noto Sans KR','Malgun Gothic',-apple-system,Segoe UI,Arial,sans-serif;
+      --hd-font-display:'HD Sans',var(--hd-font);
+    }
+    *{box-sizing:border-box;}
+    body{margin:0;background:var(--hd-bg);font-family:var(--hd-font);color:#1d1d1f;font-size:13px;}
+    a{color:var(--hd-discovery);text-decoration:none;} a:hover{text-decoration:underline;}
+    .topbar{background:var(--hd-trust);color:#fff;height:52px;display:flex;align-items:center;gap:14px;padding:0 18px;}
+    .topbar .mark{width:22px;height:22px;border-radius:4px;background:var(--hd-heritage);display:grid;place-items:center;color:#002554;font-weight:900;font-size:12px;font-family:var(--hd-font-display);}
+    .topbar .logo{font:700 14px var(--hd-font-display);display:flex;align-items:center;gap:9px;}
+    .topbar .crumb{color:rgba(255,255,255,0.62);font-size:12.5px;}
+    .topbar .user{display:flex;align-items:center;gap:8px;font-size:12px;margin-left:auto;}
+    .topbar .avatar{width:26px;height:26px;border-radius:50%;background:#003087;display:grid;place-items:center;font-size:11px;font-weight:700;}
+    .subnav{height:40px;display:flex;align-items:center;gap:4px;padding:0 18px;background:#fff;border-bottom:1px solid var(--hd-steel-200);overflow-x:auto;}
+    .snav{padding:6px 10px;font-size:12.5px;color:var(--hd-steel-700);border-radius:6px;cursor:pointer;}
+    .snav.active{color:var(--hd-trust);background:var(--hd-steel-100);font-weight:600;}
+    main{padding:18px;max-width:1280px;margin:0 auto;}
+    .h1{font:700 22px/1.1 var(--hd-font-display);color:var(--hd-heritage);margin:6px 0 4px;}
+    .meta{font-size:11.5px;color:var(--hd-gray);}
+    .eyebrow{font:600 10.5px var(--hd-font);text-transform:uppercase;letter-spacing:0.04em;color:var(--hd-gray);}
+    .card{background:#fff;border:1px solid var(--hd-steel-200);border-radius:var(--hd-radius-lg);overflow:hidden;}
+    .card-hd{padding:10px 14px;border-bottom:1px solid var(--hd-steel-200);display:flex;align-items:center;gap:10px;font-weight:600;}
+    table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;}
+    thead th{background:var(--hd-steel-50);text-align:left;padding:8px 12px;font-weight:600;font-size:11.5px;color:var(--hd-steel-700);border-bottom:1px solid var(--hd-steel-200);text-transform:uppercase;letter-spacing:0.02em;}
+    tbody td{padding:10px 12px;border-bottom:1px solid var(--hd-steel-100);}
+    tbody tr:hover td{background:var(--hd-steel-50);}
+    .num{font-variant-numeric:tabular-nums;}
+    .badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10.5px;font-weight:600;background:var(--hd-steel-100);color:var(--hd-steel-700);}
+    .badge.green{background:var(--hd-green-50);color:var(--hd-prosperity);}
+    .badge.amber{background:var(--hd-amber-50);color:var(--hd-amber);}
+    .badge.red{background:var(--hd-red-50);color:var(--hd-red);}
+    .badge.blue{background:var(--hd-blue-50);color:var(--hd-discovery);}
+    .badge.accent{background:var(--hd-green-50);color:var(--hd-prosperity);}
+    .badge.ghost{background:transparent;border:1px solid var(--hd-steel-200);color:var(--hd-steel-700);}
+    .chip{padding:4px 10px;font-size:12px;color:var(--hd-steel-700);border-radius:6px;cursor:pointer;}
+    .chip.active{color:var(--hd-trust);background:var(--hd-steel-100);font-weight:600;}
+    .conf{display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums;font-size:11.5px;}
+    .conf-track{width:60px;height:4px;border-radius:2px;background:var(--hd-steel-200);overflow:hidden;}
+    .conf-fill{height:100%;border-radius:2px;}
+    .conf.high .conf-fill{background:var(--hd-prosperity);}
+    .conf.mid .conf-fill{background:var(--hd-amber);}
+    .conf.low .conf-fill{background:var(--hd-red);}
+    .kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:14px;}
+    .kpi .b{background:#fff;border:1px solid var(--hd-steel-200);border-radius:var(--hd-radius-lg);padding:14px;}
+    .kpi .lbl{font:600 10.5px var(--hd-font);text-transform:uppercase;letter-spacing:0.04em;color:var(--hd-gray);}
+    .kpi .v{font:700 26px var(--hd-font-display);color:var(--hd-trust);margin-top:6px;}
+    .kpi .v.red{color:var(--hd-red);} .kpi .v.amber{color:var(--hd-amber);}
+    .anchor-jump{position:fixed;bottom:20px;right:20px;display:flex;gap:6px;background:#fff;padding:6px;border:1px solid var(--hd-steel-200);border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.08);font-size:12px;z-index:9;}
+    .anchor-jump a{padding:4px 10px;border-radius:4px;color:var(--hd-trust);}
+    .anchor-jump a:hover{background:var(--hd-steel-100);text-decoration:none;}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    .full{grid-column:1 / -1;}
+    .field{display:grid;grid-template-columns:140px 1fr auto;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--hd-steel-100);}
+    .field .lbl{font-size:11.5px;color:var(--hd-steel-700);}
+    .field .val{font-size:13px;color:var(--hd-trust);font-weight:500;}
+    .field .val.muted{color:var(--hd-steel-700);font-weight:400;}
+    .dot{display:inline-block;width:8px;height:8px;border-radius:4px;margin-right:4px;vertical-align:middle;}
+    .dot.s{background:var(--hd-discovery);} .dot.v{background:var(--hd-heritage);}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <span class="logo"><span class="mark">H</span> HD건설기계 · Sensor Admin</span>
+    <span class="crumb">통합 · <b>Leads · 응집·LeadScoring</b></span>
+    <span class="user"><span class="avatar">K</span> kim@hd.com</span>
+  </div>
+  <div class="subnav">
+    <a class="snav active" href="#list">Leads</a>
+    <a class="snav" href="admin-mock.html#captures">Captures</a>
+    <a class="snav" href="voice-admin-mock.html#responses">Voice · Responses</a>
+    <a class="snav" href="voice-admin-mock.html#aggregates">Voice · Insight</a>
+    <a class="snav" href="studio-mock.html">Studio · V_60</a>
+  </div>
+
+  <main>
+    <span id="list" style="display:block;height:0;"></span>
+    <h1 class="h1">Leads · U_Unified</h1>
+    <p class="meta" style="margin:0 0 14px">Sensor + Voice 응집 · R_10.01 LeadScoring · R_10.07 Playbook · H_채널통합 가설</p>
+
+    <div class="card" style="margin-bottom:12px;padding:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;">
+      <span class="eyebrow">Priority</span>
+      <span class="chip">All</span><span class="chip active">P1</span><span class="chip">P2</span><span class="chip">P1+P2</span>
+      <span style="width:1px;height:18px;background:var(--hd-steel-200);"></span>
+      <span class="eyebrow">채널</span>
+      <span class="chip">All</span><span class="chip active">Sensor + Voice</span><span class="chip">Sensor only</span><span class="chip">Voice only</span>
+      <span style="width:1px;height:18px;background:var(--hd-steel-200);"></span>
+      <input value="" placeholder="회사명·entity·연락처 (Enter)" style="height:28px;padding:0 8px;border:1px solid var(--hd-steel-200);border-radius:6px;font-size:12px;min-width:220px;" />
+    </div>
+
+    <div class="card" style="margin-bottom:14px;">
+      <table>
+        <thead><tr><th>Prio</th><th>Score</th><th>Segment</th><th>회사</th><th>Entity</th><th>채널</th><th>금액</th><th>단계</th><th>최근</th><th></th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge red" style="font-weight:700">P1</span></td>
+            <td><span class="conf high"><span class="conf-track"><span class="conf-fill" style="width:92%"></span></span>92</span></td>
+            <td><span class="badge green">key_account</span></td>
+            <td>ООО Метеор</td>
+            <td class="num">12345</td>
+            <td><span class="dot s"></span><span class="num">3</span> &nbsp; <span class="dot v"></span><span class="num">2</span></td>
+            <td class="num">15.0M RUB</td>
+            <td>negotiation</td>
+            <td class="num">05-26 14:32</td>
+            <td><a href="#detail">열기</a></td>
+          </tr>
+          <tr>
+            <td><span class="badge red" style="font-weight:700">P1</span></td>
+            <td><span class="conf high"><span class="conf-track"><span class="conf-fill" style="width:88%"></span></span>88</span></td>
+            <td><span class="badge green">mining</span></td>
+            <td>ГК «Сибирь»</td>
+            <td class="num">99821</td>
+            <td><span class="dot s"></span><span class="num">5</span> &nbsp; <span class="dot v"></span><span class="num">1</span></td>
+            <td class="num">22.4M RUB</td>
+            <td>negotiation</td>
+            <td class="num">05-26 13:18</td>
+            <td><a href="#detail">열기</a></td>
+          </tr>
+          <tr>
+            <td><span class="badge amber" style="font-weight:700">P2</span></td>
+            <td><span class="conf mid"><span class="conf-track"><span class="conf-fill" style="width:74%"></span></span>74</span></td>
+            <td><span class="badge blue">construction_heavy</span></td>
+            <td>СтройМашина</td>
+            <td class="num">8765</td>
+            <td><span class="dot s"></span><span class="num">2</span> &nbsp; <span class="dot v"></span><span class="num">3</span></td>
+            <td class="num">8.2M RUB</td>
+            <td>discovery</td>
+            <td class="num">05-26 11:54</td>
+            <td><a href="#detail">열기</a></td>
+          </tr>
+          <tr>
+            <td><span class="badge green" style="font-weight:700">P3</span></td>
+            <td><span class="conf mid"><span class="conf-track"><span class="conf-fill" style="width:60%"></span></span>60</span></td>
+            <td><span class="badge amber">rental</span></td>
+            <td>(unassociated)</td>
+            <td class="num">–</td>
+            <td><span class="dot v"></span><span class="num">2</span></td>
+            <td class="num">–</td>
+            <td>–</td>
+            <td class="num">05-26 10:02</td>
+            <td><a href="#detail">열기</a></td>
+          </tr>
+          <tr>
+            <td><span class="badge green" style="font-weight:700">P3</span></td>
+            <td><span class="conf mid"><span class="conf-track"><span class="conf-fill" style="width:57%"></span></span>57</span></td>
+            <td><span class="badge blue">general_construction</span></td>
+            <td>Восток-Строй</td>
+            <td class="num">4421</td>
+            <td><span class="dot s"></span><span class="num">2</span> &nbsp; <span class="dot v"></span><span class="num">0</span></td>
+            <td class="num">3.1M RUB</td>
+            <td>qualified</td>
+            <td class="num">05-25 17:40</td>
+            <td><a href="#detail">열기</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <span id="detail" style="display:block;height:0;"></span>
+    <h1 class="h1" style="margin-top:30px;">ООО Метеор</h1>
+    <p class="meta" style="margin:0 0 14px">entity_id 12345 · bitrix24 · 최근 2026-05-26 14:32</p>
+
+    <div class="kpi">
+      <div class="b"><div class="lbl">Score</div><div class="v red">92</div><div class="meta">05-26 14:32</div></div>
+      <div class="b"><div class="lbl">Priority</div><div class="v">P1</div></div>
+      <div class="b"><div class="lbl">Segment</div><div class="v">key_account</div></div>
+      <div class="b"><div class="lbl">채널</div><div class="v">S 3 · V 2</div></div>
+    </div>
+
+    <div class="grid-2">
+      <section class="card">
+        <div class="card-hd"><span>메타·요약</span></div>
+        <div class="field"><span class="lbl">회사명</span><span class="val">ООО Метеор</span><span/></div>
+        <div class="field"><span class="lbl">담당자</span><span class="val">Иванов И. И.</span><span/></div>
+        <div class="field"><span class="lbl">연락처</span><span class="val">+7 921 123-4567</span><span/></div>
+        <div class="field"><span class="lbl">금액</span><span class="val">15,000,000 RUB</span><span/></div>
+        <div class="field"><span class="lbl">단계</span><span class="val">negotiation</span><span/></div>
+        <div class="field"><span class="lbl">관심 장비</span><span class="val">HD HX1000L</span><span/></div>
+      </section>
+
+      <section class="card">
+        <div class="card-hd"><span>Dealer Playbook (R_10.07)</span><span class="meta" style="margin-left:auto">rule r10.07@0.1 · 14:32</span></div>
+        <div style="padding:14px;">
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <span class="badge red" style="font-weight:700">P1</span>
+            <span class="badge accent">key_account</span>
+            <span class="badge ghost">score 92</span>
+          </div>
+          <div style="font:600 16px var(--hd-font-display);color:var(--hd-trust)">
+            Playbook · key_account · P1
+          </div>
+          <p class="meta" style="margin-top:8px">풀 텍스트는 클라이언트(R_10.07 YAML) — 본 페이지는 segment·priority 기록만.</p>
+        </div>
+      </section>
+
+      <section class="card full">
+        <div class="card-hd"><span>Sensor · 13 필드 (latest active)</span></div>
+        <table>
+          <tbody>
+            <tr><td class="meta" style="width:180px;">deal_id</td><td class="num">12345</td><td class="meta" style="color:var(--hd-prosperity)">100%</td></tr>
+            <tr><td class="meta">company_name</td><td>ООО Метеор</td><td class="meta" style="color:var(--hd-prosperity)">92%</td></tr>
+            <tr><td class="meta">contact_name</td><td>Иванов И. И.</td><td class="meta" style="color:var(--hd-prosperity)">85%</td></tr>
+            <tr><td class="meta">contact_phone</td><td>+7 921 123-4567</td><td class="meta" style="color:var(--hd-amber)">78%</td></tr>
+            <tr><td class="meta">amount</td><td class="num">15,000,000</td><td class="meta" style="color:var(--hd-prosperity)">95%</td></tr>
+            <tr><td class="meta">currency</td><td>RUB</td><td class="meta">–</td></tr>
+            <tr><td class="meta">stage</td><td>negotiation</td><td class="meta" style="color:var(--hd-prosperity)">88%</td></tr>
+            <tr><td class="meta">product_model</td><td>HD HX1000L</td><td class="meta" style="color:var(--hd-amber)">72%</td></tr>
+            <tr><td class="meta">region</td><td>Saint Petersburg</td><td class="meta" style="color:var(--hd-red)">65%</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <div class="card-hd"><span>Sensor 클러스터 · 1</span></div>
+        <table>
+          <thead><tr><th>cluster</th><th>이미지</th><th>상태</th><th>최근</th></tr></thead>
+          <tbody>
+            <tr><td>3f4d9a1c</td><td class="num">5</td><td><span class="badge green">normalized</span></td><td class="num">05-26 14:32</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card">
+        <div class="card-hd"><span>Voice 응답 · 2</span></div>
+        <table>
+          <thead><tr><th>유형</th><th>NPS</th><th>seg</th><th>opt-in</th><th>시각</th></tr></thead>
+          <tbody>
+            <tr><td><span class="badge accent">dealer</span></td><td class="num">9</td><td>key_account</td><td><span class="badge blue">opt-in</span></td><td class="num">05-26 14:30</td></tr>
+            <tr><td><span class="badge blue">visitor</span></td><td class="num">8</td><td>key_account</td><td><span class="badge ghost">anon</span></td><td class="num">05-26 12:15</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="card full">
+        <div class="card-hd"><span>Linkage 이력 · 3</span></div>
+        <table>
+          <thead><tr><th>시각</th><th>소스</th><th>source_id</th></tr></thead>
+          <tbody>
+            <tr><td class="num">05-26 14:32:18</td><td><span class="badge ghost">entity_clusters</span></td><td class="num">3f4d9a1c</td></tr>
+            <tr><td class="num">05-26 14:30:55</td><td><span class="badge ghost">responses</span></td><td class="num">e9f0a1b2</td></tr>
+            <tr><td class="num">05-26 12:15:42</td><td><span class="badge ghost">responses</span></td><td class="num">a12b9c43</td></tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+
+  <nav class="anchor-jump">
+    <a href="#list">목록</a>
+    <a href="#detail">상세</a>
+    <a href="index.html">← 갤러리</a>
+  </nav>
+</body>
+</html>

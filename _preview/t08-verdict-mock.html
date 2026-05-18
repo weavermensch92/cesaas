@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>T_08 · 통과 판정 — Static Mock</title>
+  <style>
+    :root{
+      --hd-heritage:#00AD1D; --hd-prosperity:#008233; --hd-discovery:#003087; --hd-trust:#002554;
+      --hd-gray:#63666A; --hd-paper:#fff; --hd-bg:#f6f8f6;
+      --hd-steel-200:#d6dadf; --hd-steel-100:#e9edf0; --hd-steel-50:#f3f5f7; --hd-steel-700:#4f535a;
+      --hd-amber:#b45309; --hd-red:#b91c1c; --hd-green-50:#e8f7eb; --hd-blue-50:#e8eef9;
+      --hd-amber-50:#fffbeb; --hd-red-50:#fef2f2;
+      --hd-radius:6px; --hd-radius-lg:10px;
+      --hd-font:'Noto Sans KR','Malgun Gothic',-apple-system,Segoe UI,Arial,sans-serif;
+      --hd-font-display:'HD Sans',var(--hd-font);
+    }
+    *{box-sizing:border-box;}
+    body{margin:0;background:var(--hd-bg);font-family:var(--hd-font);color:#1d1d1f;font-size:13px;}
+    a{color:var(--hd-discovery);text-decoration:none;}
+    .topbar{background:var(--hd-trust);color:#fff;height:52px;display:flex;align-items:center;gap:14px;padding:0 18px;}
+    .topbar .mark{width:22px;height:22px;border-radius:4px;background:var(--hd-heritage);display:grid;place-items:center;color:#002554;font-weight:900;font-size:12px;}
+    .topbar .logo{font:700 14px var(--hd-font-display);display:flex;align-items:center;gap:9px;}
+    .topbar .crumb{color:rgba(255,255,255,0.62);font-size:12.5px;}
+    .topbar .user{display:flex;align-items:center;gap:8px;font-size:12px;margin-left:auto;}
+    .topbar .avatar{width:26px;height:26px;border-radius:50%;background:#003087;display:grid;place-items:center;font-size:11px;font-weight:700;}
+    .subnav{height:40px;display:flex;align-items:center;gap:4px;padding:0 18px;background:#fff;border-bottom:1px solid var(--hd-steel-200);overflow-x:auto;}
+    .snav{padding:6px 10px;font-size:12.5px;color:var(--hd-steel-700);border-radius:6px;cursor:pointer;}
+    .snav.active{color:var(--hd-trust);background:var(--hd-steel-100);font-weight:600;}
+    main{padding:18px;max-width:1280px;margin:0 auto;}
+    .h1{font:700 22px/1.1 var(--hd-font-display);color:var(--hd-heritage);margin:6px 0 4px;}
+    .meta{font-size:11.5px;color:var(--hd-gray);}
+    .eyebrow{font:600 10.5px var(--hd-font);text-transform:uppercase;letter-spacing:0.04em;color:var(--hd-gray);}
+    .card{background:#fff;border:1px solid var(--hd-steel-200);border-radius:var(--hd-radius-lg);overflow:hidden;}
+    .card-hd{padding:10px 14px;border-bottom:1px solid var(--hd-steel-200);display:flex;align-items:center;gap:10px;font-weight:600;}
+    .card-sub{font-size:11.5px;color:var(--hd-steel-700);font-weight:400;}
+    .btn{height:30px;padding:0 12px;border-radius:6px;font-size:12.5px;font-weight:500;display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:1px solid var(--hd-steel-300);background:#fff;color:var(--hd-trust);}
+
+    table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px;}
+    thead th{background:var(--hd-steel-50);text-align:left;padding:8px 12px;font-weight:600;font-size:11.5px;color:var(--hd-steel-700);border-bottom:1px solid var(--hd-steel-200);text-transform:uppercase;letter-spacing:0.02em;}
+    tbody td{padding:10px 12px;border-bottom:1px solid var(--hd-steel-100);}
+    .num{font-variant-numeric:tabular-nums;}
+
+    .badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10.5px;font-weight:600;background:var(--hd-steel-100);color:var(--hd-steel-700);}
+    .badge.green{background:var(--hd-green-50);color:var(--hd-prosperity);}
+    .badge.amber{background:var(--hd-amber-50);color:var(--hd-amber);}
+    .badge.red{background:var(--hd-red-50);color:var(--hd-red);}
+    .badge.blue{background:var(--hd-blue-50);color:var(--hd-discovery);}
+    .badge.ghost{background:transparent;border:1px solid var(--hd-steel-200);color:var(--hd-steel-700);}
+
+    .verdict{padding:18px;margin-bottom:14px;border:1px solid var(--hd-heritage);background:var(--hd-green-50);border-radius:var(--hd-radius-lg);display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+    .verdict .score{font:700 30px var(--hd-font-display);color:var(--hd-prosperity);}
+    .verdict .label{font:600 16px var(--hd-font-display);color:var(--hd-trust);}
+
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;padding:14px;}
+    .metric{border:1px solid var(--hd-steel-200);border-radius:var(--hd-radius);padding:12px;border-left:4px solid var(--hd-prosperity);background:#fff;}
+    .metric.warn{border-left-color:var(--hd-amber);}
+    .metric.fail{border-left-color:var(--hd-red);}
+    .metric.no{border-left-color:var(--hd-steel-700);}
+    .metric .row1{display:flex;align-items:center;justify-content:space-between;}
+    .metric .ttl{font:600 14px var(--hd-font-display);color:var(--hd-trust);margin-top:6px;}
+    .metric .val{font:700 24px var(--hd-font-display);margin-top:8px;}
+    .metric .val.green{color:var(--hd-prosperity);}
+    .metric .val.amber{color:var(--hd-amber);}
+    .metric .val.red{color:var(--hd-red);}
+    .metric .val.no{color:var(--hd-steel-700);}
+    .metric .sub{font-size:11.5px;color:var(--hd-gray);margin-top:4px;}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <span class="logo"><span class="mark">H</span> HD건설기계 · Sensor Admin</span>
+    <span class="crumb">검증 · <b>T_08 통과 판정</b></span>
+    <span class="user"><span class="avatar">K</span> kim@hd.com</span>
+  </div>
+  <div class="subnav">
+    <a class="snav" href="leads-mock.html#list">Leads</a>
+    <a class="snav" href="admin-mock.html#captures">Captures</a>
+    <a class="snav" href="voice-admin-mock.html#responses">Voice · Responses</a>
+    <a class="snav" href="voice-admin-mock.html#aggregates">Voice · Insight</a>
+    <a class="snav" href="studio-mock.html">Studio · V_60</a>
+    <a class="snav active" href="#">T_08 · 통과 판정</a>
+  </div>
+
+  <main>
+    <h1 class="h1">T_08 · 통과 판정</h1>
+    <p class="meta" style="margin:0 0 14px">정량 9 지표 · 가설별 누적 · 최근 runs · D11 (2026-05-24) 보고용</p>
+
+    <div class="card" style="margin-bottom:14px;padding:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <span class="eyebrow">집계 기간</span>
+      <span class="snav active">7일</span>
+      <span class="snav">14일</span>
+      <span class="snav">30일</span>
+      <span class="snav">전체</span>
+      <span style="margin-left:auto"></span>
+      <button class="btn">↻ Refresh</button>
+    </div>
+
+    <!-- Verdict -->
+    <div class="verdict">
+      <span class="score">8/9</span>
+      <div>
+        <div class="label">△ 부분 통과 — 우회 시나리오 검토</div>
+        <div class="meta">기준 시각 2026-05-19 14:32 ~ now · 9 정량 지표</div>
+      </div>
+      <span style="margin-left:auto"></span>
+      <span class="meta">실패 0 · 경고 1</span>
+    </div>
+
+    <!-- 9 metrics grid -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-hd"><span>정량 9 지표</span><span class="card-sub">T_08.01 — Prometheus + DB 쿼리</span></div>
+      <div class="grid">
+
+        <div class="metric">
+          <div class="row1"><span class="eyebrow">H1</span><span class="badge green">PASS</span></div>
+          <div class="ttl">캡쳐·송출 성공률</div>
+          <div class="val green">99.2 <span class="meta" style="font-size:14px">%</span></div>
+          <div class="sub">기준: ≥ 98% · 샘플 42</div>
+        </div>
+
+        <div class="metric warn">
+          <div class="row1"><span class="eyebrow">H1</span><span class="badge amber">WARN</span></div>
+          <div class="ttl">finalize P95 latency</div>
+          <div class="val amber">5,140 <span class="meta" style="font-size:14px">ms</span></div>
+          <div class="sub">기준: ≤ 5,000ms · 샘플 14</div>
+        </div>
+
+        <div class="metric">
+          <div class="row1"><span class="eyebrow">H1</span><span class="badge green">PASS</span></div>
+          <div class="ttl">7 화면 종류 커버</div>
+          <div class="val green">7/7</div>
+          <div class="sub">기준: 7/7 · 종 7</div>
+        </div>
+
+        <div class="metric">
+          <div class="row1"><span class="eyebrow">H2</span><span class="badge green">PASS</span></div>
+          <div class="ttl">1 고객당 1주 캡쳐 (최대)</div>
+          <div class="val green">8 <span class="meta" style="font-size:14px">건</span></div>
+          <div class="sub">기준: ≥ 5건 · 12개 entity</div>
+        </div>
+
+        <div class="metric">
+          <div class="row1"><span class="eyebrow">H3</span><span class="badge green">PASS</span></div>
+          <div class="ttl">13 필드 가중 confidence 평균</div>
+          <div class="val green">82.4 <span class="meta" style="font-size:14px">%</span></div>
+          <div class="sub">기준: ≥ 60% (v1 시도) · 샘플 24</div>
+        </div>
+
+        <div class="metric">
+          <div class="row1"><span class="eyebrow">H3</span><span class="badge green">PASS</span></div>
+          <div class="ttl">정규화 시도율</div>
+          <div class="val green">100.0 <span class="meta" style="font-size:14px">%</span></div>
+          <div class="sub">기준: 100% · 24/24</div>
+        </div>
+
+        <div class="metric">
+          <div class="row1"><span class="eyebrow">V_가설</span><span class="badge green">PASS</span></div>
+          <div class="ttl">Dealer Playbook 발급 수</div>
+          <div class="val green">15 <span class="meta" style="font-size:14px">건</span></div>
+          <div class="sub">기준: ≥ 10건</div>
+        </div>
+
+        <div class="metric">
+          <div class="row1"><span class="eyebrow">V_가설</span><span class="badge green">PASS</span></div>
+          <div class="ttl">Visitor 응답 수</div>
+          <div class="val green">28 <span class="meta" style="font-size:14px">건</span></div>
+          <div class="sub">기준: ≥ 20건</div>
+        </div>
+
+        <div class="metric">
+          <div class="row1"><span class="eyebrow">H_외부컨트롤</span><span class="badge green">PASS</span></div>
+          <div class="ttl">외부 컨트롤 사이클</div>
+          <div class="val green">2 <span class="meta" style="font-size:14px">회</span></div>
+          <div class="sub">기준: ≥ 1회 · publish_rule() 호출 후 actor != system_seed</div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Hypothesis breakdown -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-hd"><span>가설별 누적 (test_assertions GROUP BY)</span></div>
+      <table>
+        <thead><tr><th>가설</th><th>통과</th><th>실패</th><th>스킵</th><th>주 metric</th><th>평균</th></tr></thead>
+        <tbody>
+          <tr><td><b>H1</b></td><td><span class="badge green">42</span></td><td>0</td><td>0</td><td class="meta">success_rate</td><td class="num">99.2</td></tr>
+          <tr><td><b>H3</b></td><td><span class="badge green">14</span></td><td>0</td><td>0</td><td class="meta">image_count</td><td class="num">3.5</td></tr>
+          <tr><td><b>H_LLM</b></td><td><span class="badge green">3</span></td><td><span class="badge red">1</span></td><td><span class="badge ghost">10</span></td><td class="meta">waited_ms</td><td class="num">28430</td></tr>
+          <tr><td><b>V_가설</b></td><td><span class="badge green">28</span></td><td>0</td><td><span class="badge ghost">2</span></td><td class="meta">latency_ms</td><td class="num">298</td></tr>
+          <tr><td><b>H_채널통합</b></td><td><span class="badge green">5</span></td><td>0</td><td>0</td><td class="meta">score</td><td class="num">84.2</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Recent runs -->
+    <div class="card">
+      <div class="card-hd"><span>최근 runs (test_runs)</span><span class="card-sub">8건</span></div>
+      <table>
+        <thead><tr><th>시각</th><th>suite</th><th>scenario</th><th>actor</th><th>상태</th><th>pass</th><th>fail</th><th>ms</th></tr></thead>
+        <tbody>
+          <tr><td class="num">05-26 14:32</td><td><span class="badge ghost">T_06</span></td><td>unified_same_entity</td><td class="meta">weaver@gridge.co.kr</td><td><span class="badge green">passed</span></td><td class="num">13</td><td class="num">0</td><td class="num">8920</td></tr>
+          <tr><td class="num">05-26 14:30</td><td><span class="badge ghost">T_05</span></td><td>voice_full</td><td class="meta">weaver@gridge.co.kr</td><td><span class="badge green">passed</span></td><td class="num">7</td><td class="num">0</td><td class="num">4820</td></tr>
+          <tr><td class="num">05-26 14:18</td><td><span class="badge ghost">T_04</span></td><td>sensor_full</td><td class="meta">weaver@gridge.co.kr</td><td><span class="badge green">passed</span></td><td class="num">8</td><td class="num">0</td><td class="num">12340</td></tr>
+          <tr><td class="num">05-26 12:15</td><td><span class="badge ghost">T_04</span></td><td>sensor_full</td><td class="meta">weaver@gridge.co.kr</td><td><span class="badge green">passed</span></td><td class="num">8</td><td class="num">0</td><td class="num">11890</td></tr>
+          <tr><td class="num">05-26 12:14</td><td><span class="badge ghost">T_05</span></td><td>voice_full</td><td class="meta">weaver@gridge.co.kr</td><td><span class="badge red">failed</span></td><td class="num">5</td><td class="num"><span style="color:var(--hd-red)">2</span></td><td class="num">3420</td></tr>
+          <tr><td class="num">05-25 18:02</td><td><span class="badge ghost">T_06</span></td><td>unified_same_entity</td><td class="meta">weaver@gridge.co.kr</td><td><span class="badge green">passed</span></td><td class="num">13</td><td class="num">0</td><td class="num">9100</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p class="meta" style="text-align:center;margin-top:18px;">
+      <a href="index.html">← 갤러리</a> ·
+      <a href="t-test-mock.html">T_Test 콘솔</a> ·
+      <a href="../T_Test/CLAUDE.md" target="_blank">T_Test 인덱스</a>
+    </p>
+  </main>
+</body>
+</html>

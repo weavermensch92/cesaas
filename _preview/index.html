@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HD건설기계 PoC — 화면 갤러리</title>
+  <style>
+    :root {
+      --hd-eco:#00E600; --hd-heritage:#00AD1D; --hd-prosperity:#008233;
+      --hd-discovery:#003087; --hd-trust:#002554;
+      --hd-gray:#63666A; --hd-paper:#fff; --hd-bg:#f6f8f6;
+      --hd-steel-200:#d6dadf; --hd-steel-100:#e9edf0; --hd-steel-50:#f3f5f7;
+      --hd-radius:6px; --hd-radius-lg:10px;
+      --hd-font:'Noto Sans KR','Malgun Gothic',-apple-system,Segoe UI,Arial,sans-serif;
+      --hd-font-display:'HD Sans',var(--hd-font);
+    }
+    *{box-sizing:border-box;}
+    body{margin:0;background:var(--hd-bg);font-family:var(--hd-font);color:#1d1d1f;}
+    header{background:var(--hd-trust);color:#fff;padding:18px 24px;display:flex;align-items:center;gap:14px;}
+    header .mark{width:30px;height:30px;border-radius:6px;background:var(--hd-heritage);display:grid;place-items:center;color:#002554;font-weight:900;font-family:var(--hd-font-display);}
+    header h1{margin:0;font:700 18px/1.2 var(--hd-font-display);letter-spacing:-0.01em;}
+    header .sub{font-size:13px;color:rgba(255,255,255,0.68);}
+    header .ver{margin-left:auto;font-size:12px;color:rgba(255,255,255,0.5);}
+    main{max-width:1100px;margin:0 auto;padding:24px;}
+    h2{font:700 22px/1.1 var(--hd-font-display);color:var(--hd-heritage);letter-spacing:-0.01em;margin:24px 0 4px;}
+    h3{font:600 15px var(--hd-font-display);color:var(--hd-discovery);margin:0 0 12px;}
+    p.lead{color:var(--hd-gray);font-size:14px;line-height:1.5;margin:0 0 18px;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+    .card{background:var(--hd-paper);border:1px solid var(--hd-steel-200);border-radius:var(--hd-radius-lg);overflow:hidden;display:flex;flex-direction:column;}
+    .card .ph{background:var(--hd-steel-50);height:140px;display:flex;align-items:center;justify-content:center;color:var(--hd-gray);font-size:13px;border-bottom:1px solid var(--hd-steel-200);}
+    .card .body{padding:14px;flex:1;display:flex;flex-direction:column;}
+    .card .body h4{margin:0 0 4px;font:600 15px var(--hd-font-display);color:var(--hd-trust);}
+    .card .body p{margin:0 0 8px;font-size:13px;color:var(--hd-gray);line-height:1.45;}
+    .meta{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+    .badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:2px 8px;border-radius:999px;background:var(--hd-steel-100);color:var(--hd-gray);font-weight:600;letter-spacing:0.02em;}
+    .badge.live{background:#e8f7eb;color:var(--hd-prosperity);}
+    .badge.mock{background:#fef3c7;color:#92400e;}
+    .badge.dep{background:#dbeafe;color:#1e3a8a;}
+    .actions{margin-top:auto;display:flex;gap:6px;}
+    .btn{flex:1;text-align:center;padding:8px 12px;border-radius:var(--hd-radius);font-size:13px;font-weight:600;text-decoration:none;border:1px solid var(--hd-steel-200);color:var(--hd-trust);background:#fff;}
+    .btn.primary{background:var(--hd-prosperity);color:#fff;border-color:var(--hd-prosperity);}
+    .btn.primary:hover{filter:brightness(0.95);}
+    .btn.ghost{background:transparent;border-color:transparent;color:var(--hd-discovery);}
+    .legend{margin-top:30px;padding-top:18px;border-top:1px solid var(--hd-steel-200);color:var(--hd-gray);font-size:12px;}
+    .legend code{background:var(--hd-steel-50);padding:1px 5px;border-radius:3px;font-family:'JetBrains Mono',monospace;}
+
+    /* miniatures (CSS-only sketches) */
+    .ph .mini{background:#fff;border:1px solid var(--hd-steel-200);border-radius:4px;padding:6px;font-size:9px;line-height:1.2;color:#1d1d1f;width:80%;max-width:200px;}
+    .ph .mini b{color:var(--hd-trust);}
+    .ph .topbar{background:var(--hd-trust);color:#fff;padding:4px 6px;margin:-6px -6px 4px;border-radius:3px 3px 0 0;display:flex;align-items:center;gap:4px;font-size:9px;}
+    .ph .topbar .m{width:10px;height:10px;border-radius:2px;background:var(--hd-heritage);}
+    .ph .row{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px dotted #eee;}
+    .ph .pill{display:inline-block;padding:1px 5px;border-radius:99px;background:var(--hd-prosperity);color:#fff;font-size:8px;}
+    .ph .pill.red{background:#b91c1c;}
+    .ph .pill.amber{background:#b45309;}
+  </style>
+</head>
+<body>
+  <header>
+    <span class="mark">H</span>
+    <div>
+      <h1>HD건설기계 PoC · 화면 갤러리</h1>
+      <span class="sub">개발된 surfaces 한눈에 보기 · CTT Moscow 2026</span>
+    </div>
+    <span class="ver">_preview · v1.1</span>
+  </header>
+
+  <main>
+    <h2>L — Live (백엔드 없이 단독 실행)</h2>
+    <p class="lead">파일을 직접 열어 디자인·플로우 확인 가능. <code>file://</code> 또는 <code>npx serve _preview</code>.</p>
+
+    <div class="grid">
+      <article class="card">
+        <div class="ph">
+          <div class="mini">
+            <div class="topbar"><span class="m"></span> HD · Dealer</div>
+            <b>1단계 — 회사 프로필</b>
+            <div style="margin-top:4px;">○ 회사 규모 <span class="pill">L</span></div>
+            <div style="margin-top:2px;">○ 주요 용도 <span class="pill">광업</span></div>
+            <div style="margin-top:2px;">○ 연간 거래액</div>
+          </div>
+        </div>
+        <div class="body">
+          <h4>V_10 · Dealer 단일 HTML</h4>
+          <div class="meta">
+            <span class="badge live">LIVE</span>
+            <span class="badge">offline OK</span>
+            <span class="badge">ru/en/ko</span>
+            <span class="badge">IndexedDB</span>
+          </div>
+          <p>6 axis + 7 marketing + NPS → segment 매칭 → Playbook 즉시 표시. 출장 시연에 직접 사용.</p>
+          <div class="actions">
+            <a class="btn primary" href="../V_Voice/dealer/index.html" target="_blank">열기 ↗</a>
+            <a class="btn" href="../V_Voice/dealer/README.md" target="_blank">README</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ph">
+          <div class="mini" style="width:130px;">
+            <div class="topbar"><span class="m"></span> HD · Visitor</div>
+            <b>1/4 — 회사 정보</b>
+            <div style="margin-top:3px;">○ 회사 규모</div>
+            <div style="margin-top:1px;">○ 주요 용도 <span class="pill">광업</span></div>
+            <div style="margin-top:1px;">○ 보유 장비</div>
+            <div style="margin-top:3px;font-size:8px;color:#888;">QR · 익명 · PWA</div>
+          </div>
+        </div>
+        <div class="body">
+          <h4>V_20 · Visitor PWA</h4>
+          <div class="meta">
+            <span class="badge live">LIVE</span>
+            <span class="badge">PWA + SW</span>
+            <span class="badge">옵트인</span>
+            <span class="badge">honeypot</span>
+          </div>
+          <p>18문항 (필수 12 + 선택 6). 모바일 우선. 결과 카드 + segment 힌트 + 카탈로그 안내.</p>
+          <div class="actions">
+            <a class="btn primary" href="../V_Voice/visitor/index.html" target="_blank">열기 ↗</a>
+            <a class="btn" href="../V_Voice/visitor/README.md" target="_blank">README</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ph">
+          <div class="mini">
+            <div class="topbar"><span class="m"></span> HD · Sensor</div>
+            <b>HD건설기계 · Sensor</b>
+            <div class="row"><span>Dealer</span><b>dealer_001</b></div>
+            <div class="row"><span>큐 (pending)</span><b>3</b></div>
+            <div class="row"><span>완료</span><b>27</b></div>
+            <div style="margin-top:4px;text-align:center;"><span class="pill">Drain</span></div>
+          </div>
+        </div>
+        <div class="body">
+          <h4>S_10 · Extension popup</h4>
+          <div class="meta">
+            <span class="badge live">LIVE</span>
+            <span class="badge">MV3</span>
+          </div>
+          <p>Chrome Extension 아이콘 클릭 시 표시. 큐 상태·재시도·로그 export.</p>
+          <div class="actions">
+            <a class="btn primary" href="extension-popup.html" target="_blank">미리보기 ↗</a>
+            <a class="btn" href="../S_Sensor/extension/README.md" target="_blank">README</a>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <h2>M — Mock (백엔드 없이 정적 mock)</h2>
+    <p class="lead">실제 운영은 Supabase + Anthropic 필요. mock은 UI·정보 구조 확인용. 데이터는 페이지 안에 inline.</p>
+
+    <div class="grid">
+      <article class="card">
+        <div class="ph">
+          <div class="mini">
+            <div class="topbar"><span class="m"></span> HD · Sensor Admin</div>
+            <div class="row"><b>captured</b><b>dealer</b><b>status</b></div>
+            <div class="row"><span>08:00</span><span>d_001</span><span class="pill">norm</span></div>
+            <div class="row"><span>08:01</span><span>d_001</span><span class="pill amber">class</span></div>
+            <div class="row"><span>08:03</span><span>d_002</span><span class="pill red">fail</span></div>
+            <div class="row"><span>08:05</span><span>d_001</span><span class="pill">norm</span></div>
+          </div>
+        </div>
+        <div class="body">
+          <h4>S_50 · Admin · 캡쳐 목록</h4>
+          <div class="meta">
+            <span class="badge mock">MOCK</span>
+            <span class="badge">filter</span>
+            <span class="badge">cursor</span>
+          </div>
+          <p>HD 검토자가 보는 캡쳐 목록. 필터 칩·상태 뱃지·신뢰도 막대.</p>
+          <div class="actions">
+            <a class="btn primary" href="admin-mock.html#captures" target="_blank">미리보기 ↗</a>
+            <a class="btn" href="../S_Sensor/admin/README.md" target="_blank">README</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ph">
+          <div class="mini">
+            <div class="topbar"><span class="m"></span> Cluster · entity 12345</div>
+            <div class="row"><b>company_name</b><b>ООО Метеор</b></div>
+            <div class="row"><span>contact_name</span><span>Иванов И.</span></div>
+            <div class="row"><span>amount</span><span>15M ₽</span></div>
+            <div class="row"><span>product_model</span><span>HX1000L</span></div>
+            <div style="margin-top:4px;text-align:center;"><span class="pill">재정규화</span></div>
+          </div>
+        </div>
+        <div class="body">
+          <h4>S_50 · Admin · 클러스터 상세</h4>
+          <div class="meta">
+            <span class="badge mock">MOCK</span>
+            <span class="badge">13 필드 편집</span>
+            <span class="badge">audit</span>
+          </div>
+          <p>5장 이미지 + 13 필드 인라인 편집 + audit 이력 + 재정규화 버튼.</p>
+          <div class="actions">
+            <a class="btn primary" href="admin-mock.html#cluster" target="_blank">미리보기 ↗</a>
+            <a class="btn" href="../S_Sensor/admin/app/clusters/[id]/page.tsx" target="_blank">소스</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ph">
+          <div class="mini">
+            <div class="topbar"><span class="m"></span> HD · Voice Responses</div>
+            <div class="row"><b>유형</b><b>seg</b><b>NPS</b></div>
+            <div class="row"><span>dealer</span><span class="pill">mining</span><span>9</span></div>
+            <div class="row"><span>visitor</span><span class="pill amber">rental</span><span>7</span></div>
+            <div class="row"><span>dealer</span><span class="pill">key_acc</span><span>10</span></div>
+            <div style="margin-top:4px;text-align:center;"><span class="pill" style="background:#003087;">CSV anon</span></div>
+          </div>
+        </div>
+        <div class="body">
+          <h4>V_30 · Voice · Responses</h4>
+          <div class="meta">
+            <span class="badge mock">MOCK</span>
+            <span class="badge">filter · cursor</span>
+            <span class="badge">CSV · anon</span>
+          </div>
+          <p>Dealer/Visitor 응답 목록·필터·CSV/익명 CSV 다운로드.</p>
+          <div class="actions">
+            <a class="btn primary" href="voice-admin-mock.html#responses" target="_blank">미리보기 ↗</a>
+            <a class="btn" href="../S_Sensor/admin/app/voice/responses/page.tsx" target="_blank">소스</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ph">
+          <div class="mini">
+            <div class="topbar"><span class="m"></span> HD · Voice Insight</div>
+            <div class="row"><b>총</b><b>NPS</b><b>Prom</b></div>
+            <div class="row"><span>67</span><span>8.2</span><span class="pill">42%</span></div>
+            <div style="margin-top:4px;">mining ████████ 17</div>
+            <div>construction ████ 12</div>
+            <div>rental ██ 6</div>
+          </div>
+        </div>
+        <div class="body">
+          <h4>V_30 · Voice · Insight v0</h4>
+          <div class="meta">
+            <span class="badge mock">MOCK</span>
+            <span class="badge">segment bar</span>
+            <span class="badge">NPS dist</span>
+          </div>
+          <p>총응답·NPS 평균·Promoter/Detractor·segment 분포 막대·event·언어 표.</p>
+          <div class="actions">
+            <a class="btn primary" href="voice-admin-mock.html#aggregates" target="_blank">미리보기 ↗</a>
+            <a class="btn" href="../S_Sensor/admin/app/voice/aggregates/page.tsx" target="_blank">소스</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ph">
+          <div class="mini">
+            <div class="topbar"><span class="m"></span> Studio · V_60</div>
+            <div style="margin-top:4px;font-size:8px;color:#555;">자연어 입력</div>
+            <div style="border:1px solid #ccc;border-radius:3px;padding:3px;background:#fff;font-size:8px;margin-top:2px;color:#1d1d1f;">"광업 대상 31문항 dealer..."</div>
+            <div style="margin-top:4px;text-align:center;"><span class="pill" style="background:#00AD1D;color:#002554;">LLM 빌드 → 검토 → 배포</span></div>
+            <div style="margin-top:2px;font-size:8px;color:#888;text-align:center;">survey_v1_dealer_mining_...</div>
+          </div>
+        </div>
+        <div class="body">
+          <h4>V_60 · Studio (자연어 → 설문)</h4>
+          <div class="meta">
+            <span class="badge mock">MOCK</span>
+            <span class="badge">LLM · R_10.06</span>
+            <span class="badge">gridge_admin</span>
+          </div>
+          <p>자연어 입력 → Claude로 SurveySpec 생성 → 검토·편집 → DB 배포. 이전 active 자동 archive.</p>
+          <div class="actions">
+            <a class="btn primary" href="studio-mock.html" target="_blank">미리보기 ↗</a>
+            <a class="btn" href="../S_Sensor/admin/app/studio/page.tsx" target="_blank">소스</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ph">
+          <div class="mini">
+            <div class="topbar"><span class="m"></span> T_Test · Console</div>
+            <div style="margin-top:3px;color:#444;font-size:8px;">✓ chunks 100%</div>
+            <div style="color:#444;font-size:8px;">✓ cluster image≥3</div>
+            <div style="color:#444;font-size:8px;">✓ segment match</div>
+            <div style="color:#444;font-size:8px;">✓ opt-in PII NULL</div>
+            <div style="margin-top:4px;text-align:center;"><span class="pill" style="background:#008233;color:#fff;">passed 15/15</span></div>
+          </div>
+        </div>
+        <div class="body">
+          <h4>T_04+T_05+T_06 · E2E Runner</h4>
+          <div class="meta">
+            <span class="badge mock">MOCK</span>
+            <span class="badge">H1·H3·V_가설·H_채널통합</span>
+            <span class="badge">test_runs DB</span>
+          </div>
+          <p>Sensor + Voice + Unified 통합 자동 측정. HMAC·청크·클러스터·정규화 큐·Voice JWT·segment·Lead 응집·LeadScoring·Playbook·linkage 검증.</p>
+          <div class="actions">
+            <a class="btn primary" href="t-test-mock.html" target="_blank">미리보기 ↗</a>
+            <a class="btn" href="../T_Test/runner/README.md" target="_blank">README</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ph">
+          <div class="mini">
+            <div class="topbar"><span class="m"></span> HD · Leads</div>
+            <div class="row"><b>P1</b><b>92</b><b>key_account</b></div>
+            <div class="row"><span>ООО Метеор</span><span class="pill">S 3·V 2</span></div>
+            <div class="row"><span>ГК «Сибирь»</span><span class="pill amber">P1·88</span></div>
+            <div style="margin-top:4px;font-size:8px;color:#888;">R_10.01 + R_10.07</div>
+          </div>
+        </div>
+        <div class="body">
+          <h4>U_Unified · Leads (응집·LeadScoring)</h4>
+          <div class="meta">
+            <span class="badge mock">MOCK</span>
+            <span class="badge">H_채널통합</span>
+            <span class="badge">P1~P5</span>
+          </div>
+          <p>같은 entity의 Sensor+Voice 한 row 응집·score 0~100·priority·Playbook 자동 발급. 트리거 자동 실행.</p>
+          <div class="actions">
+            <a class="btn primary" href="leads-mock.html#list" target="_blank">미리보기 ↗</a>
+            <a class="btn" href="../S_Sensor/admin/app/leads/page.tsx" target="_blank">소스</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ph">
+          <div class="mini">
+            <div class="topbar"><span class="m"></span> T_08 · 통과 판정</div>
+            <div style="margin-top:3px;display:flex;justify-content:space-between;">
+              <b style="color:#008233;font-size:14px;">8/9</b><span class="pill" style="background:#fffbeb;color:#b45309;">△ partial</span>
+            </div>
+            <div style="margin-top:2px;color:#444;font-size:8px;">✓ H1 99.2% &nbsp; ✓ H3 100%</div>
+            <div style="color:#444;font-size:8px;">⚠ P95 5,140ms</div>
+            <div style="color:#444;font-size:8px;">✓ V_가설 · ✓ 컨트롤 2회</div>
+          </div>
+        </div>
+        <div class="body">
+          <h4>T_08 · 통과 판정 (정량 9 지표)</h4>
+          <div class="meta">
+            <span class="badge mock">MOCK</span>
+            <span class="badge">자동 채점</span>
+            <span class="badge">verdict</span>
+          </div>
+          <p>D11 보고용 — 9 지표 자동 집계·verdict·가설 누적·최근 runs. 위버 publish_rule 횟수도 자동 포함.</p>
+          <div class="actions">
+            <a class="btn primary" href="t08-verdict-mock.html" target="_blank">미리보기 ↗</a>
+            <a class="btn" href="../S_Sensor/admin/app/t-test/page.tsx" target="_blank">소스</a>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <h2>D — 의존성 필요 (로컬 풀스택 실행)</h2>
+    <p class="lead">Supabase + Anthropic 키 필요. 실 데이터 흐름 확인.</p>
+
+    <div class="grid">
+      <article class="card">
+        <div class="ph"><div class="mini">supabase start<br/>supabase migration up<br/>npm run dev -w @hd/sensor-admin</div></div>
+        <div class="body">
+          <h4>S_50 · Admin (Next.js 실 백엔드)</h4>
+          <div class="meta">
+            <span class="badge dep">DEPS</span>
+            <span class="badge">Supabase</span>
+            <span class="badge">Magic Link</span>
+          </div>
+          <p>Next.js 14 · App Router · `@supabase/ssr`. 실제 DB·인증.</p>
+          <div class="actions">
+            <a class="btn" href="../S_Sensor/admin/README.md" target="_blank">로컬 실행 가이드</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ph"><div class="mini">npm run issue-token -w @hd/r20 --<br/>&nbsp;&nbsp;--dealer dealer_001<br/>&nbsp;&nbsp;--event ctt_moscow_2026</div></div>
+        <div class="body">
+          <h4>R_20 · Dealer 토큰 CLI</h4>
+          <div class="meta">
+            <span class="badge dep">DEPS</span>
+            <span class="badge">JWT</span>
+            <span class="badge">QR PNG</span>
+          </div>
+          <p>출장 전 위버가 Bearer JWT 발급. CSV 일괄 발급도 가능.</p>
+          <div class="actions">
+            <a class="btn" href="../R_Runtime/r20/README.md" target="_blank">사용법 ↗</a>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ph"><div class="mini">supabase functions deploy<br/>&nbsp;&nbsp;captures-chunks · finalize<br/>&nbsp;&nbsp;normalize-worker<br/>&nbsp;&nbsp;responses-receive</div></div>
+        <div class="body">
+          <h4>Edge Functions (7개)</h4>
+          <div class="meta">
+            <span class="badge dep">DEPS</span>
+            <span class="badge">Deno</span>
+            <span class="badge">Supabase</span>
+          </div>
+          <p>HMAC·idempotency·청크 합성·LLM 정규화·Admin·응답 수신.</p>
+          <div class="actions">
+            <a class="btn" href="../S_Sensor/backend/README.md" target="_blank">Sensor 백엔드</a>
+            <a class="btn" href="../V_Voice/backend/functions/responses-receive/index.ts" target="_blank">Voice 수신</a>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <h2>📚 자료</h2>
+    <div class="grid">
+      <article class="card"><div class="body">
+        <h4>최상위 진입점</h4>
+        <p>코드 컨벤션·트리·키워드 트리거.</p>
+        <div class="actions"><a class="btn" href="../CLAUDE.md" target="_blank">CLAUDE.md ↗</a></div>
+      </div></article>
+      <article class="card"><div class="body">
+        <h4>PRD (요구사항)</h4>
+        <p>마스터 + Sensor + Voice + 플랫폼 + 검증.</p>
+        <div class="actions"><a class="btn" href="../PRD/PRD_00_마스터.md" target="_blank">PRD ↗</a></div>
+      </div></article>
+      <article class="card"><div class="body">
+        <h4>하네스 1 룰</h4>
+        <p>본질·경계·가설 — 외부 디렉토리.</p>
+        <div class="actions"><a class="btn" href="../../../hd-hyundai-poc-harness-v1/hd-hyundai-poc/CLAUDE.md" target="_blank">harness ↗</a></div>
+      </div></article>
+    </div>
+
+    <div class="legend">
+      <strong>범례</strong> ·
+      <span class="badge live">LIVE</span> 바로 열림 ·
+      <span class="badge mock">MOCK</span> 정적 데이터 ·
+      <span class="badge dep">DEPS</span> Supabase/Anthropic 필요
+    </div>
+  </main>
+</body>
+</html>

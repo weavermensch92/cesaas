@@ -1,0 +1,74 @@
+# ⚠️  PUBLIC REPO — 시크릿 commit 절대 금지.
+# 새 시크릿 파일은 반드시 여기 추가 후 작업.
+
+# ─── node ─────────────────────────────────────────────────────
+node_modules/
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# ─── env · 시크릿 ─────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.production.local
+.env.test.local
+
+# Extension 빌드 시 주입되는 시크릿
+S_Sensor/extension/config.js
+
+# R_20 발급된 토큰·QR 출력 (대량 시크릿)
+R_Runtime/r20/out/
+
+# 인증서·키
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+service-account*.json
+
+# ─── Supabase ─────────────────────────────────────────────────
+.supabase/
+supabase/.branches/
+supabase/.temp/
+
+# ─── Fly.io ───────────────────────────────────────────────────
+.fly/
+
+# ─── IDE ──────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+.history/
+
+# ─── Logs ─────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ─── OS ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ─── 실 데이터 (HD 영업 데이터 절대 commit X) ─────────────────
+data/
+*.csv
+*.xlsx
+!**/example*.csv
+!**/sample*.csv
+captures/
+fixtures-real/
+
+# ─── 임시 / 분석 ──────────────────────────────────────────────
+tmp/
+.cache/
+coverage/
+.nyc_output/

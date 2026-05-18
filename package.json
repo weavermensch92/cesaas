@@ -1,0 +1,26 @@
+{
+  "name": "hd-poc",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HD건설기계 PoC — Sensor + Voice + Unified 11-day verification",
+  "workspaces": [
+    "C_Common/packages/*",
+    "S_Sensor/admin",
+    "R_Runtime/r20",
+    "T_Test/runner"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "@types/node": "^20.12.7"
+  },
+  "engines": {
+    "node": ">=20.10.0",
+    "npm": ">=10.0.0"
+  }
+}

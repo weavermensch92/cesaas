@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Studio · V_60 — Static Mock</title>
+  <style>
+    :root {
+      --hd-heritage:#00AD1D; --hd-prosperity:#008233;
+      --hd-discovery:#003087; --hd-trust:#002554;
+      --hd-gray:#63666A; --hd-paper:#fff; --hd-bg:#f6f8f6;
+      --hd-steel-200:#d6dadf; --hd-steel-300:#b8bcc2; --hd-steel-100:#e9edf0; --hd-steel-50:#f3f5f7; --hd-steel-700:#4f535a;
+      --hd-amber:#b45309; --hd-red:#b91c1c;
+      --hd-green-50:#e8f7eb; --hd-blue-50:#e8eef9;
+      --hd-radius:6px; --hd-radius-lg:10px;
+      --hd-font:'Noto Sans KR','Malgun Gothic',-apple-system,Segoe UI,Arial,sans-serif;
+      --hd-font-display:'HD Sans',var(--hd-font);
+      --hd-fs:13px;
+    }
+    *{box-sizing:border-box;}
+    body{margin:0;background:var(--hd-bg);font-family:var(--hd-font);color:#1d1d1f;font-size:var(--hd-fs);}
+    a{color:var(--hd-discovery);text-decoration:none;}
+
+    .topbar{background:var(--hd-trust);color:#fff;height:52px;display:flex;align-items:center;gap:16px;padding:0 18px;}
+    .topbar .mark{width:22px;height:22px;border-radius:4px;background:var(--hd-heritage);display:grid;place-items:center;color:#002554;font-weight:900;font-size:12px;font-family:var(--hd-font-display);}
+    .topbar .logo{font:700 14px var(--hd-font-display);display:flex;align-items:center;gap:9px;}
+    .topbar .crumb{color:rgba(255,255,255,0.62);font-size:12.5px;}
+    .topbar .user{display:flex;align-items:center;gap:8px;font-size:12px;margin-left:auto;}
+    .topbar .avatar{width:26px;height:26px;border-radius:50%;background:var(--hd-prosperity);display:grid;place-items:center;font-size:11px;font-weight:700;}
+
+    .subnav{height:40px;display:flex;align-items:center;gap:4px;padding:0 18px;background:#fff;border-bottom:1px solid var(--hd-steel-200);overflow-x:auto;}
+    .snav{padding:6px 10px;font-size:12.5px;color:var(--hd-steel-700);border-radius:6px;cursor:pointer;text-decoration:none;}
+    .snav.active{color:var(--hd-trust);background:var(--hd-steel-100);font-weight:600;}
+
+    main{padding:18px;max-width:1100px;margin:0 auto;}
+    .h1{font:700 22px/1.1 var(--hd-font-display);color:var(--hd-heritage);margin:6px 0 4px;}
+    .meta{font-size:11.5px;color:var(--hd-gray);}
+    .eyebrow{font:600 10.5px var(--hd-font);text-transform:uppercase;letter-spacing:0.04em;color:var(--hd-gray);}
+
+    .card{background:#fff;border:1px solid var(--hd-steel-200);border-radius:var(--hd-radius-lg);overflow:hidden;margin-bottom:14px;}
+    .card-hd{padding:10px 14px;border-bottom:1px solid var(--hd-steel-200);display:flex;align-items:center;gap:10px;font-weight:600;}
+    .card-sub{font-size:11.5px;color:var(--hd-steel-700);font-weight:400;}
+
+    .btn{height:30px;padding:0 12px;border-radius:6px;font-size:12.5px;font-weight:500;display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:1px solid var(--hd-steel-300);background:#fff;color:var(--hd-trust);}
+    .btn.primary{background:var(--hd-trust);color:#fff;border-color:var(--hd-trust);}
+    .btn.accent{background:var(--hd-heritage);color:#002554;border-color:var(--hd-heritage);font-weight:600;}
+    .btn.ghost{background:transparent;border:none;color:var(--hd-steel-700);}
+    .btn.sm{height:24px;padding:0 8px;font-size:11.5px;}
+    .chip{padding:4px 10px;font-size:12px;color:var(--hd-steel-700);border-radius:6px;cursor:pointer;}
+    .chip.active{color:var(--hd-trust);background:var(--hd-steel-100);font-weight:600;}
+
+    .badge{display:inline-flex;align-items:center;gap:5px;padding:2px 7px;border-radius:4px;font-size:10.5px;font-weight:600;background:var(--hd-steel-100);color:var(--hd-steel-700);}
+    .badge.accent{background:var(--hd-green-50);color:var(--hd-prosperity);}
+    .badge.blue{background:var(--hd-blue-50);color:var(--hd-discovery);}
+
+    textarea{width:100%;min-height:120px;padding:12px;border:1px solid var(--hd-steel-200);border-radius:6px;font:inherit;font-size:14px;resize:vertical;}
+    input,select{height:28px;padding:0 8px;border:1px solid var(--hd-steel-200);border-radius:6px;font:inherit;font-size:12px;background:#fff;}
+
+    .q-row{display:grid;grid-template-columns:32px 1fr 130px 90px auto;gap:8px;align-items:center;padding:10px;border:1px solid var(--hd-steel-200);border-radius:6px;background:#fff;margin-bottom:8px;}
+    .q-row .num{font-variant-numeric:tabular-nums;text-align:center;color:var(--hd-trust);font-weight:600;}
+
+    .deployed{background:#e8f7eb;border-color:var(--hd-heritage);}
+    code.id{background:var(--hd-steel-50);padding:2px 6px;border-radius:4px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <span class="logo"><span class="mark">H</span> HD건설기계 · Sensor Admin</span>
+    <span class="crumb">위버 도구 · <b>Studio · 자연어 → 설문</b></span>
+    <span class="user"><span class="avatar">G</span> weaver@gridge.co.kr</span>
+  </div>
+
+  <div class="subnav">
+    <a class="snav" href="admin-mock.html#captures">Captures</a>
+    <a class="snav" href="voice-admin-mock.html#responses">Voice · Responses</a>
+    <a class="snav" href="voice-admin-mock.html#aggregates">Voice · Insight</a>
+    <a class="snav active" href="#">Studio · V_60</a>
+  </div>
+
+  <main>
+    <h1 class="h1">Studio · V_60</h1>
+    <p class="meta" style="margin:0 0 14px">자연어 → 설문 빌드 → 검토·편집 → 배포. R_10.06 voice_studio_survey_build · gridge_admin 전용.</p>
+
+    <div class="card deployed" style="padding:14px;">
+      <strong style="color:var(--hd-prosperity)">✓ 배포 완료</strong>
+      <div class="meta" style="margin-top:4px;">
+        <code class="id">survey_id: survey_v1_dealer_mining_20260526104500</code> · target dealer
+      </div>
+    </div>
+
+    <!-- 1) 자연어 입력 -->
+    <section class="card">
+      <div class="card-hd"><span>1. 자연어 입력</span></div>
+      <div style="padding:14px;">
+        <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap;">
+          <span class="eyebrow">Target</span>
+          <span class="chip active">Dealer (31)</span>
+          <span class="chip">Visitor (18)</span>
+          <span style="width:1px;height:18px;background:var(--hd-steel-200);"></span>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;">
+            <input type="checkbox" checked /> 이전 active 자동 archive
+          </label>
+        </div>
+
+        <textarea>러시아 광업(mining) 대형 사업자 대상 31문항 dealer 설문. 6 axis + 마케팅 7질문 + NPS + 동의. 광업 특유의 가동시간·디젤 가격·환경 규제 질문 추가. 거래액 규모는 5천만 ₽ 초과 기준.</textarea>
+
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="eyebrow" style="align-self:center;margin-right:4px;">예시</span>
+          <button class="btn sm ghost" style="font-size:11px;color:var(--hd-discovery)">러시아 광업(mining) 대형 사업자…</button>
+          <button class="btn sm ghost" style="font-size:11px;color:var(--hd-discovery)">농업 보조 장비 visitor PWA 18문항…</button>
+          <button class="btn sm ghost" style="font-size:11px;color:var(--hd-discovery)">렌탈 사업자(rental) 인터뷰 25문항…</button>
+        </div>
+
+        <div style="margin-top:14px;display:flex;gap:8px;align-items:center;">
+          <button class="btn primary">LLM 빌드</button>
+          <span class="meta">128/4000자</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2) 검토·편집 -->
+    <section class="card">
+      <div class="card-hd">
+        <span>2. 검토·편집</span>
+        <span class="card-sub">31문항 · claude-opus-4-7 · prompt 2026-05-18.002 · tokens 1240/2810</span>
+      </div>
+      <div style="padding:14px;">
+        <input value="HD건설기계 — Mining Dealer 인터뷰 v1"
+          style="width:100%;padding:10px;font:600 16px var(--hd-font-display);color:var(--hd-trust);" />
+
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span class="eyebrow">language_default</span>
+          <select><option>ru</option><option>en</option><option>ko</option></select>
+          <span class="eyebrow">estimated_minutes</span>
+          <input type="number" value="6" style="width:60px" />
+        </div>
+
+        <div style="margin-top:14px;">
+          <div class="q-row">
+            <span class="num">1</span>
+            <input value="회사 규모" />
+            <select><option>single_select</option></select>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" checked />required</label>
+            <div style="display:flex;gap:4px;">
+              <button class="btn ghost sm">↑</button><button class="btn ghost sm">↓</button><button class="btn ghost sm" style="color:var(--hd-red)">×</button>
+            </div>
+            <div style="grid-column:2 / -1;margin-top:4px;">
+              <span class="meta">options: </span><span class="meta" style="color:var(--hd-trust)">~50인 · 51~200 · 201~1000 · 1000+</span>
+            </div>
+            <div style="grid-column:2 / -1;"><span class="badge accent">axis: scale</span></div>
+          </div>
+
+          <div class="q-row">
+            <span class="num">2</span>
+            <input value="주요 용도" />
+            <select><option>single_select</option></select>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" checked />required</label>
+            <div style="display:flex;gap:4px;">
+              <button class="btn ghost sm">↑</button><button class="btn ghost sm">↓</button><button class="btn ghost sm" style="color:var(--hd-red)">×</button>
+            </div>
+            <div style="grid-column:2 / -1;"><span class="badge accent">axis: usage</span></div>
+          </div>
+
+          <div class="q-row">
+            <span class="num">3</span>
+            <input value="연간 가동 시간 (광산)" />
+            <select><option>single_select</option></select>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" checked />required</label>
+            <div style="display:flex;gap:4px;">
+              <button class="btn ghost sm">↑</button><button class="btn ghost sm">↓</button><button class="btn ghost sm" style="color:var(--hd-red)">×</button>
+            </div>
+            <div style="grid-column:2 / -1;"><span class="badge accent">axis: annual_operating_hours</span></div>
+          </div>
+
+          <div class="q-row">
+            <span class="num">4</span>
+            <input value="디젤 가격 변동 민감도" />
+            <select><option>scale_1_5</option></select>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" checked />required</label>
+            <div style="display:flex;gap:4px;">
+              <button class="btn ghost sm">↑</button><button class="btn ghost sm">↓</button><button class="btn ghost sm" style="color:var(--hd-red)">×</button>
+            </div>
+          </div>
+
+          <div class="q-row">
+            <span class="num">5</span>
+            <input value="환경 규제 영향" />
+            <select><option>multi_select</option></select>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" checked />required</label>
+            <div style="display:flex;gap:4px;">
+              <button class="btn ghost sm">↑</button><button class="btn ghost sm">↓</button><button class="btn ghost sm" style="color:var(--hd-red)">×</button>
+            </div>
+          </div>
+
+          <div style="text-align:center;margin:8px 0;color:var(--hd-gray);font-size:12px;">… 6 ~ 29 문항 (생략) …</div>
+
+          <div class="q-row">
+            <span class="num">30</span>
+            <input value="HD를 동료에게 추천하시겠습니까 (0~10)" />
+            <select><option>nps</option></select>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" checked />required</label>
+            <div style="display:flex;gap:4px;">
+              <button class="btn ghost sm">↑</button><button class="btn ghost sm">↓</button><button class="btn ghost sm" style="color:var(--hd-red)">×</button>
+            </div>
+          </div>
+
+          <div class="q-row">
+            <span class="num">31</span>
+            <input value="개인정보 처리 동의" />
+            <select><option>consent</option></select>
+            <label style="display:flex;align-items:center;gap:6px;font-size:12px"><input type="checkbox" checked />required</label>
+            <div style="display:flex;gap:4px;">
+              <button class="btn ghost sm">↑</button><button class="btn ghost sm">↓</button><button class="btn ghost sm" style="color:var(--hd-red)">×</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3) 배포 -->
+    <section class="card">
+      <div class="card-hd"><span>3. 배포</span></div>
+      <div style="padding:14px;display:flex;align-items:center;gap:12px;">
+        <span class="meta">surveys + survey_questions 트랜잭션 INSERT · 새 survey_id 자동 발급 · 이전 active 같은 target archive</span>
+        <span style="margin-left:auto"></span>
+        <button class="btn accent">dealer 로 배포</button>
+      </div>
+    </section>
+
+    <p class="meta" style="text-align:center;margin-top:18px;">
+      <a href="index.html">← 갤러리</a> &nbsp;·&nbsp;
+      <a href="../R_Runtime/r20/README.md" target="_blank">R_20 도구</a> &nbsp;·&nbsp;
+      <a href="../C_Common/r_10_rules/R_10.06_PromptTemplates.yaml" target="_blank">R_10.06</a>
+    </p>
+  </main>
+</body>
+</html>

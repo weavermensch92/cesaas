@@ -1,0 +1,88 @@
+# Supabase 마이그레이션 + Edge Functions 자동 배포.
+# main → production, staging → staging 환경.
+#
+# 필요한 GitHub Secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_ACCESS_TOKEN       — 위버 PAT (Supabase Dashboard → Account → Access Tokens)
+#   SUPABASE_REF_PROD           — 프로젝트 ref (xxx.supabase.co의 xxx)
+#   SUPABASE_REF_STAGING        — staging 프로젝트 ref
+#   SUPABASE_DB_PASSWORD_PROD   — DB 비밀번호 (db push 시 필요)
+#   SUPABASE_DB_PASSWORD_STAGING
+
+name: Deploy
+
+on:
+  push:
+    branches: [main, staging]
+  workflow_dispatch:
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+      - run: npm ci
+      - run: npm run typecheck --if-present
+
+  deploy-staging:
+    if: github.ref == 'refs/heads/staging'
+    needs: typecheck
+    runs-on: ubuntu-latest
+    environment: staging
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      REF: ${{ secrets.SUPABASE_REF_STAGING }}
+      DB_PWD: ${{ secrets.SUPABASE_DB_PASSWORD_STAGING }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - name: DB migrations
+        run: |
+          supabase link --project-ref "$REF" --password "$DB_PWD"
+          supabase db push --linked --include-all
+        working-directory: C_Common/supabase
+      - name: Deploy Edge Functions
+        run: |
+          cd S_Sensor/backend       && supabase functions deploy --project-ref "$REF" --no-verify-jwt captures-chunks captures-finalize normalize-worker admin-captures admin-clusters admin-field-edit admin-normalize-trigger
+          cd ../../V_Voice/backend  && supabase functions deploy --project-ref "$REF" --no-verify-jwt responses-receive voice-responses voice-aggregates voice-csv-export studio-build-survey studio-deploy
+          cd ../../U_Unified/backend && supabase functions deploy --project-ref "$REF" --no-verify-jwt admin-leads admin-leads-detail
+          cd ../../T_Test/backend   && supabase functions deploy --project-ref "$REF" --no-verify-jwt admin-test-summary
+
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    needs: typecheck
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      REF: ${{ secrets.SUPABASE_REF_PROD }}
+      DB_PWD: ${{ secrets.SUPABASE_DB_PASSWORD_PROD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - name: DB migrations
+        run: |
+          supabase link --project-ref "$REF" --password "$DB_PWD"
+          supabase db push --linked --include-all
+        working-directory: C_Common/supabase
+      - name: Deploy Edge Functions
+        run: |
+          cd S_Sensor/backend       && supabase functions deploy --project-ref "$REF" --no-verify-jwt captures-chunks captures-finalize normalize-worker admin-captures admin-clusters admin-field-edit admin-normalize-trigger
+          cd ../../V_Voice/backend  && supabase functions deploy --project-ref "$REF" --no-verify-jwt responses-receive voice-responses voice-aggregates voice-csv-export studio-build-survey studio-deploy
+          cd ../../U_Unified/backend && supabase functions deploy --project-ref "$REF" --no-verify-jwt admin-leads admin-leads-detail
+          cd ../../T_Test/backend   && supabase functions deploy --project-ref "$REF" --no-verify-jwt admin-test-summary
+
+  deploy-admin-fly:
+    if: github.ref == 'refs/heads/main'
+    needs: deploy-prod
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only --config S_Sensor/admin/fly.toml
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

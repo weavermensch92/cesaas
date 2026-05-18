@@ -1,0 +1,8 @@
+{
+  "bitrix24": {
+    "id": "bitrix24",
+    "name": "Bitrix24",
+    "host_pattern": "^https://(bitrix\\.gkcompany\\.pro|[^/]+\\.bitrix24\\.(com|ru))/",
+    "capture_paths": ["/crm/"]
+  }
+}
