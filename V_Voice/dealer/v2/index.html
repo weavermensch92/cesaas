@@ -52,7 +52,7 @@ input,textarea,select{font:inherit;color:inherit;}
 .lang-sel{height:28px;padding:0 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-family:var(--hd-mono);font-size:11.5px;}
 
 /* Stage */
-.stage{display:grid;grid-template-columns:240px 1fr 440px;gap:14px;padding:14px;min-height:calc(100vh - 56px);}
+.stage{display:grid;grid-template-columns:300px 1fr 420px;gap:14px;padding:14px;min-height:calc(100vh - 56px);}
 .panel{background:var(--hd-paper);border:var(--hd-border);border-radius:var(--hd-radius-lg);padding:16px;overflow:hidden;}
 .panel-head{font-family:var(--hd-mono);font-size:10.5px;color:var(--hd-gray);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;}
 .panel-head b{color:var(--hd-heritage);font-weight:600;}
@@ -127,6 +127,19 @@ input,textarea,select{font:inherit;color:inherit;}
 .consent input{margin-top:2px;accent-color:var(--hd-heritage);}
 .req{color:var(--hd-red);font-weight:600;}
 
+/* Dealer Profile card */
+.dealer-card{padding:12px;background:linear-gradient(135deg,var(--hd-trust) 0%,var(--hd-discovery) 100%);color:#fff;border-radius:var(--hd-radius);margin-bottom:14px;}
+.dealer-card .dc-row{display:flex;justify-content:space-between;align-items:center;font-family:var(--hd-mono);font-size:10.5px;letter-spacing:0.04em;opacity:0.85;text-transform:uppercase;margin-bottom:4px;}
+.dealer-card .dc-id{font-family:var(--hd-mono);font-size:14px;font-weight:600;letter-spacing:0.02em;margin-bottom:6px;color:var(--hd-light-blue);}
+.dealer-card .dc-meta{font-size:11.5px;line-height:1.5;opacity:0.9;}
+.dealer-card .dc-meta b{font-weight:600;opacity:1;}
+.dealer-card.empty{background:var(--hd-steel-100);color:var(--hd-gray);}
+.dealer-card.empty .dc-id{color:var(--hd-gray);}
+
+/* Section block headers within columns */
+.section-block{margin-top:18px;}
+.section-block:first-child{margin-top:0;}
+
 /* Submit */
 .submit-row{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
 .btn{padding:12px 16px;border:var(--hd-border);border-radius:var(--hd-radius);background:var(--hd-paper);color:var(--hd-ink);font-weight:600;font-size:13px;transition:background 0.1s,opacity 0.1s;}
@@ -162,34 +175,57 @@ input,textarea,select{font:inherit;color:inherit;}
 
 <main class="stage">
 
-  <!-- COL 1 — Segments hypothesis -->
+  <!-- LEFT — Dealer Profile · Hypothesis · Axis 질문 절반 -->
   <aside class="panel">
-    <div class="panel-head"><b>8</b> Segments · <span id="lbl_hypothesis">가설</span></div>
-    <div class="seg-list" id="segList"></div>
-    <div class="hint" id="lbl_hypothesis_help"></div>
+    <div class="section-block">
+      <div class="panel-head" id="lbl_dealer_profile">Dealer Profile</div>
+      <div id="dealerCard"></div>
+    </div>
+
+    <div class="section-block">
+      <div class="panel-head"><b>8</b> Segments · <span id="lbl_hypothesis">가설</span></div>
+      <div class="seg-list" id="segList"></div>
+      <div class="hint" id="lbl_hypothesis_help"></div>
+    </div>
+
+    <div class="section-block">
+      <div class="panel-head" id="lbl_profile_left">회사 프로필 (1/2)</div>
+      <div id="qaListLeft" class="qa-list" style="max-height:none;"></div>
+    </div>
+
     <div class="survey-meta" id="surveyMeta" style="display:none;"></div>
   </aside>
 
-  <!-- COL 2 — Target + Radar + Summary -->
+  <!-- CENTER — Target · Axis 질문 절반 · Radar -->
   <section class="panel">
-    <div class="panel-head" id="lbl_target_head">상담 대상</div>
-    <div class="target">
-      <label id="lbl_company">Company *</label><input id="inp_company" type="text" autocomplete="off"/>
-      <label id="lbl_contact">Contact</label><input id="inp_contact" type="text" autocomplete="off"/>
-      <label id="lbl_phone">Phone</label><input id="inp_phone" type="text" inputmode="tel" autocomplete="off"/>
-      <label id="lbl_notes">Notes</label><textarea id="inp_notes" autocomplete="off"></textarea>
+    <div class="section-block">
+      <div class="panel-head" id="lbl_target_head">상담 대상</div>
+      <div class="target">
+        <label id="lbl_company">Company *</label><input id="inp_company" type="text" autocomplete="off"/>
+        <label id="lbl_contact">Contact</label><input id="inp_contact" type="text" autocomplete="off"/>
+        <label id="lbl_phone">Phone</label><input id="inp_phone" type="text" inputmode="tel" autocomplete="off"/>
+        <label id="lbl_notes">Notes</label><textarea id="inp_notes" autocomplete="off"></textarea>
+      </div>
     </div>
-    <div class="panel-head" id="lbl_radar_head">포지셔닝 맵 · 답변 기반 자동 도출</div>
-    <div class="radar-wrap" id="radarWrap">
-      <span class="radar-empty">설문 응답이 시작되면 표시됩니다</span>
+
+    <div class="section-block">
+      <div class="panel-head" id="lbl_profile_center">회사 프로필 (2/2)</div>
+      <div id="qaListCenter" class="qa-list" style="max-height:none;"></div>
     </div>
-    <div class="summary" id="summary"></div>
+
+    <div class="section-block">
+      <div class="panel-head" id="lbl_radar_head">포지셔닝 맵 · 답변 기반 자동 도출</div>
+      <div class="radar-wrap" id="radarWrap">
+        <span class="radar-empty">설문 응답이 시작되면 표시됩니다</span>
+      </div>
+      <div class="summary" id="summary"></div>
+    </div>
   </section>
 
-  <!-- COL 3 — Interview -->
+  <!-- RIGHT — 마케팅 + NPS + 동의 + Submit -->
   <aside class="panel">
     <div class="panel-head"><span id="lbl_interview">고객 인터뷰</span> · <span id="progress">0/0</span></div>
-    <div id="qaList" class="qa-list"><div class="loading">로딩 중…</div></div>
+    <div id="qaListRight" class="qa-list"></div>
     <div class="submit-row">
       <button class="btn primary" id="btnSubmit" disabled>저장 + CRM Sync</button>
       <button class="btn ghost" id="btnReset" style="display:none;">새 상담</button>
@@ -215,7 +251,9 @@ const SEGMENTS = [
 ];
 
 const I18N = {
-  ru:{ hypothesis:'гипотеза', hypothesis_help:'Дилер выбирает гипотетический сегмент. Сервер автоматически переклассифицирует — измеряется точность гипотезы.',
+  ru:{ dealer_profile:'Профиль дилера',
+       hypothesis:'гипотеза', hypothesis_help:'Дилер выбирает гипотетический сегмент. Сервер автоматически переклассифицирует — измеряется точность гипотезы.',
+       profile_left:'Профиль компании (1/2)', profile_center:'Профиль компании (2/2)',
        target_head:'Информация о клиенте', company:'Компания *', contact:'Контакт', phone:'Телефон', notes:'Заметки',
        radar_head:'Карта позиционирования · автовывод по ответам', interview:'Интервью клиента',
        net_on:'Online', net_off:'Offline', queue:'Очередь',
@@ -223,7 +261,9 @@ const I18N = {
        ok_sent:'Сохранено + отправлено', ok_offline:'Сохранено локально (offline)',
        loading:'Загрузка опроса…', radar_empty:'Появится после ответов', survey_id:'Опрос',
        avg:'Среднее', strong:'Сильнейшая ось', weak:'Слабейшая' },
-  en:{ hypothesis:'hypothesis', hypothesis_help:'Dealer toggles hypothesized segment. Server re-classifies independently — hypothesis accuracy measured.',
+  en:{ dealer_profile:'Dealer Profile',
+       hypothesis:'hypothesis', hypothesis_help:'Dealer toggles hypothesized segment. Server re-classifies independently — hypothesis accuracy measured.',
+       profile_left:'Company profile (1/2)', profile_center:'Company profile (2/2)',
        target_head:'Customer information', company:'Company *', contact:'Contact', phone:'Phone', notes:'Notes',
        radar_head:'Positioning Map · derived from answers', interview:'Customer Interview',
        net_on:'Online', net_off:'Offline', queue:'Queue',
@@ -231,7 +271,9 @@ const I18N = {
        ok_sent:'Saved + sent', ok_offline:'Saved locally (offline)',
        loading:'Loading survey…', radar_empty:'Shows up after answers', survey_id:'Survey',
        avg:'Average', strong:'Strongest axis', weak:'Weakest' },
-  ko:{ hypothesis:'가설', hypothesis_help:'딜러가 인터뷰 중 가정하는 segment 라벨. 서버는 별도로 자동 재분류 — 가설 vs 자동 정확도가 측정됨.',
+  ko:{ dealer_profile:'딜러 프로필',
+       hypothesis:'가설', hypothesis_help:'딜러가 인터뷰 중 가정하는 segment 라벨. 서버는 별도로 자동 재분류 — 가설 vs 자동 정확도가 측정됨.',
+       profile_left:'회사 프로필 (1/2)', profile_center:'회사 프로필 (2/2)',
        target_head:'상담 대상 정보', company:'회사명 *', contact:'담당자', phone:'연락처', notes:'메모',
        radar_head:'포지셔닝 맵 · 답변 기반 자동 도출', interview:'고객 인터뷰',
        net_on:'Online', net_off:'Offline', queue:'큐',
@@ -442,27 +484,66 @@ function renderRadar(){
 }
 
 function renderQA(){
-  const list = document.getElementById('qaList');
-  list.innerHTML = '';
+  const left  = document.getElementById('qaListLeft');
+  const ctr   = document.getElementById('qaListCenter');
+  const right = document.getElementById('qaListRight');
+  [left, ctr, right].forEach((el) => { if (el) el.innerHTML = ''; });
 
   if (state.loadError) {
-    list.innerHTML = `<div class="toast err">설문 로드 실패: ${state.loadError}</div>`;
+    right.innerHTML = `<div class="toast err">설문 로드 실패: ${state.loadError}</div>`;
     document.getElementById('progress').textContent = '–';
     return;
   }
   if (!state.questions.length) {
-    list.innerHTML = `<div class="loading">${t('loading')}</div>`;
+    right.innerHTML = `<div class="loading">${t('loading')}</div>`;
     return;
   }
 
-  for (const q of state.questions) {
-    list.appendChild(renderQuestion(q));
-  }
+  // axis 질문: sort_order 오름차순 → 절반은 LEFT, 절반은 CENTER
+  const axisQs  = state.questions.filter((q) => q.axis).sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+  const otherQs = state.questions.filter((q) => !q.axis).sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+  const half = Math.ceil(axisQs.length / 2);
+  const leftQs = axisQs.slice(0, half);
+  const ctrQs  = axisQs.slice(half);
 
-  // Progress (only required + answered)
+  for (const q of leftQs)  left.appendChild(renderQuestion(q));
+  for (const q of ctrQs)   ctr.appendChild(renderQuestion(q));
+  for (const q of otherQs) right.appendChild(renderQuestion(q));
+
+  // Progress
   const reqQs = state.questions.filter((q) => q.required);
   const done = reqQs.filter((q) => hasAnswer(q)).length;
   document.getElementById('progress').textContent = `${done}/${reqQs.length}`;
+}
+
+function renderDealerCard(){
+  const card = document.getElementById('dealerCard');
+  if (!card) return;
+  if (!state.dealerId) {
+    card.className = 'dealer-card empty';
+    card.innerHTML = `<div class="dc-row"><span>No token</span></div>
+      <div class="dc-id">로그인 필요</div>
+      <div class="dc-meta">/voice/dealers 어드민에서 토큰 발급 후 URL <code>?token=...</code> 으로 진입</div>`;
+    return;
+  }
+  // JWT exp 추출 (옵션)
+  let expStr = '';
+  try {
+    const p = decodeJwt(state.token);
+    if (p?.exp) {
+      const d = new Date(p.exp * 1000);
+      expStr = d.toLocaleDateString('ko-KR');
+    }
+  } catch(_) {}
+  card.className = 'dealer-card';
+  card.innerHTML = `
+    <div class="dc-row"><span>Dealer</span><span>${state.event || ''}</span></div>
+    <div class="dc-id">${state.dealerId}</div>
+    <div class="dc-meta">
+      ${state.event ? `<b>Event</b> ${state.event}<br/>` : ''}
+      ${expStr ? `<b>Token exp</b> ${expStr}` : ''}
+    </div>
+  `;
 }
 
 function hasAnswer(q){
@@ -660,14 +741,16 @@ function resetState(){
 function applyI18N(){
   document.documentElement.lang = state.lang;
   const set=(id,k)=>{const el=document.getElementById(id); if(el) el.textContent=t(k);};
+  set('lbl_dealer_profile','dealer_profile');
   set('lbl_hypothesis','hypothesis'); set('lbl_hypothesis_help','hypothesis_help');
+  set('lbl_profile_left','profile_left'); set('lbl_profile_center','profile_center');
   set('lbl_target_head','target_head'); set('lbl_company','company'); set('lbl_contact','contact');
   set('lbl_phone','phone'); set('lbl_notes','notes'); set('lbl_radar_head','radar_head');
   set('lbl_interview','interview');
   document.getElementById('netLabel').textContent = state.online ? t('net_on') : t('net_off');
   document.getElementById('tokenStatus').textContent = state.dealerId ? `dealer:${state.dealerId.slice(0,12)}` : 'no token';
   refreshQueue();
-  renderSegments(); renderRadar(); renderQA(); refreshSubmit();
+  renderDealerCard(); renderSegments(); renderRadar(); renderQA(); refreshSubmit();
 }
 
 function bindInputs(){
