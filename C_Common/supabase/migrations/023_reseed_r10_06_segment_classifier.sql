@@ -1,20 +1,28 @@
-# R_10.06 — Prompt Templates (LLM 시스템·user 프롬프트)
-# 하네스 2 (Runtime). 모든 LLM 호출은 이 파일의 templates를 로드 — 하드코드 금지 (C_05_LLM_정책 § 6).
-#
-# 운영 시 prod truth는 DB rule_versions(status='active').body_yaml. 이 YAML은 시드.
-# 변경 흐름: 위버가 여기 편집 → r20/bin/publish-rule.ts → publish_rule() RPC → DB 갱신.
-#
-# 접근 패턴 (shared/llm.ts callRule):
-#   body.templates[promptKey]   ← 신규
-#   body[promptKey]             ← 레거시 호환 (Phase B.2d 전환기)
+-- 023_reseed_r10_06_segment_classifier.sql
+-- R_10.06 PromptTemplates 시드를 segment_classifier 템플릿 추가본으로 갱신 (V-004).
+--
+-- 변경 요지:
+--   - 기존 3 템플릿(sensor_13_fields·sensor_screen_classify·voice_studio_survey_build) 유지
+--   - 신규 segment_classifier 추가 — Claude Haiku 분류기 (axis_json → segment + confidence)
+--
+-- 호출부:
+--   V_Voice/backend/shared/segments.ts: deterministic이 'other' 반환 시 callRule('R_10.06_PromptTemplates','segment_classifier',{axis_json}) LLM fallback.
+--   비용 최소화 — Haiku 사용 + axis가 의미 있는 데이터일 때만 fire.
+--
+-- 이전: 018·022 마이그레이션이 R_10.06 시드. 본 마이그레이션이 active 갱신.
 
-rule_id: R_10.06_PromptTemplates
+DO $migration$
+BEGIN
+  PERFORM publish_rule(
+    'R_10.06_PromptTemplates',
+    '2026-05-20.001',
+    $yaml$rule_id: R_10.06_PromptTemplates
 version: 1
-description: 'LLM 호출에 사용하는 시스템·user 프롬프트 템플릿 (Sensor 13 필드 추출·화면 분류·Studio 빌드)'
+description: 'LLM 호출 시스템·user 프롬프트 (Sensor 13 필드·화면 분류·Studio 빌드·Segment 분류기)'
 harness: 2
 v1_v2: v1
 status: active
-last_modified: '2026-05-19T00:00:00Z'
+last_modified: '2026-05-20T00:00:00Z'
 modified_by: 'weaver@gridge.co.kr'
 
 templates:
@@ -23,10 +31,6 @@ templates:
     model: claude-opus-4-7
     max_tokens: 2000
     temperature: 0
-    # 컬럼 매핑은 normalized_fields 테이블 (S_40.04)과 1:1.
-    # 13 필드 = deal_id · deal_code · company_name · contact_name · contact_phone
-    #         · contact_email · amount · currency · stage · product_model
-    #         · region · date_created · responsible_dealer
     system: |
       당신은 HD건설기계의 러시아 영업 깔때기 데이터 추출 어시스턴트이다.
       Bitrix24 CRM 스크린샷 1~5장을 받아 동일 deal의 13개 표준 필드를 JSON으로 반환한다.
@@ -97,11 +101,9 @@ templates:
 
   segment_classifier:
     id: R_10.06.004
-    model: claude-haiku-4-5-20251001   # 분류 단일 — 작은 모델로도 충분
+    model: claude-haiku-4-5-20251001
     max_tokens: 200
     temperature: 0
-    # PRD-02 V-004: deterministic 룰(R_10.05 voice_segment) 매칭 실패('other') 시 LLM 보조.
-    # 호출부에서 {axis_json} 치환.
     system: |
       당신은 HD건설기계 영업 segment 분류기다.
       6 axis 응답 데이터를 보고 가장 적합한 segment 1개를 반환한다.
@@ -126,3 +128,10 @@ multi_image_guide:
   max_images: 5
   ordering: chronological
   diversification: true
+$yaml$,
+    NULL,
+    'system_migration',
+    '023 — R_10.06 reseed: segment_classifier (Haiku, V-004 LLM fallback) 추가'
+  );
+END
+$migration$;

@@ -43,7 +43,7 @@
 | Admin Dealer 계정 발급·목록·폐기 Edge Functions | `backend/functions/dealer-tokens-{issue,list,revoke}/index.ts` |
 | Admin Dealer 계정 UI (gridge_admin 전용 · 발급 폼·QR·목록·딜러별 응답 수) | `../S_Sensor/admin/app/voice/dealers/page.tsx` |
 | voice_dealer_tokens 운영 메타 (label·issued_by) | `../C_Common/supabase/migrations/017_dealer_tokens_meta.sql` |
-| 서버 측 deterministic segment 매칭 (R_10.05 DB 로드 + harness2 lib + inline fallback) | `backend/shared/segments.ts` |
+| 서버 측 segment 매칭 — R_10.05 DB → R_10.06.segment_classifier LLM 보조 (V-004) → inline fallback 3단계 | `backend/shared/segments.ts` |
 | Lead scoring (R_10.01·.02·.05 DB 로드 + lib *Core + leads UPDATE + dealer_outputs INSERT) | `backend/shared/lead_scoring.ts` |
 | 공통 helpers (errors·db·hash·env·idempotency·logger) | `backend/shared/*.ts` (S_Sensor 재export) |
 | Visitor PWA (단일 HTML · Service Worker · IndexedDB · 옵트인 명함) | `visitor/index.html` · `visitor/sw.js` · `visitor/manifest.webmanifest` |
@@ -113,3 +113,4 @@ RLS: service_role 전권 / `is_hd_admin()` read.
 | 2026-05-19 | v0.6 — Phase D.3 scoring 이전: `shared/lead_scoring.ts` (R_10.01·.02·.05 DB 로드 + lib *Core + leads UPDATE + dealer_outputs INSERT). responses-receive가 save 후 호출. `021_disable_trigger_scoring.sql`이 trigger의 `PERFORM score_lead` 제거. NF-P01 hot reload 완전 실 동작. |
 | 2026-05-19 | v0.7 — Phase F (V-009 서버 Playbook 갱신): `022_seed_r10_07_dealer_output.sql`로 R_10.07 DB 시드. `lead_scoring.ts`가 R_10.07 로드 후 segment lookup → dealer_outputs.{title·weapons·pitch·models·next_action} 풀 payload 채움 (이전: title만). `dealer-playbook` Edge Function (Bearer JWT + lead_id 소유권 검증 + active output 조회). responses-receive 응답에 lead_id 포함 (단말 fetch 용이). 다음: Phase E — dealer/index.html이 fetch한 playbook 표시 (현재 inline). |
 | 2026-05-20 | v0.8 — Phase E (dealer fetch wiring): dealer/index.html이 응답 송출 후 GET /dealer-playbook?lead_id=X로 server Playbook fetch → renderResult가 inline 대신 server 페이로드 표시. 실패 시 inline fallback(오프라인 부스 정상). 'live' 배지로 server fetch 표시. state.{pendingIdemKey, serverPlaybook, serverPlaybookSource} 추적, navReset 시 리셋. R_10.07 hot reload 사이클이 부스 단말까지 닫힘. |
+| 2026-05-20 | v0.9 — V-004 segment LLM fallback: R_10.06.segment_classifier (Claude Haiku) 템플릿 추가 (`023_reseed_r10_06_segment_classifier.sql`). segments.ts classifyServerSide가 deterministic이 'other' 반환 + axis.usage 있을 때만 LLM 보조 호출 — 비용 게이트. method 값 'server_llm' 추가. LLM 실패 시 deterministic 결과 유지. |
