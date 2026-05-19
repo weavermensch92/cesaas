@@ -80,6 +80,7 @@
     .pb{border:1px solid var(--hd-heritage);background:#e8f7eb;border-radius:12px;padding:18px;}
     .pb h2{margin:0 0 6px;font:700 20px var(--hd-font-display);color:var(--hd-prosperity);}
     .pb .seg{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:var(--hd-trust);color:#fff;font-size:12px;font-weight:600;letter-spacing:0.02em;}
+    .pb .pb-live{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:var(--hd-prosperity);color:#fff;font-size:10px;font-weight:700;letter-spacing:0.04em;margin-left:6px;text-transform:uppercase;cursor:help;}
     .pb h3{font:600 14px var(--hd-font);color:var(--hd-trust);margin:14px 0 4px;text-transform:uppercase;letter-spacing:0.04em;}
     .pb ul{margin:0;padding-left:18px;}
     .pb li{margin-bottom:4px;font-size:14px;}
@@ -184,6 +185,7 @@
       saved_offline:'Сохранено локально (offline)',
       prio:{p1:'P1 · Высш. приоритет', p2:'P2 · Срочно', p3:'P3 · Стандарт', p4:'P4 · Низк.', p5:'P5 · Только в CRM'},
       pb_weapons:'Инструменты продаж', pb_pitch:'Пример речи', pb_models:'Модели', pb_next:'Следующий шаг',
+      pb_live:'live', pb_live_hint:'Свежий Playbook с сервера (R_10.07)',
       consent_q1:'Подписка на дальнейшие обновления',
       consent_q2:'Согласие на обработку данных (обязательно)',
       help_btn:'Помощь',
@@ -237,6 +239,7 @@
       saved_offline:'Saved locally (offline)',
       prio:{p1:'P1 · Top priority', p2:'P2 · Urgent', p3:'P3 · Standard', p4:'P4 · Low', p5:'P5 · CRM only'},
       pb_weapons:'Sales weapons', pb_pitch:'Pitch example', pb_models:'Related models', pb_next:'Next action',
+      pb_live:'live', pb_live_hint:'Fresh Playbook from server (R_10.07)',
       consent_q1:'Subscribe to future updates',
       consent_q2:'Data processing consent (required)',
       help_btn:'Help',
@@ -290,6 +293,7 @@
       saved_offline:'오프라인 저장됨',
       prio:{p1:'P1 · 최고 우선', p2:'P2 · 긴급', p3:'P3 · 표준', p4:'P4 · 낮음', p5:'P5 · CRM 갱신만'},
       pb_weapons:'영업 무기', pb_pitch:'멘트 시안', pb_models:'관련 모델', pb_next:'다음 단계',
+      pb_live:'live', pb_live_hint:'서버에서 받은 최신 Playbook (R_10.07)',
       consent_q1:'향후 업데이트 수신 동의',
       consent_q2:'개인정보 처리 동의 (필수)',
       help_btn:'도움말',
@@ -590,6 +594,11 @@
     history:null,              // { loading, error, rows }
     companies:[],              // target_company datalist suggestions (최근 사용 순 distinct)
     result:null,
+    // Phase E — 서버 발급 Playbook. drainQueue 후 fetchServerPlaybook이 채움.
+    // null이면 inline PLAYBOOKS fallback (오프라인·콜드스타트 부스 정상 운영).
+    pendingIdemKey:null,       // 가장 최근 큐잉된 idempotency_key (drain 후 응답과 매칭)
+    serverPlaybook:null,       // adaptServerPlaybook(body.playbook) 결과 — renderResult가 우선 사용
+    serverPlaybookSource:null, // 'fetch' | null. UI에 'live R_10.07' 표시
     queueCount:0,
     online: navigator.onLine,
     token: null,
@@ -725,8 +734,18 @@
     for (const it of items) {
       try {
         await queueUpdate(it.id, { status:'sending', attempts: (it.attempts||0)+1 });
-        await postOne(it);
+        const body = await postOne(it);
         await queueUpdate(it.id, { status:'done', completed_at: new Date().toISOString() });
+
+        // Phase E — 현재 결과 화면이 이 idempotency_key의 응답이면 server Playbook으로 업그레이드.
+        // 다른 응답이 큐에 있는 경우는 skip (state.result는 가장 최근 한 건만 표시).
+        if (
+          state.showResult &&
+          body && body.lead_id &&
+          state.pendingIdemKey === (it.idempotency_key || it.id)
+        ) {
+          tryUpgradePlaybook(body.lead_id).catch(() => {});
+        }
       } catch (e) {
         if (e && e.terminal) {
           await queueUpdate(it.id, { status:'failed', last_error: String(e.message || e) });
@@ -739,6 +758,60 @@
     refreshQueueBadge();
   }
   setInterval(drainQueue, 30 * 1000);
+
+  // ============================================================================
+  // Phase E — server Playbook fetch (R_10.07 hot reload 부스 종착).
+  // 서버는 lead_id에 해당하는 active dealer_outputs 반환.
+  // 실패 시 inline PLAYBOOKS fallback — 부스 끊김 방지.
+  // ============================================================================
+  async function tryUpgradePlaybook(leadId){
+    if (!API_BASE || !state.token || !leadId) return;
+    try {
+      const res = await fetch(`${API_BASE}/dealer-playbook?lead_id=${encodeURIComponent(leadId)}`, {
+        headers: { 'Authorization': `Bearer ${state.token}` },
+      });
+      if (!res.ok) return;
+      const body = await res.json();
+      const pb = body && body.playbook;
+      if (!pb) return;
+      state.serverPlaybook = adaptServerPlaybook(pb);
+      state.serverPlaybookSource = 'fetch';
+      if (state.showResult) render();
+    } catch (_e) {
+      // silent — inline fallback 그대로 사용
+    }
+  }
+
+  // 서버 shape → renderResult가 기대하는 inline shape로 변환.
+  // 서버: { title (string ko/ru 중 하나), weapons:{ko,ru,items}, pitch:{ko,ru} (배열), models, next_action:{ko,ru} }
+  // 인라인: { title:{ru,en,ko}, weapons:{ru,en,ko}, pitch:{ru,en,ko} (단일 문장), models, next:{ru,en,ko} }
+  function adaptServerPlaybook(pb){
+    const titleStr = typeof pb.title === 'string' ? pb.title : '';
+    const w = pb.weapons || {};
+    const p = pb.pitch || {};
+    const na = pb.next_action || {};
+    const ru = (k) => (Array.isArray(w[k]) ? w[k] : []);
+    const firstSentence = (arr) => (Array.isArray(arr) && arr.length > 0 ? String(arr[0]) : '');
+    return {
+      title:   { ru: titleStr, en: titleStr, ko: titleStr },
+      weapons: {
+        ru: ru('ru'),
+        en: (Array.isArray(w.en) && w.en.length ? w.en : ru('ru')),
+        ko: ru('ko'),
+      },
+      pitch:   {
+        ru: firstSentence(p.ru),
+        en: firstSentence(p.en) || firstSentence(p.ru),
+        ko: firstSentence(p.ko),
+      },
+      models:  Array.isArray(pb.models) ? pb.models : [],
+      next:    {
+        ru: typeof na.ru === 'string' ? na.ru : '',
+        en: typeof na.en === 'string' ? na.en : (typeof na.ru === 'string' ? na.ru : ''),
+        ko: typeof na.ko === 'string' ? na.ko : '',
+      },
+    };
+  }
 
   async function refreshQueueBadge(){
     state.queueCount = await queueCount().catch(() => 0);
@@ -958,6 +1031,11 @@
     const id = crypto.randomUUID();
     await queueAdd({ idempotency_key: id, payload });
 
+    // Phase E — drain 후 응답을 이 result 화면과 매칭하기 위한 키. 새 응답마다 리셋.
+    state.pendingIdemKey = id;
+    state.serverPlaybook = null;
+    state.serverPlaybookSource = null;
+
     // 방금 입력한 회사명을 즉시 suggestions 최상단에 반영 (서버 round-trip 없이도 동작)
     const justCompany = payload.target_company;
     if (justCompany) {
@@ -986,13 +1064,18 @@
 
   function renderResult(){
     const r = state.result;
-    const pb = PLAYBOOKS[r.segment] || PLAYBOOKS.other;
+    // Phase E — server fetched playbook (R_10.07 hot reload) 우선, 없으면 inline fallback.
+    const pb = state.serverPlaybook ?? (PLAYBOOKS[r.segment] || PLAYBOOKS.other);
+    const liveBadge = state.serverPlaybookSource === 'fetch'
+      ? `<span class="pb-live" title="${escapeAttr(t('pb_live_hint'))}">${escapeText(t('pb_live'))}</span>`
+      : '';
     const prioLbl = t('prio')[r.priority] || r.priority.toUpperCase();
     const target = state.answers['_target_company'] || '';
     root.innerHTML = `
       <div class="card pb">
         <span class="prio ${r.priority}">${prioLbl}</span>
         <span class="seg">${r.segment.toUpperCase()}</span>
+        ${liveBadge}
         <h2>${tx(pb.title)}</h2>
         ${target ? `<p style="margin:6px 0 0;font-weight:600;color:var(--hd-discovery)">${escapeText(target)}</p>` : ''}
         <p class="ghost">${t('result_sub')}</p>
@@ -1020,6 +1103,7 @@
     `;
     document.getElementById('navReset').onclick = () => {
       state.step = 0; state.answers = {}; state.showResult = false; state.result = null;
+      state.pendingIdemKey = null; state.serverPlaybook = null; state.serverPlaybookSource = null;
       render();
     };
   }

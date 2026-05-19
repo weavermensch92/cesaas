@@ -33,7 +33,7 @@
 |---|---|
 | surveys·survey_questions·responses·response_answers + 시드 31문항 | `../C_Common/supabase/migrations/003_voice.sql` |
 | save_response RPC (responses + answers 트랜잭션) | `../C_Common/supabase/migrations/003_voice.sql` |
-| Dealer v3 단일 HTML (오프라인·IndexedDB·R_10.05·R_10.07 inline + ru/en/ko 4쪽 첫 접속 튜토리얼) | `dealer/index.html` |
+| Dealer v3 단일 HTML (오프라인·IndexedDB·R_10.05·R_10.07 inline + ru/en/ko 4쪽 튜토리얼 + 응답 후 server Playbook fetch + live 배지) | `dealer/index.html` |
 | 응답 수신 Edge Function — Supabase 진입점 (Deno.serve 1줄) | `backend/functions/responses-receive/index.ts` |
 | 응답 수신 핸들러 — Bearer/Anonymous + idempotency + segment 재검증 + scoreLead. Supabase Edge + Fly.io Edge fallback이 양쪽에서 import | `backend/functions/responses-receive/handler.ts` |
 | Dealer Bearer JWT 검증 + jti revoke 차단 + Anonymous device_id | `backend/shared/bearer.ts` |
@@ -112,3 +112,4 @@ RLS: service_role 전권 / `is_hd_admin()` read.
 | 2026-05-19 | v0.5.4 — /voice/responses 검색·필터 확장: voice-responses Edge에 `target_company` ilike(부분 일치) + `dealer_id` eq 파라미터, Admin UI에 검색 바 (350ms debounce) + 활성 필터 표시. |
 | 2026-05-19 | v0.6 — Phase D.3 scoring 이전: `shared/lead_scoring.ts` (R_10.01·.02·.05 DB 로드 + lib *Core + leads UPDATE + dealer_outputs INSERT). responses-receive가 save 후 호출. `021_disable_trigger_scoring.sql`이 trigger의 `PERFORM score_lead` 제거. NF-P01 hot reload 완전 실 동작. |
 | 2026-05-19 | v0.7 — Phase F (V-009 서버 Playbook 갱신): `022_seed_r10_07_dealer_output.sql`로 R_10.07 DB 시드. `lead_scoring.ts`가 R_10.07 로드 후 segment lookup → dealer_outputs.{title·weapons·pitch·models·next_action} 풀 payload 채움 (이전: title만). `dealer-playbook` Edge Function (Bearer JWT + lead_id 소유권 검증 + active output 조회). responses-receive 응답에 lead_id 포함 (단말 fetch 용이). 다음: Phase E — dealer/index.html이 fetch한 playbook 표시 (현재 inline). |
+| 2026-05-20 | v0.8 — Phase E (dealer fetch wiring): dealer/index.html이 응답 송출 후 GET /dealer-playbook?lead_id=X로 server Playbook fetch → renderResult가 inline 대신 server 페이로드 표시. 실패 시 inline fallback(오프라인 부스 정상). 'live' 배지로 server fetch 표시. state.{pendingIdemKey, serverPlaybook, serverPlaybookSource} 추적, navReset 시 리셋. R_10.07 hot reload 사이클이 부스 단말까지 닫힘. |
