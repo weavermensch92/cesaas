@@ -64,7 +64,7 @@ jobs:
       - name: Deploy Edge Functions
         run: |
           cd S_Sensor/backend       && supabase functions deploy --project-ref "$REF" --no-verify-jwt captures-chunks captures-finalize normalize-worker admin-captures admin-clusters admin-field-edit admin-normalize-trigger
-          cd ../../V_Voice/backend  && supabase functions deploy --project-ref "$REF" --no-verify-jwt responses-receive voice-responses voice-aggregates voice-csv-export studio-build-survey studio-deploy
+          cd ../../V_Voice/backend  && supabase functions deploy --project-ref "$REF" --no-verify-jwt responses-receive voice-responses voice-aggregates voice-csv-export studio-build-survey studio-deploy surveys-get
           cd ../../U_Unified/backend && supabase functions deploy --project-ref "$REF" --no-verify-jwt admin-leads admin-leads-detail
           cd ../../T_Test/backend   && supabase functions deploy --project-ref "$REF" --no-verify-jwt admin-test-summary
 
@@ -89,7 +89,7 @@ jobs:
       - name: Deploy Edge Functions
         run: |
           cd S_Sensor/backend       && supabase functions deploy --project-ref "$REF" --no-verify-jwt captures-chunks captures-finalize normalize-worker admin-captures admin-clusters admin-field-edit admin-normalize-trigger
-          cd ../../V_Voice/backend  && supabase functions deploy --project-ref "$REF" --no-verify-jwt responses-receive voice-responses voice-aggregates voice-csv-export studio-build-survey studio-deploy
+          cd ../../V_Voice/backend  && supabase functions deploy --project-ref "$REF" --no-verify-jwt responses-receive voice-responses voice-aggregates voice-csv-export studio-build-survey studio-deploy surveys-get
           cd ../../U_Unified/backend && supabase functions deploy --project-ref "$REF" --no-verify-jwt admin-leads admin-leads-detail
           cd ../../T_Test/backend   && supabase functions deploy --project-ref "$REF" --no-verify-jwt admin-test-summary
 
