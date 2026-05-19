@@ -10,7 +10,7 @@
  */
 
 import { requireAdmin } from 'shared/admin_auth.ts';
-import { ApiError, toJsonResponse } from 'shared/errors.ts';
+import { ApiError, toJsonResponse , corsPreflight } from 'shared/errors.ts';
 import { db } from 'shared/db.ts';
 import { requestLogger } from 'shared/logger.ts';
 import { sha256Hex } from 'shared/hash.ts';
@@ -28,6 +28,7 @@ const COLUMNS = [
 const PII_COLS = new Set(['contact_name', 'contact_phone', 'contact_email']);
 
 Deno.serve(async (req: Request) => {
+  const cors = corsPreflight(req); if (cors) return cors;
   const log = requestLogger(req, { route: '/voice-csv-export' });
   try {
     if (req.method !== 'GET') throw new ApiError('bad_request', 'GET only');

@@ -30,8 +30,9 @@ file_size_limit = "50MiB"
 
 [auth]
 enabled = true
+# 로컬 dev 전용 — 원격 운영 URL은 Supabase Dashboard 또는 Management API로 관리 (013 마이그레이션 이후 hd-poc-admin.fly.dev).
 site_url = "http://localhost:3000"
-additional_redirect_urls = ["http://localhost:3000/auth/callback"]
+additional_redirect_urls = ["http://localhost:3000/auth/callback", "https://hd-poc-admin.fly.dev/**"]
 jwt_expiry = 3600
 enable_refresh_token_rotation = true
 refresh_token_reuse_interval = 10

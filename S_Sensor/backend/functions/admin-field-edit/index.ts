@@ -15,7 +15,7 @@
  */
 
 import { requireAdmin } from 'shared/admin_auth.ts';
-import { ApiError, jsonResponse, toJsonResponse } from 'shared/errors.ts';
+import { ApiError, jsonResponse, toJsonResponse , corsPreflight } from 'shared/errors.ts';
 import { db } from 'shared/db.ts';
 import { requestLogger } from 'shared/logger.ts';
 
@@ -27,6 +27,7 @@ interface EditBody {
 }
 
 Deno.serve(async (req: Request) => {
+  const cors = corsPreflight(req); if (cors) return cors;
   const log = requestLogger(req, { route: '/admin-field-edit' });
   try {
     if (req.method !== 'PATCH' && req.method !== 'POST') {

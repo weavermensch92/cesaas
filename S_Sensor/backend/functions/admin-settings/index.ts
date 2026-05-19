@@ -8,7 +8,7 @@
  */
 
 import { requireAdmin } from 'shared/admin_auth.ts';
-import { ApiError, jsonResponse, toJsonResponse } from 'shared/errors.ts';
+import { ApiError, jsonResponse, toJsonResponse , corsPreflight } from 'shared/errors.ts';
 import { db } from 'shared/db.ts';
 import { requestLogger } from 'shared/logger.ts';
 
@@ -19,6 +19,7 @@ interface KeyMeta {
 }
 
 Deno.serve(async (req: Request) => {
+  const cors = corsPreflight(req); if (cors) return cors;
   const log = requestLogger(req, { route: '/admin-settings' });
   try {
     const admin = await requireAdmin(req);

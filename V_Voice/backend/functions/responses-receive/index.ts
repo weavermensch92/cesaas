@@ -19,7 +19,7 @@
  */
 
 import { resolveRespondent } from 'shared/bearer.ts';
-import { ApiError, jsonResponse, toJsonResponse } from 'shared/errors.ts';
+import { ApiError, jsonResponse, toJsonResponse , corsPreflight } from 'shared/errors.ts';
 import { sha256Hex } from 'shared/hash.ts';
 import { lookupIdempotency, recordIdempotency } from 'shared/idempotency.ts';
 import { db } from 'shared/db.ts';
@@ -54,6 +54,7 @@ interface ResponsePayload {
 }
 
 Deno.serve(async (req: Request) => {
+  const cors = corsPreflight(req); if (cors) return cors;
   const log = requestLogger(req, { route: ROUTE });
   try {
     if (req.method !== 'POST') throw new ApiError('bad_request', 'POST only');

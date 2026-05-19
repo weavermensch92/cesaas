@@ -21,7 +21,7 @@
 
 import { verifyHmac } from 'shared/hmac.ts';
 import { lookupIdempotency, recordIdempotency } from 'shared/idempotency.ts';
-import { ApiError, jsonResponse, toJsonResponse } from 'shared/errors.ts';
+import { ApiError, jsonResponse, toJsonResponse , corsPreflight } from 'shared/errors.ts';
 import { sha256Hex } from 'shared/hash.ts';
 import { db } from 'shared/db.ts';
 import { requestLogger } from 'shared/logger.ts';
@@ -48,6 +48,7 @@ interface CaptureRow {
 }
 
 Deno.serve(async (req: Request) => {
+  const cors = corsPreflight(req); if (cors) return cors;
   const log = requestLogger(req, { route: ROUTE });
   try {
     if (req.method !== 'POST') {
