@@ -3,7 +3,7 @@
 > **모듈**: 채널 2 (Dealer 인터뷰 · Visitor PWA · Admin · Studio).
 > **상위**: `../CLAUDE.md`
 > **하네스 룰 원본**: `../../../hd-hyundai-poc-harness-v1/hd-hyundai-poc/V_Voice/CLAUDE.md`
-> **v0.4 상태**: DB(003+009+010) + Dealer v3 + Visitor PWA + 응답 수신 + V_30 Admin + **V_60 Studio (자연어 → 설문 빌드·배포)**.
+> **v0.5 상태**: v0.4 + **V_30.04 Admin Dealer 계정 발급 UI (issue·list·revoke + QR + 응답 카운트)**.
 
 ---
 
@@ -33,9 +33,12 @@
 |---|---|
 | surveys·survey_questions·responses·response_answers + 시드 31문항 | `../C_Common/supabase/migrations/003_voice.sql` |
 | save_response RPC (responses + answers 트랜잭션) | `../C_Common/supabase/migrations/003_voice.sql` |
-| Dealer v3 단일 HTML (오프라인·IndexedDB·R_10.05·R_10.07 inline) | `dealer/index.html` |
+| Dealer v3 단일 HTML (오프라인·IndexedDB·R_10.05·R_10.07 inline + ru/en/ko 4쪽 첫 접속 튜토리얼) | `dealer/index.html` |
 | 응답 수신 Edge Function (Bearer/Anonymous + idempotency + 서버측 segment 재검증) | `backend/functions/responses-receive/index.ts` |
-| Dealer Bearer JWT 검증 + Anonymous device_id | `backend/shared/bearer.ts` |
+| Dealer Bearer JWT 검증 + jti revoke 차단 + Anonymous device_id | `backend/shared/bearer.ts` |
+| Admin Dealer 계정 발급·목록·폐기 Edge Functions | `backend/functions/dealer-tokens-{issue,list,revoke}/index.ts` |
+| Admin Dealer 계정 UI (gridge_admin 전용 · 발급 폼·QR·목록·딜러별 응답 수) | `../S_Sensor/admin/app/voice/dealers/page.tsx` |
+| voice_dealer_tokens 운영 메타 (label·issued_by) | `../C_Common/supabase/migrations/017_dealer_tokens_meta.sql` |
 | 서버 측 deterministic segment 매칭 (R_10.05 미러) | `backend/shared/segments.ts` |
 | 공통 helpers (errors·db·hash·env·idempotency·logger) | `backend/shared/*.ts` (S_Sensor 재export) |
 | Visitor PWA (단일 HTML · Service Worker · IndexedDB · 옵트인 명함) | `visitor/index.html` · `visitor/sw.js` · `visitor/manifest.webmanifest` |
@@ -97,3 +100,5 @@ RLS: service_role 전권 / `is_hd_admin()` read.
 | 2026-05-18 | v0.2 — `009_voice_visitor.sql`(survey_v1_visitor 18문항·옵트인 컬럼·visitor_quota RPC) + `visitor/{index.html,sw.js,manifest.webmanifest}` (PWA·IndexedDB·honeypot) + `responses-receive` 확장 (opt-in 연락처·24h quota) |
 | 2026-05-18 | v0.3 — V_30 Admin: 3 Edge Functions (voice-responses·voice-aggregates·voice-csv-export) + Next.js `/voice/responses`·`/voice/aggregates` + `SectionNav` |
 | 2026-05-18 | v0.4 — V_60 Studio: `010_studio.sql`(studio_drafts·deploy_survey RPC) + 2 Edge Functions (studio-build-survey·studio-deploy) + Next.js `/studio` + `shared/{llm,rules}` re-export |
+| 2026-05-19 | v0.5 — V_30.04 Admin Dealer 계정 발급: `017_dealer_tokens_meta.sql`(label·issued_by) + 3 Edge Functions (`dealer-tokens-{issue,list,revoke}`) + Next.js `/voice/dealers` (QR 인라인) + `bearer.ts` jti revoke 차단 강화 |
+| 2026-05-19 | v0.5.1 — Dealer 첫 접속 튜토리얼 4쪽 (ru/en/ko) 추가. 헤더 `?` 버튼으로 재호출. `localStorage.hd_dealer_tutorial_seen_v1`로 1회 자동 노출. |

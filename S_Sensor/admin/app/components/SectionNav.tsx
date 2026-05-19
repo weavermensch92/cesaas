@@ -13,6 +13,7 @@ interface Item {
 const ITEMS: Item[] = [
   { href: '/leads',             label: 'Leads',              match: (p) => p === '/leads' || p.startsWith('/leads/') },
   { href: '/',                  label: 'Captures',           match: (p) => p === '/' || p.startsWith('/clusters') },
+  { href: '/voice/dealers',     label: 'Voice · Dealers',    match: (p) => p.startsWith('/voice/dealers'), adminOnly: true },
   { href: '/voice/responses',   label: 'Voice · Responses',  match: (p) => p.startsWith('/voice/responses') },
   { href: '/voice/aggregates',  label: 'Voice · Insight',    match: (p) => p.startsWith('/voice/aggregates') },
   { href: '/studio',            label: 'Studio · V_60',      match: (p) => p.startsWith('/studio') },
