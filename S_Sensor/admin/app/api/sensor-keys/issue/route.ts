@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const buf = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+    const buf = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE', compressionOptions: { level: 6 } });
     const fname = `hd-sensor-${dealer_id || 'global'}-${key_id}.zip`;
 
     return new NextResponse(buf, {
