@@ -57,7 +57,9 @@
 | Classification (segment·priority·screen_kind) | `r_10_rules/R_10.05_Classification.yaml` |
 | Dealer Playbook | `r_10_rules/R_10.07_DealerOutput.yaml` |
 | Survey Build Prompt (Studio) | `r_10_rules/R_10.08_SurveyBuildPrompt.yaml` |
+| DataPointToQuestion (Studio 추가 질문 보강) | `r_10_rules/R_10.09_DataPointToQuestion.yaml` |
 | Lead Scoring 가중치 | `r_10_rules/R_10.01_LeadScoring.yaml` |
+| Lead Quality 등급 (A/B/C/D) | `r_10_rules/R_10.02_LeadQuality.yaml` |
 
 ---
 
@@ -74,7 +76,7 @@
 | `supabase/migrations/005_runtime.sql` | (R_Runtime 라운드) |
 | `packages/core/src/*` | ✓ 8 modules |
 | `packages/design/src/*` | ✓ CSS + i18n |
-| `r_10_rules/*.yaml` | ✓ 5 룰 스텁 |
+| `r_10_rules/*.yaml` | ✓ 7 룰 시드 (R_10.01·.02·.05·.06·.07·.08·.09) |
 
 ---
 
@@ -207,3 +209,4 @@ export function CapturesPage({ lang }: { lang: Lang }) {
 | 시점 | 변경 |
 |---|---|
 | 2026-05-18 | v0.1 — 골격 (8 core modules · 5 R_10 stubs · 2 base migrations · 디자인 패키지) |
+| 2026-05-19 | v0.2 — R_10.02 LeadQuality (A/B/C/D 임계 80/50/25) + R_10.09 DataPointToQuestion (Studio 추가 질문 보강 프롬프트) YAML 시드. 하네스 2 본질 R-002·R-009 PRD-03 § 4 충족 (Phase A — lib·publish·hot reload는 Phase B~D 후속) |

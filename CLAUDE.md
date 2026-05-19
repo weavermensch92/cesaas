@@ -81,12 +81,14 @@ hd-hyundai-poc/
     │           │   └── styles.css
     │           └── i18n/
     │               └── index.ts
-    └── r_10_rules/                     R_10 YAML 스텁 (R_Runtime 이관 예정)
+    └── r_10_rules/                     R_10 YAML 시드 (R_Runtime 이관 예정)
         ├── R_10.01_LeadScoring.yaml
+        ├── R_10.02_LeadQuality.yaml
         ├── R_10.05_Classification.yaml
         ├── R_10.06_PromptTemplates.yaml
         ├── R_10.07_DealerOutput.yaml
-        └── R_10.08_SurveyBuildPrompt.yaml
+        ├── R_10.08_SurveyBuildPrompt.yaml
+        └── R_10.09_DataPointToQuestion.yaml
 ```
 
 ---
