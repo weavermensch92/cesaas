@@ -34,6 +34,12 @@ COPY V_Voice/visitor           S_Sensor/admin/public/visitor
 # 디자인 와이어프레임 (스펙 비교용 — meeting_brief_2026_05_14 추출)
 COPY _preview                  S_Sensor/admin/public/_design
 
+# Sensor Extension 자산 + 설치 스크립트 (API 라우트가 ZIP 동적 생성 시 읽음)
+COPY S_Sensor/extension        S_Sensor/admin/public/_ext-template
+
+# Sensor Extension 자산 + 설치 스크립트 (API 라우트가 ZIP 생성 시 읽음)
+COPY S_Sensor/extension        S_Sensor/admin/public/_ext-template
+
 ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
