@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gridge Voice — 4 도구 와이어프레임</title>
+
+<link rel="stylesheet" as="style" crossorigin
+  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300..700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #FAFAFA;
+    --fg: #0A0A0A;
+    --fg-2: #525252;
+    --fg-3: #A3A3A3;
+    --line: #E5E5E5;
+    --line-2: #F0F0F0;
+    --panel: #FFFFFF;
+    --code-bg: #F5F5F5;
+
+    --studio: #8B5CF6;
+    --dealer: #2563EB;
+    --visitor: #059669;
+    --insight: #D97706;
+
+    --sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+    --mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--line-2) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-2) 1px, transparent 1px);
+    background-size: 32px 32px;
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .container { max-width: 1320px; margin: 0 auto; padding: 32px 40px; }
+
+  /* ─────────── Header ─────────── */
+  .doc-header {
+    margin-bottom: 36px;
+    padding-bottom: 22px;
+    border-bottom: 2px solid var(--fg);
+  }
+  .doc-eyebrow {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--fg-2); letter-spacing: 0.06em;
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+  .doc-title {
+    font-size: 32px; font-weight: 700; letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .doc-sub {
+    font-family: var(--mono); font-size: 12px; color: var(--fg-2);
+  }
+
+  /* ─────────── Section ─────────── */
+  .section {
+    margin-bottom: 48px;
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .section-num {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--fg-3); letter-spacing: 0.06em;
+  }
+  .section-title {
+    font-size: 18px; font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .section-sub {
+    font-size: 13px; color: var(--fg-2);
+    margin-left: auto;
+  }
+
+  /* ─────────── System Diagram ─────────── */
+  .sys-diagram {
+    padding: 32px 24px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+  }
+  .diagram-svg { display: block; margin: 0 auto; }
+
+  .legend {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px dashed var(--line);
+  }
+  .legend-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 14px;
+    border-left: 3px solid;
+  }
+  .legend-item.studio { border-left-color: var(--studio); }
+  .legend-item.dealer { border-left-color: var(--dealer); }
+  .legend-item.visitor { border-left-color: var(--visitor); }
+  .legend-item.insight { border-left-color: var(--insight); }
+  .legend-name {
+    font-size: 13px; font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .legend-role {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--fg-2); letter-spacing: 0.02em;
+  }
+  .legend-desc {
+    font-size: 11px; color: var(--fg-2);
+    margin-top: 2px;
+  }
+
+  /* ─────────── Wireframe Card ─────────── */
+  .wf-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+  }
+  .wf-head {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  .wf-color-strip {
+    width: 3px; align-self: stretch;
+  }
+  .wf-color-strip.studio { background: var(--studio); }
+  .wf-color-strip.dealer { background: var(--dealer); }
+  .wf-color-strip.visitor { background: var(--visitor); }
+  .wf-color-strip.insight { background: var(--insight); }
+
+  .wf-head-info { flex: 1; }
+  .wf-head-num {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--fg-2); letter-spacing: 0.06em;
+    margin-bottom: 2px;
+  }
+  .wf-head-title {
+    font-size: 17px; font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .wf-head-meta {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--fg-2); letter-spacing: 0.02em;
+    text-align: right;
+  }
+
+  .wf-body {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 0;
+  }
+  .wf-screen {
+    background: #FAFAFA;
+    border-right: 1px solid var(--line);
+    min-height: 460px;
+    overflow: hidden;
+    position: relative;
+  }
+  .wf-info {
+    padding: 20px 22px;
+    background: var(--panel);
+  }
+  .wf-info-block {
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .wf-info-block:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+  .wf-info-label {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--fg-2); letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .wf-info-value {
+    font-size: 12px; color: var(--fg);
+    line-height: 1.6;
+  }
+  .wf-info-tags {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    margin-top: 4px;
+  }
+  .wf-tag {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--fg-2);
+    padding: 2px 6px;
+    background: var(--code-bg);
+    letter-spacing: 0.02em;
+  }
+
+  /* ─────────── Studio Wireframe ─────────── */
+  .studio-screen {
+    display: grid;
+    grid-template-columns: 280px 1fr 240px;
+    height: 460px;
+  }
+  .studio-col {
+    border-right: 1px solid var(--line);
+    padding: 14px 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .studio-col:last-child { border-right: none; }
+  .studio-col-head {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--fg-2); letter-spacing: 0.06em;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .studio-chat-thread {
+    display: flex; flex-direction: column; gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+  }
+  .chat-bubble {
+    padding: 8px 11px;
+    font-size: 11px;
+    line-height: 1.5;
+    max-width: 90%;
+  }
+  .chat-bubble.user {
+    background: var(--code-bg);
+    align-self: flex-start;
+  }
+  .chat-bubble.ai {
+    background: var(--studio);
+    color: #FFFFFF;
+    align-self: flex-end;
+  }
+  .chat-bubble.ai .chat-meta {
+    font-family: var(--mono); font-size: 8px;
+    opacity: 0.7; margin-top: 4px;
+    letter-spacing: 0.04em;
+  }
+  .studio-input {
+    margin-top: 10px;
+    padding: 8px 10px;
+    border: 1px solid var(--fg);
+    font-family: var(--mono); font-size: 10px;
+    color: var(--fg-2);
+    background: var(--panel);
+  }
+
+  /* Generated preview */
+  .gen-preview {
+    flex: 1;
+    overflow-y: auto;
+  }
+  .gen-q-card {
+    border: 1px solid var(--line);
+    padding: 10px 12px;
+    background: var(--panel);
+    margin-bottom: 8px;
+  }
+  .gen-q-meta {
+    display: flex; justify-content: space-between;
+    font-family: var(--mono); font-size: 8px;
+    color: var(--fg-2); letter-spacing: 0.04em;
+    margin-bottom: 4px;
+  }
+  .gen-q-text {
+    font-size: 11px; font-weight: 500;
+    margin-bottom: 6px;
+    line-height: 1.4;
+  }
+  .gen-q-opts {
+    display: flex; flex-direction: column; gap: 3px;
+    font-family: var(--mono); font-size: 9px;
+    color: var(--fg-2);
+  }
+  .gen-q-opt {
+    padding: 3px 6px;
+    background: var(--code-bg);
+    border-left: 2px solid var(--studio);
+  }
+  .gen-q-rationale {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed var(--line);
+    font-family: var(--mono); font-size: 8px;
+    color: var(--fg-2);
+    line-height: 1.5;
+  }
+
+  .deploy-bar {
+    display: flex; gap: 6px;
+    padding: 10px;
+    border-top: 1px solid var(--line);
+    background: var(--panel);
+  }
+  .deploy-btn {
+    flex: 1;
+    padding: 7px;
+    text-align: center;
+    font-family: var(--mono); font-size: 10px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+  }
+  .deploy-btn.primary {
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .deploy-btn.secondary {
+    border: 1px solid var(--line);
+    color: var(--fg-2);
+  }
+
+  /* Pool list (right column) */
+  .pool-item {
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    margin-bottom: 6px;
+  }
+  .pool-cat {
+    font-family: var(--mono); font-size: 8px;
+    color: var(--studio); letter-spacing: 0.04em;
+    margin-bottom: 2px;
+  }
+  .pool-title {
+    font-size: 11px; font-weight: 500;
+    line-height: 1.4;
+  }
+  .pool-meta {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--fg-2); margin-top: 4px;
+  }
+
+  /* ─────────── Dealer Wireframe (mini reference of v3) ─────────── */
+  .dealer-screen {
+    display: grid;
+    grid-template-columns: 140px 1fr 220px;
+    height: 460px;
+  }
+  .dealer-col {
+    border-right: 1px solid var(--line);
+    padding: 12px 14px;
+    overflow: hidden;
+  }
+  .dealer-col:last-child { border-right: none; }
+  .dealer-col-head {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--fg-2); letter-spacing: 0.06em;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .seg-mini {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 7px;
+    border: 1px solid var(--line);
+    font-size: 10px;
+    margin-bottom: 3px;
+    cursor: default;
+  }
+  .seg-mini.active { border-color: var(--fg); background: var(--code-bg); }
+  .seg-mini-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .seg-mini-name {
+    font-size: 9px; line-height: 1.3;
+  }
+
+  .dealer-radar {
+    display: flex; align-items: center; justify-content: center;
+    height: 100%;
+  }
+  .dealer-radar svg { max-width: 100%; height: auto; }
+
+  .dealer-iv {
+    display: flex; flex-direction: column;
+    height: 100%;
+  }
+  .dealer-iv-meta {
+    padding: 8px 10px;
+    background: var(--code-bg);
+    border-left: 3px solid var(--visitor);
+    margin-bottom: 10px;
+  }
+  .dealer-iv-row {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--fg-2); letter-spacing: 0.02em;
+    line-height: 1.6;
+  }
+  .dealer-iv-q {
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    margin-bottom: 8px;
+  }
+  .dealer-iv-axis {
+    font-family: var(--mono); font-size: 8px;
+    color: var(--fg-2); margin-bottom: 2px;
+  }
+  .dealer-iv-title {
+    font-size: 11px; font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .dealer-iv-scores {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 3px;
+  }
+  .iv-score-mini {
+    text-align: center;
+    padding: 5px 0;
+    border: 1px solid var(--line);
+    font-family: var(--mono); font-size: 10px;
+  }
+  .iv-score-mini.selected {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+  }
+
+  .dealer-iv-match {
+    padding: 9px 12px;
+    background: var(--code-bg);
+    border-left: 3px solid var(--dealer);
+    margin-top: 6px;
+  }
+  .iv-match-label {
+    font-family: var(--mono); font-size: 8px;
+    color: var(--fg-2); letter-spacing: 0.04em;
+    margin-bottom: 3px;
+  }
+  .iv-match-type-mini {
+    font-size: 12px; font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .iv-match-info {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--dealer);
+  }
+
+  .crm-sync-btn {
+    margin-top: auto;
+    padding: 9px;
+    border: 1px solid var(--fg);
+    text-align: center;
+    font-family: var(--mono); font-size: 10px;
+    background: var(--fg);
+    color: var(--bg);
+    letter-spacing: 0.02em;
+  }
+
+  /* ─────────── Visitor Wireframe (Phone) ─────────── */
+  .visitor-screen {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 24px;
+    padding: 24px;
+    height: 460px;
+    overflow-y: auto;
+  }
+  .phone-frame {
+    width: 290px;
+    height: 540px;
+    background: var(--fg);
+    border-radius: 32px;
+    padding: 10px;
+    box-shadow: 0 0 0 1px var(--line);
+    flex-shrink: 0;
+  }
+  .phone-screen {
+    background: var(--panel);
+    height: 100%;
+    border-radius: 26px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+  .phone-notch {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 18px;
+    background: var(--fg);
+    border-radius: 14px;
+    z-index: 1;
+  }
+  .phone-top {
+    padding: 26px 20px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .phone-brand {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .phone-brand-sub {
+    font-family: var(--mono); font-size: 8px;
+    color: var(--fg-2); letter-spacing: 0.04em;
+    margin-top: 1px;
+  }
+  .phone-progress {
+    margin-top: 8px;
+    height: 2px;
+    background: var(--line);
+    position: relative;
+  }
+  .phone-progress-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 60%;
+    background: var(--visitor);
+  }
+  .phone-progress-text {
+    font-family: var(--mono); font-size: 8px;
+    color: var(--fg-2);
+    margin-top: 3px;
+    text-align: right;
+    letter-spacing: 0.04em;
+  }
+
+  .phone-body {
+    flex: 1;
+    padding: 18px 20px;
+    overflow-y: auto;
+  }
+  .phone-q-num {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--fg-2); letter-spacing: 0.06em;
+    margin-bottom: 6px;
+  }
+  .phone-q-title {
+    font-size: 16px; font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.35;
+    margin-bottom: 18px;
+  }
+  .phone-opt {
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    margin-bottom: 8px;
+    font-size: 13px;
+    cursor: default;
+  }
+  .phone-opt.selected {
+    border-color: var(--visitor);
+    background: rgba(5, 150, 105, 0.06);
+    font-weight: 500;
+  }
+  .phone-bottom {
+    padding: 14px 20px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    gap: 8px;
+  }
+  .phone-btn {
+    flex: 1;
+    padding: 11px;
+    text-align: center;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.04em;
+  }
+  .phone-btn.primary {
+    background: var(--visitor);
+    color: #FFFFFF;
+  }
+  .phone-btn.secondary {
+    border: 1px solid var(--line);
+    color: var(--fg-2);
+  }
+
+  /* Result card (2nd phone) */
+  .phone-result-body {
+    padding: 20px;
+    flex: 1;
+  }
+  .result-eyebrow-mini {
+    font-family: var(--mono); font-size: 8px;
+    color: var(--fg-2); letter-spacing: 0.06em;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .result-headline {
+    font-size: 18px; font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+    line-height: 1.3;
+  }
+  .result-model-box {
+    padding: 14px 16px;
+    background: var(--code-bg);
+    border-left: 3px solid var(--visitor);
+    margin-bottom: 14px;
+  }
+  .result-model-label {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--fg-2); margin-bottom: 4px;
+    letter-spacing: 0.04em;
+  }
+  .result-model-name {
+    font-size: 14px; font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .result-model-reason {
+    font-size: 11px; color: var(--fg-2);
+    line-height: 1.5;
+  }
+  .result-segment {
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .result-segment-tag {
+    display: inline-block;
+    font-family: var(--mono); font-size: 9px;
+    padding: 3px 7px;
+    background: var(--visitor);
+    color: #FFFFFF;
+    letter-spacing: 0.02em;
+  }
+  .result-segment-text {
+    margin-top: 5px;
+    font-size: 11px;
+    color: var(--fg-2);
+  }
+
+  /* ─────────── Insight Wireframe ─────────── */
+  .insight-screen {
+    display: flex;
+    flex-direction: column;
+    height: 460px;
+    overflow: hidden;
+  }
+  .insight-summary-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    border-bottom: 1px solid var(--line);
+  }
+  .summary-cell {
+    padding: 12px 14px;
+    border-right: 1px solid var(--line);
+  }
+  .summary-cell:last-child { border-right: none; }
+  .summary-label {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--fg-2); letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .summary-value {
+    font-size: 22px; font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .summary-delta {
+    font-family: var(--mono); font-size: 9px;
+    color: var(--visitor);
+    margin-top: 2px;
+  }
+  .summary-delta.down { color: var(--insight); }
+
+  .insight-body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    overflow: hidden;
+  }
+  .insight-charts-col {
+    padding: 14px 16px;
+    border-right: 1px solid var(--line);
+    overflow-y: auto;
+  }
+  .insight-dealer-col {
+    padding: 14px 16px;
+    overflow-y: auto;
+  }
+
+  .chart-row-mini {
+    display: grid;
+    grid-template-columns: 90px 1fr 24px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+    font-size: 10px;
+  }
+  .chart-bar-track {
+    height: 8px;
+    background: var(--code-bg);
+    position: relative;
+  }
+  .chart-bar-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    background: var(--insight);
+  }
+  .chart-bar-fill.alt1 { background: var(--dealer); }
+  .chart-bar-fill.alt2 { background: var(--visitor); }
+  .chart-num-mini {
+    font-family: var(--mono); font-size: 10px;
+    text-align: right;
+  }
+
+  .insight-card-mini {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .insight-card-mini:last-child { border-bottom: none; }
+  .card-mini-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .card-mini-title {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .card-mini-sub {
+    font-family: var(--mono); font-size: 8px;
+    color: var(--fg-2); letter-spacing: 0.02em;
+  }
+
+  .dealer-row {
+    display: grid;
+    grid-template-columns: 1fr 30px;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 0;
+    border-bottom: 1px dashed var(--line);
+    font-size: 10px;
+  }
+  .dealer-row:last-child { border-bottom: none; }
+  .dealer-name {
+    font-size: 10px;
+  }
+  .dealer-sub {
+    font-family: var(--mono); font-size: 8px;
+    color: var(--fg-2);
+  }
+  .dealer-grade {
+    font-family: var(--mono); font-size: 11px;
+    text-align: right; font-weight: 600;
+  }
+  .dealer-grade.a { color: var(--visitor); }
+  .dealer-grade.b { color: var(--dealer); }
+  .dealer-grade.c { color: var(--insight); }
+
+  /* General note style */
+  .footer-note {
+    padding: 32px 24px;
+    background: var(--code-bg);
+    border-left: 3px solid var(--fg);
+    margin-top: 36px;
+    font-size: 12px; line-height: 1.7;
+  }
+  .footer-note strong { font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <header class="doc-header">
+    <div class="doc-eyebrow">SYSTEM WIREFRAMES · v0.1</div>
+    <h1 class="doc-title">Gridge Voice — 4 도구 큰 그림</h1>
+    <div class="doc-sub">정기수 (그릿지) · 2026-05-13 · 5/14 이강훈 책임매니저 미팅 자료</div>
+  </header>
+
+  <!-- ─────────── SYSTEM DIAGRAM ─────────── -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <span class="section-title">시스템 다이어그램</span>
+      <span class="section-sub">4 도구 + 데이터 흐름</span>
+    </div>
+
+    <div class="sys-diagram">
+      <svg class="diagram-svg" width="1100" height="380" viewBox="0 0 1100 380" xmlns="http://www.w3.org/2000/svg">
+        <!-- Studio (top) -->
+        <rect x="450" y="20" width="200" height="64" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="2"/>
+        <text x="550" y="42" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="13" font-weight="700">Voice / Studio</text>
+        <text x="550" y="58" text-anchor="middle" font-family="Geist Mono, monospace" font-size="9" fill="#525252">마케팅팀 · 설문 설계</text>
+        <text x="550" y="72" text-anchor="middle" font-family="Geist Mono, monospace" font-size="9" fill="#8B5CF6">AI 에이전트 (Claude API)</text>
+
+        <!-- Survey Schema label on arrow -->
+        <text x="350" y="120" text-anchor="middle" font-family="Geist Mono, monospace" font-size="10" fill="#525252">Survey Schema</text>
+        <text x="750" y="120" text-anchor="middle" font-family="Geist Mono, monospace" font-size="10" fill="#525252">Survey Schema</text>
+
+        <!-- Arrows from Studio to Dealer/Visitor -->
+        <line x1="520" y1="84" x2="270" y2="155" stroke="#0A0A0A" stroke-width="1.2"/>
+        <polygon points="270,155 260,150 265,160" fill="#0A0A0A"/>
+        <line x1="580" y1="84" x2="830" y2="155" stroke="#0A0A0A" stroke-width="1.2"/>
+        <polygon points="830,155 820,160 825,150" fill="#0A0A0A"/>
+
+        <!-- Dealer (mid-left) -->
+        <rect x="160" y="155" width="200" height="64" fill="#FFFFFF" stroke="#2563EB" stroke-width="2"/>
+        <text x="260" y="177" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="13" font-weight="700">Voice / Dealer</text>
+        <text x="260" y="193" text-anchor="middle" font-family="Geist Mono, monospace" font-size="9" fill="#525252">딜러 상담사</text>
+        <text x="260" y="207" text-anchor="middle" font-family="Geist Mono, monospace" font-size="9" fill="#525252">태블릿·노트북</text>
+
+        <!-- Visitor (mid-right) -->
+        <rect x="740" y="155" width="200" height="64" fill="#FFFFFF" stroke="#059669" stroke-width="2"/>
+        <text x="840" y="177" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="13" font-weight="700">Voice / Visitor</text>
+        <text x="840" y="193" text-anchor="middle" font-family="Geist Mono, monospace" font-size="9" fill="#525252">행사 고객 자가 응답</text>
+        <text x="840" y="207" text-anchor="middle" font-family="Geist Mono, monospace" font-size="9" fill="#525252">모바일 (QR 스캔)</text>
+
+        <!-- Response DB (center) -->
+        <line x1="260" y1="219" x2="490" y2="280" stroke="#0A0A0A" stroke-width="1.2"/>
+        <polygon points="490,280 478,277 484,287" fill="#0A0A0A"/>
+        <line x1="840" y1="219" x2="610" y2="280" stroke="#0A0A0A" stroke-width="1.2"/>
+        <polygon points="610,280 620,287 616,277" fill="#0A0A0A"/>
+
+        <text x="380" y="248" text-anchor="middle" font-family="Geist Mono, monospace" font-size="10" fill="#525252">Response</text>
+        <text x="720" y="248" text-anchor="middle" font-family="Geist Mono, monospace" font-size="10" fill="#525252">Response</text>
+
+        <rect x="450" y="280" width="200" height="56" fill="#0A0A0A" stroke="#0A0A0A" stroke-width="2"/>
+        <text x="550" y="302" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="12" font-weight="700" fill="#FFFFFF">Response DB</text>
+        <text x="550" y="318" text-anchor="middle" font-family="Geist Mono, monospace" font-size="9" fill="#A3A3A3">통합 누적</text>
+
+        <!-- Insight + CRM (bottom) -->
+        <line x1="490" y1="336" x2="280" y2="370" stroke="#0A0A0A" stroke-width="1.2"/>
+        <line x1="610" y1="336" x2="820" y2="370" stroke="#0A0A0A" stroke-width="1.2"/>
+
+        <rect x="180" y="350" width="200" height="20" fill="#FFFFFF" stroke="#D97706" stroke-width="2"/>
+        <text x="280" y="364" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11" font-weight="700">Voice / Insight</text>
+
+        <rect x="720" y="350" width="200" height="20" fill="#FFFFFF" stroke="#525252" stroke-width="1.5" stroke-dasharray="3 2"/>
+        <text x="820" y="364" text-anchor="middle" font-family="Pretendard, sans-serif" font-size="11" font-weight="600">Dealer CRM Sync</text>
+      </svg>
+
+      <!-- Legend -->
+      <div class="legend">
+        <div class="legend-item studio">
+          <div class="legend-name">Voice / Studio</div>
+          <div class="legend-role">마케팅팀 — 설문 설계</div>
+          <div class="legend-desc">자연어 의도 입력 → AI 에이전트가 적절한 설문으로 변환 → 두 채널 배포</div>
+        </div>
+        <div class="legend-item dealer">
+          <div class="legend-name">Voice / Dealer</div>
+          <div class="legend-role">딜러 — 인터뷰 수집</div>
+          <div class="legend-desc">상담사가 고객을 인터뷰하며 응답 입력. 자체 CRM 동시 적재.</div>
+        </div>
+        <div class="legend-item visitor">
+          <div class="legend-name">Voice / Visitor</div>
+          <div class="legend-role">고객 — 자가 응답</div>
+          <div class="legend-desc">QR 스캔 → 모바일 단축 설문 → 추천 모델 결과 카드 + 딜러 연결</div>
+        </div>
+        <div class="legend-item insight">
+          <div class="legend-name">Voice / Insight</div>
+          <div class="legend-role">마케팅팀 — 분석·평가</div>
+          <div class="legend-desc">리드 등급 평가, 딜러별 성과, 마케팅 인사이트 추출.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─────────── 02. STUDIO ─────────── -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <span class="section-title">Voice / Studio</span>
+      <span class="section-sub">설문 설계 + AI 변환 에이전트</span>
+    </div>
+
+    <div class="wf-card">
+      <div class="wf-head">
+        <div class="wf-color-strip studio"></div>
+        <div class="wf-head-info">
+          <div class="wf-head-num">01 · STUDIO</div>
+          <div class="wf-head-title">마케팅팀 설문 설계 화면</div>
+        </div>
+        <div class="wf-head-meta">
+          데스크톱 1440+<br/>
+          사용자: 마케팅팀 (본사)
+        </div>
+      </div>
+
+      <div class="wf-body">
+        <div class="wf-screen">
+          <div class="studio-screen">
+
+            <!-- Col 1: AI 채팅 -->
+            <div class="studio-col">
+              <div class="studio-col-head">AI 에이전트 · 의도 입력</div>
+              <div class="studio-chat-thread">
+                <div class="chat-bubble user">러시아 고객의 가격 민감도를 더 정확히 측정하고 싶음. TCO 계산 능력도 함께.</div>
+                <div class="chat-bubble ai">
+                  가격·TCO 결합 측정 질문 2개를 제안합니다. 1점=TCO 합리적 / 5점=단기 가격 우선으로 환산.
+                  <div class="chat-meta">— Claude · 2.3s</div>
+                </div>
+                <div class="chat-bubble user">옵션 좀 더 구체적으로. 러시아 시장 실제 가격대로.</div>
+                <div class="chat-bubble ai">
+                  옵션을 ₽(루블) 기준으로 재작성. 1,500만원 → 1.5M ₽ 표기로 변경.
+                  <div class="chat-meta">— Claude · 1.8s</div>
+                </div>
+              </div>
+              <input type="text" class="studio-input" placeholder="추가 요청 입력 (예: '러시아 시장 어투로 자연스럽게')">
+            </div>
+
+            <!-- Col 2: 생성 미리보기 -->
+            <div class="studio-col">
+              <div class="studio-col-head">AI 생성 설문 — 검토</div>
+              <div class="gen-preview">
+                <div class="gen-q-card">
+                  <div class="gen-q-meta">
+                    <span>C1.3 · MATRIX</span>
+                    <span>AXIS: PRICE 0.7 / TCO 0.3</span>
+                  </div>
+                  <div class="gen-q-text">
+                    성능 동일한 두 장비 중 한 쪽이 1.5M ₽ 더 비싸지만,
+                    5년 운영 시 연료비를 0.8M ₽ 더 절약할 수 있다면?
+                  </div>
+                  <div class="gen-q-opts">
+                    <div class="gen-q-opt">[1] 비싸지만 운영비 낮은 쪽</div>
+                    <div class="gen-q-opt">[3] 50:50, 다른 요인으로</div>
+                    <div class="gen-q-opt">[5] 초기 가격 낮은 쪽</div>
+                  </div>
+                  <div class="gen-q-rationale">
+                    근거 · TCO 합리적 구매자 식별. 1점 = 합리·장기 / 5점 = 단기 가격 우선.
+                  </div>
+                </div>
+
+                <div class="gen-q-card">
+                  <div class="gen-q-meta">
+                    <span>C1.4 · MATRIX</span>
+                    <span>AXIS: PRICE 1.0</span>
+                  </div>
+                  <div class="gen-q-text">
+                    경쟁사 가격이 10% 인상되었을 때 우리 장비 검토 의향이?
+                  </div>
+                  <div class="gen-q-opts">
+                    <div class="gen-q-opt">[1] 인상돼도 그쪽 고려</div>
+                    <div class="gen-q-opt">[3] 비교 다시</div>
+                    <div class="gen-q-opt">[5] 즉시 우리 쪽으로</div>
+                  </div>
+                  <div class="gen-q-rationale">
+                    근거 · 가격 탄력성 직접 측정. 경쟁사 가격 변동에 대한 반응성.
+                  </div>
+                </div>
+              </div>
+              <div class="deploy-bar">
+                <div class="deploy-btn secondary">재생성</div>
+                <div class="deploy-btn secondary">초안 저장</div>
+                <div class="deploy-btn primary">두 채널 배포 ▸</div>
+              </div>
+            </div>
+
+            <!-- Col 3: 기존 설문 풀 -->
+            <div class="studio-col">
+              <div class="studio-col-head">기존 설문 풀 (31)</div>
+              <div class="gen-preview">
+                <div class="pool-item">
+                  <div class="pool-cat">B. SEGMENT</div>
+                  <div class="pool-title">B1 · 사업 형태</div>
+                  <div class="pool-meta">8 옵션 · 자동 매핑</div>
+                </div>
+                <div class="pool-item">
+                  <div class="pool-cat">C. MATRIX · PRICE</div>
+                  <div class="pool-title">C1.1 · 가격-성능 트레이드오프</div>
+                  <div class="pool-meta">5 옵션 · 가격 axis</div>
+                </div>
+                <div class="pool-item">
+                  <div class="pool-cat">C. MATRIX · PRICE</div>
+                  <div class="pool-title">C1.2 · 할인·프로모션 영향력</div>
+                  <div class="pool-meta">5 옵션 · 가격 axis</div>
+                </div>
+                <div class="pool-item">
+                  <div class="pool-cat">E. MARKETING</div>
+                  <div class="pool-title">E1 · 인지 채널</div>
+                  <div class="pool-meta">7 옵션 · 광고 ROI</div>
+                </div>
+                <div class="pool-item">
+                  <div class="pool-cat">E. MARKETING</div>
+                  <div class="pool-title">E7 · NPS</div>
+                  <div class="pool-meta">0~10 척도</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="wf-info">
+          <div class="wf-info-block">
+            <div class="wf-info-label">핵심 기능</div>
+            <div class="wf-info-value">
+              마케팅팀이 자연어로 의도 입력 →
+              AI 에이전트가 적절한 설문 문항으로 변환 →
+              검토·수정 후 두 채널(Dealer / Visitor)에 즉시 배포
+            </div>
+          </div>
+          <div class="wf-info-block">
+            <div class="wf-info-label">AI 에이전트 구성</div>
+            <div class="wf-info-value">
+              Claude API · 시스템 프롬프트로 제약 (어휘 규칙, 시간 제약,
+              스키마 강제). 별도 그릿지 솔루션이 아닌 가벼운 변환기.
+            </div>
+          </div>
+          <div class="wf-info-block">
+            <div class="wf-info-label">UI 구성</div>
+            <div class="wf-info-value">
+              3-column · 좌(채팅 의도 입력) / 중(생성 미리보기·편집) / 우(기존 설문 풀)
+            </div>
+            <div class="wf-info-tags">
+              <span class="wf-tag">자연어 입력</span>
+              <span class="wf-tag">JSON 스키마</span>
+              <span class="wf-tag">중복 방지</span>
+              <span class="wf-tag">버전 관리</span>
+            </div>
+          </div>
+          <div class="wf-info-block">
+            <div class="wf-info-label">출력</div>
+            <div class="wf-info-value">
+              Survey Schema (JSON) → Dealer·Visitor에 즉시 반영
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─────────── 03. DEALER ─────────── -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <span class="section-title">Voice / Dealer</span>
+      <span class="section-sub">딜러 인터뷰 + CRM 동기화</span>
+    </div>
+
+    <div class="wf-card">
+      <div class="wf-head">
+        <div class="wf-color-strip dealer"></div>
+        <div class="wf-head-info">
+          <div class="wf-head-num">02 · DEALER</div>
+          <div class="wf-head-title">딜러 상담사용 인터뷰 화면</div>
+        </div>
+        <div class="wf-head-meta">
+          태블릿·노트북 1024+<br/>
+          사용자: 딜러 영업·상담 인력
+        </div>
+      </div>
+
+      <div class="wf-body">
+        <div class="wf-screen">
+          <div class="dealer-screen">
+
+            <!-- Col 1: Segment toggle -->
+            <div class="dealer-col">
+              <div class="dealer-col-head">8 Segments</div>
+              <div class="seg-mini active">
+                <span class="seg-mini-dot" style="background: #38BDF8;"></span>
+                <span class="seg-mini-name">Individual</span>
+              </div>
+              <div class="seg-mini">
+                <span class="seg-mini-dot" style="background: #1E293B;"></span>
+                <span class="seg-mini-name">Fleet/Rental</span>
+              </div>
+              <div class="seg-mini">
+                <span class="seg-mini-dot" style="background: #8B5CF6;"></span>
+                <span class="seg-mini-name">Key Account</span>
+              </div>
+              <div class="seg-mini active">
+                <span class="seg-mini-dot" style="background: #F87171;"></span>
+                <span class="seg-mini-name">Mining</span>
+              </div>
+              <div class="seg-mini">
+                <span class="seg-mini-dot" style="background: #F97316;"></span>
+                <span class="seg-mini-name">Infrastructure</span>
+              </div>
+              <div class="seg-mini">
+                <span class="seg-mini-dot" style="background: #EAB308;"></span>
+                <span class="seg-mini-name">Plantation</span>
+              </div>
+              <div class="seg-mini active">
+                <span class="seg-mini-dot" style="background: #14B8A6;"></span>
+                <span class="seg-mini-name">Quarry</span>
+              </div>
+              <div class="seg-mini">
+                <span class="seg-mini-dot" style="background: #EC4899;"></span>
+                <span class="seg-mini-name">Gov/Public</span>
+              </div>
+            </div>
+
+            <!-- Col 2: Radar -->
+            <div class="dealer-col">
+              <div class="dealer-col-head">Segment Positioning Map</div>
+              <div class="dealer-radar">
+                <svg width="280" height="280" viewBox="0 0 280 280">
+                  <!-- Grid -->
+                  <polygon points="140,40 226.6,90 226.6,190 140,240 53.4,190 53.4,90" fill="none" stroke="#E5E5E5" stroke-width="0.5"/>
+                  <polygon points="140,60 209.3,100 209.3,180 140,220 70.7,180 70.7,100" fill="none" stroke="#E5E5E5" stroke-width="0.5"/>
+                  <polygon points="140,80 192,110 192,170 140,200 88,170 88,110" fill="none" stroke="#E5E5E5" stroke-width="0.5"/>
+                  <polygon points="140,100 174.6,120 174.6,160 140,180 105.4,160 105.4,120" fill="none" stroke="#E5E5E5" stroke-width="0.5"/>
+                  <polygon points="140,120 157.3,130 157.3,150 140,160 122.7,150 122.7,130" fill="none" stroke="#E5E5E5" stroke-width="0.5"/>
+                  <!-- Axis -->
+                  <line x1="140" y1="140" x2="140" y2="40" stroke="#F0F0F0" stroke-width="0.5"/>
+                  <line x1="140" y1="140" x2="226.6" y2="90" stroke="#F0F0F0" stroke-width="0.5"/>
+                  <line x1="140" y1="140" x2="226.6" y2="190" stroke="#F0F0F0" stroke-width="0.5"/>
+                  <line x1="140" y1="140" x2="140" y2="240" stroke="#F0F0F0" stroke-width="0.5"/>
+                  <line x1="140" y1="140" x2="53.4" y2="190" stroke="#F0F0F0" stroke-width="0.5"/>
+                  <line x1="140" y1="140" x2="53.4" y2="90" stroke="#F0F0F0" stroke-width="0.5"/>
+                  <!-- Labels -->
+                  <text x="140" y="32" text-anchor="middle" font-size="8" fill="#0A0A0A" font-weight="500">Price</text>
+                  <text x="237" y="92" text-anchor="start" font-size="8" fill="#0A0A0A" font-weight="500">Fuel</text>
+                  <text x="237" y="194" text-anchor="start" font-size="8" fill="#0A0A0A" font-weight="500">Durability</text>
+                  <text x="140" y="252" text-anchor="middle" font-size="8" fill="#0A0A0A" font-weight="500">Service</text>
+                  <text x="43" y="194" text-anchor="end" font-size="8" fill="#0A0A0A" font-weight="500">Reference</text>
+                  <text x="43" y="92" text-anchor="end" font-size="8" fill="#0A0A0A" font-weight="500">Versatility</text>
+                  <!-- Individual -->
+                  <polygon points="140,40 174.6,120 157.3,130 140,180 105.4,160 53.4,90" fill="rgba(56,189,248,0.06)" stroke="#38BDF8" stroke-width="1.5"/>
+                  <!-- Mining -->
+                  <polygon points="140,100 192,110 209.3,180 209.3,180 174.6,160 122.7,130" fill="rgba(248,113,113,0.06)" stroke="#F87171" stroke-width="1.5"/>
+                  <!-- Quarry -->
+                  <polygon points="140,100 192,110 209.3,180 192,170 174.6,160 140,160" fill="rgba(20,184,166,0.06)" stroke="#14B8A6" stroke-width="1.5"/>
+                  <!-- Current respondent (dashed) -->
+                  <polygon points="140,100 192,110 209.3,180 209.3,180 174.6,160 140,160" fill="rgba(10,10,10,0.10)" stroke="#0A0A0A" stroke-width="2" stroke-dasharray="4 3"/>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Col 3: Interview -->
+            <div class="dealer-col">
+              <div class="dealer-col-head">Customer Interview</div>
+              <div class="dealer-iv">
+                <div class="dealer-iv-meta">
+                  <div class="dealer-iv-row">고객사 · ДСТ-Волга ООО</div>
+                  <div class="dealer-iv-row">담당자 · Илья В.</div>
+                </div>
+                <div class="dealer-iv-q">
+                  <div class="dealer-iv-axis">AXIS 03 / 06 · DURABILITY</div>
+                  <div class="dealer-iv-title">장비 사용 환경</div>
+                  <div class="dealer-iv-scores">
+                    <div class="iv-score-mini">1</div>
+                    <div class="iv-score-mini">2</div>
+                    <div class="iv-score-mini">3</div>
+                    <div class="iv-score-mini">4</div>
+                    <div class="iv-score-mini selected">5</div>
+                  </div>
+                </div>
+                <div class="dealer-iv-match">
+                  <div class="iv-match-label">잠정 매칭</div>
+                  <div class="iv-match-type-mini">Mining · 광산</div>
+                  <div class="iv-match-info">일치도 95% · A 등급 · 50M~120M ₽</div>
+                </div>
+                <div class="crm-sync-btn">CRM에 추가 ▸ Bitrix24</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="wf-info">
+          <div class="wf-info-block">
+            <div class="wf-info-label">핵심 기능</div>
+            <div class="wf-info-value">
+              인터뷰 입력 + 실시간 8 segment 매칭 + 리드 등급 자동 산출 +
+              <strong>자체 CRM에 응답 즉시 적재</strong>
+            </div>
+          </div>
+          <div class="wf-info-block">
+            <div class="wf-info-label">현 구현 상태</div>
+            <div class="wf-info-value">
+              <strong>v3 풀 도구 완성</strong> · gridge_voice_v3.html 별도 파일.
+              미팅 자리에서 실제 동작 시연 가능.
+            </div>
+          </div>
+          <div class="wf-info-block">
+            <div class="wf-info-label">UI 구성</div>
+            <div class="wf-info-value">
+              3-column · 좌(segment 토글) / 중(비교 레이더) / 우(인터뷰)
+            </div>
+            <div class="wf-info-tags">
+              <span class="wf-tag">매트릭스 6 axis</span>
+              <span class="wf-tag">8 segment 매칭</span>
+              <span class="wf-tag">마케팅 7 질문</span>
+              <span class="wf-tag">CSV·CRM export</span>
+            </div>
+          </div>
+          <div class="wf-info-block">
+            <div class="wf-info-label">v4 확장 계획</div>
+            <div class="wf-info-value">
+              · Bitrix24 Webhook 표준 연결 · 다국어 (ru/en/ko)<br/>
+              · Studio에서 배포한 Survey Schema 자동 수신
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─────────── 04. VISITOR ─────────── -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <span class="section-title">Voice / Visitor</span>
+      <span class="section-sub">행사 고객 모바일 자가 응답</span>
+    </div>
+
+    <div class="wf-card">
+      <div class="wf-head">
+        <div class="wf-color-strip visitor"></div>
+        <div class="wf-head-info">
+          <div class="wf-head-num">03 · VISITOR</div>
+          <div class="wf-head-title">모바일 자가 응답 화면</div>
+        </div>
+        <div class="wf-head-meta">
+          모바일 360~480 세로<br/>
+          사용자: 행사 부스 방문 고객
+        </div>
+      </div>
+
+      <div class="wf-body">
+        <div class="wf-screen">
+          <div class="visitor-screen">
+
+            <!-- Phone 1: Question -->
+            <div class="phone-frame">
+              <div class="phone-screen">
+                <div class="phone-notch"></div>
+                <div class="phone-top">
+                  <div class="phone-brand">Gridge Voice</div>
+                  <div class="phone-brand-sub">HD현대건설기계 · CTT 2026</div>
+                  <div class="phone-progress"><div class="phone-progress-fill"></div></div>
+                  <div class="phone-progress-text">11 / 18</div>
+                </div>
+                <div class="phone-body">
+                  <div class="phone-q-num">B1 / B</div>
+                  <div class="phone-q-title">귀하의 회사는 다음 중 어디에 가장 가깝습니까?</div>
+                  <div class="phone-opt">개인 사업자 / 1~3인 소규모</div>
+                  <div class="phone-opt">장비 렌탈 · 다수 운영</div>
+                  <div class="phone-opt">대형 건설사 · EPC</div>
+                  <div class="phone-opt selected">광산 · 채굴 기업</div>
+                  <div class="phone-opt">도로·철도·항만 인프라</div>
+                </div>
+                <div class="phone-bottom">
+                  <div class="phone-btn secondary">◂ 이전</div>
+                  <div class="phone-btn primary">다음 ▸</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Phone 2: Result Card -->
+            <div class="phone-frame">
+              <div class="phone-screen">
+                <div class="phone-notch"></div>
+                <div class="phone-top">
+                  <div class="phone-brand">응답이 저장되었습니다</div>
+                  <div class="phone-brand-sub">소요 4분 32초 · 18 / 18 ✓</div>
+                </div>
+                <div class="phone-result-body">
+                  <div class="result-eyebrow-mini">고객님께 추천</div>
+                  <div class="result-headline">
+                    Mining 환경에 맞춘<br/>
+                    중형 크롤러 굴착기
+                  </div>
+
+                  <div class="result-segment">
+                    <span class="result-segment-tag">MINING · 광산</span>
+                    <div class="result-segment-text">
+                      응답 기반 · 내구성·A/S·TCO 중심 프로필
+                    </div>
+                  </div>
+
+                  <div class="result-model-box">
+                    <div class="result-model-label">추천 모델</div>
+                    <div class="result-model-name">DX220LC-7M</div>
+                    <div class="result-model-reason">
+                      광산 환경 내구성·생산성 입증.
+                      러시아 시장 다수 운영 사례.
+                    </div>
+                  </div>
+                </div>
+                <div class="phone-bottom">
+                  <div class="phone-btn secondary">자료 받기</div>
+                  <div class="phone-btn primary">딜러 연결 ▸</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="wf-info">
+          <div class="wf-info-block">
+            <div class="wf-info-label">핵심 기능</div>
+            <div class="wf-info-value">
+              QR 스캔 → 단축 설문 18문항 (~5분) →
+              MBTI 스타일 결과 카드 → 딜러 연결·자료 옵션
+            </div>
+          </div>
+          <div class="wf-info-block">
+            <div class="wf-info-label">PWA 구성</div>
+            <div class="wf-info-value">
+              별도 앱 설치 X · 모바일 풀스크린 ·
+              다국어 (러시아어·영어·한국어 자동 감지)
+            </div>
+          </div>
+          <div class="wf-info-block">
+            <div class="wf-info-label">UX 원칙</div>
+            <div class="wf-info-value">
+              1질문 1화면 · 큰 버튼 (44px+) · 진행 바 명시 ·
+              익명 응답 가능 (연락처 옵트인)
+            </div>
+            <div class="wf-info-tags">
+              <span class="wf-tag">QR 진입</span>
+              <span class="wf-tag">5분 응답</span>
+              <span class="wf-tag">결과 카드</span>
+              <span class="wf-tag">옵트인 연락</span>
+            </div>
+          </div>
+          <div class="wf-info-block">
+            <div class="wf-info-label">CTT 적용 시나리오</div>
+            <div class="wf-info-value">
+              부스 입구 QR 비치 → 방문객 휴대폰 스캔 → 응답 →
+              결과 카드를 가지고 딜러 상담 진입 (자연 도입선)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ─────────── 05. INSIGHT ─────────── -->
+  <section class="section">
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <span class="section-title">Voice / Insight</span>
+      <span class="section-sub">마케팅팀 분석 · 리드 평가</span>
+    </div>
+
+    <div class="wf-card">
+      <div class="wf-head">
+        <div class="wf-color-strip insight"></div>
+        <div class="wf-head-info">
+          <div class="wf-head-num">04 · INSIGHT</div>
+          <div class="wf-head-title">분석 · 리드 평가 대시보드</div>
+        </div>
+        <div class="wf-head-meta">
+          데스크톱 1440+<br/>
+          사용자: 마케팅팀 · 임원 · 본부장
+        </div>
+      </div>
+
+      <div class="wf-body">
+        <div class="wf-screen">
+          <div class="insight-screen">
+
+            <!-- Top summary row -->
+            <div class="insight-summary-row">
+              <div class="summary-cell">
+                <div class="summary-label">누적 응답</div>
+                <div class="summary-value">142</div>
+                <div class="summary-delta">+38 오늘</div>
+              </div>
+              <div class="summary-cell">
+                <div class="summary-label">A 등급</div>
+                <div class="summary-value">31</div>
+                <div class="summary-delta">21.8% · 전주 대비 +4.2%p</div>
+              </div>
+              <div class="summary-cell">
+                <div class="summary-label">평균 NPS</div>
+                <div class="summary-value">+47</div>
+                <div class="summary-delta">Promoter 41 / Detractor 12</div>
+              </div>
+              <div class="summary-cell">
+                <div class="summary-label">예상 파이프라인</div>
+                <div class="summary-value">8.4B ₽</div>
+                <div class="summary-delta">A·B 등급 합산</div>
+              </div>
+              <div class="summary-cell">
+                <div class="summary-label">활성 딜러</div>
+                <div class="summary-value">3</div>
+                <div class="summary-delta">CTT 2026</div>
+              </div>
+            </div>
+
+            <!-- Body grid -->
+            <div class="insight-body">
+
+              <!-- Charts column -->
+              <div class="insight-charts-col">
+
+                <div class="insight-card-mini">
+                  <div class="card-mini-head">
+                    <span class="card-mini-title">유입 채널 분포</span>
+                    <span class="card-mini-sub">Awareness · ROI 진단</span>
+                  </div>
+                  <div class="chart-row-mini">
+                    <span>딜러 방문</span>
+                    <div class="chart-bar-track"><div class="chart-bar-fill alt1" style="width: 100%;"></div></div>
+                    <span class="chart-num-mini">52</span>
+                  </div>
+                  <div class="chart-row-mini">
+                    <span>전시회·박람회</span>
+                    <div class="chart-bar-track"><div class="chart-bar-fill alt1" style="width: 75%;"></div></div>
+                    <span class="chart-num-mini">39</span>
+                  </div>
+                  <div class="chart-row-mini">
+                    <span>디지털 광고</span>
+                    <div class="chart-bar-track"><div class="chart-bar-fill alt1" style="width: 48%;"></div></div>
+                    <span class="chart-num-mini">25</span>
+                  </div>
+                  <div class="chart-row-mini">
+                    <span>동료 추천</span>
+                    <div class="chart-bar-track"><div class="chart-bar-fill alt1" style="width: 32%;"></div></div>
+                    <span class="chart-num-mini">17</span>
+                  </div>
+                </div>
+
+                <div class="insight-card-mini">
+                  <div class="card-mini-head">
+                    <span class="card-mini-title">콘텐츠 효과</span>
+                    <span class="card-mini-sub">회의록 ABC 풀이</span>
+                  </div>
+                  <div class="chart-row-mini">
+                    <span>시연·실 사용 영상</span>
+                    <div class="chart-bar-track"><div class="chart-bar-fill alt2" style="width: 100%;"></div></div>
+                    <span class="chart-num-mini">68</span>
+                  </div>
+                  <div class="chart-row-mini">
+                    <span>TCO·생산성 자료</span>
+                    <div class="chart-bar-track"><div class="chart-bar-fill alt2" style="width: 78%;"></div></div>
+                    <span class="chart-num-mini">53</span>
+                  </div>
+                  <div class="chart-row-mini">
+                    <span>사용자 후기·레퍼런스</span>
+                    <div class="chart-bar-track"><div class="chart-bar-fill alt2" style="width: 60%;"></div></div>
+                    <span class="chart-num-mini">41</span>
+                  </div>
+                </div>
+
+                <div class="insight-card-mini">
+                  <div class="card-mini-head">
+                    <span class="card-mini-title">경쟁 브랜드 비교</span>
+                    <span class="card-mini-sub">자주 비교되는 브랜드</span>
+                  </div>
+                  <div class="chart-row-mini">
+                    <span>Caterpillar</span>
+                    <div class="chart-bar-track"><div class="chart-bar-fill" style="width: 100%;"></div></div>
+                    <span class="chart-num-mini">89</span>
+                  </div>
+                  <div class="chart-row-mini">
+                    <span>Komatsu</span>
+                    <div class="chart-bar-track"><div class="chart-bar-fill" style="width: 73%;"></div></div>
+                    <span class="chart-num-mini">65</span>
+                  </div>
+                  <div class="chart-row-mini">
+                    <span>SANY</span>
+                    <div class="chart-bar-track"><div class="chart-bar-fill" style="width: 38%;"></div></div>
+                    <span class="chart-num-mini">34</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Dealer performance column -->
+              <div class="insight-dealer-col">
+                <div class="card-mini-head" style="margin-bottom: 10px;">
+                  <span class="card-mini-title">딜러별 성과</span>
+                  <span class="card-mini-sub">CTT 2026</span>
+                </div>
+                <div class="dealer-row">
+                  <div>
+                    <div class="dealer-name">Volga Equipment</div>
+                    <div class="dealer-sub">RU · 52 응답 · A 14</div>
+                  </div>
+                  <div class="dealer-grade a">A</div>
+                </div>
+                <div class="dealer-row">
+                  <div>
+                    <div class="dealer-name">Moscow Heavy</div>
+                    <div class="dealer-sub">RU · 47 응답 · A 11</div>
+                  </div>
+                  <div class="dealer-grade a">A</div>
+                </div>
+                <div class="dealer-row">
+                  <div>
+                    <div class="dealer-name">Siberia Industrial</div>
+                    <div class="dealer-sub">RU · 43 응답 · A 6</div>
+                  </div>
+                  <div class="dealer-grade b">B</div>
+                </div>
+
+                <div style="margin-top: 16px; padding-top: 14px; border-top: 1px dashed var(--line);">
+                  <div class="card-mini-head" style="margin-bottom: 10px;">
+                    <span class="card-mini-title">최근 페인포인트</span>
+                    <span class="card-mini-sub">자유 응답</span>
+                  </div>
+                  <div style="padding: 8px 10px; background: var(--code-bg); border-left: 2px solid var(--insight); margin-bottom: 6px;">
+                    <div style="font-size: 10px; line-height: 1.5;">
+                      "A/S 부품 도착이 2주 — 24시간 가동 환경엔 부담"
+                    </div>
+                    <div style="font-family: var(--mono); font-size: 8px; color: var(--fg-2); margin-top: 3px;">
+                      — ДСТ-Волга · Mining
+                    </div>
+                  </div>
+                  <div style="padding: 8px 10px; background: var(--code-bg); border-left: 2px solid var(--insight);">
+                    <div style="font-size: 10px; line-height: 1.5;">
+                      "디자인 보수적. 가격은 만족"
+                    </div>
+                    <div style="font-family: var(--mono); font-size: 8px; color: var(--fg-2); margin-top: 3px;">
+                      — Volga Quarry · Quarry
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        <div class="wf-info">
+          <div class="wf-info-block">
+            <div class="wf-info-label">핵심 기능</div>
+            <div class="wf-info-value">
+              누적 응답 분석 + <strong>리드 등급 자동 평가</strong> +
+              딜러별 성과 비교 + 마케팅 인사이트 7카테고리 + BI export
+            </div>
+          </div>
+          <div class="wf-info-block">
+            <div class="wf-info-label">상단 5 KPI</div>
+            <div class="wf-info-value">
+              누적 응답 · A 등급 비율 · 평균 NPS · 예상 파이프라인 · 활성 딜러 수
+            </div>
+          </div>
+          <div class="wf-info-block">
+            <div class="wf-info-label">UI 구성</div>
+            <div class="wf-info-value">
+              상단 KPI 5개 + 좌측 인사이트 차트 + 우측 딜러별 성과·페인포인트
+            </div>
+            <div class="wf-info-tags">
+              <span class="wf-tag">리드 등급</span>
+              <span class="wf-tag">딜러 성과</span>
+              <span class="wf-tag">시계열</span>
+              <span class="wf-tag">BI export</span>
+            </div>
+          </div>
+          <div class="wf-info-block">
+            <div class="wf-info-label">권한</div>
+            <div class="wf-info-value">
+              본사 마케팅팀 · 임원 = 전체 보기 ·
+              딜러 = 자기 응답만 보기 (옵션)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- Footer note -->
+  <div class="footer-note">
+    <strong>본 문서는 v0.1 와이어프레임 시안입니다.</strong>
+    5/14 이강훈 책임매니저 미팅에서 검토 → 5/14~5/25 사이에 풀 UI 디테일링.
+    실 작동 도구는 현재 <strong>Voice / Dealer (v3)</strong>만 완성 · 별도 파일 (gridge_voice_v3.html).
+    Studio · Visitor · Insight는 본 와이어프레임 기반으로 단계별 구현 예정.
+  </div>
+
+</div>
+
+</body>
+</html>
+

@@ -31,6 +31,9 @@ COPY S_Sensor/admin            S_Sensor/admin
 COPY V_Voice/dealer            S_Sensor/admin/public/dealer
 COPY V_Voice/visitor           S_Sensor/admin/public/visitor
 
+# 디자인 와이어프레임 (스펙 비교용 — meeting_brief_2026_05_14 추출)
+COPY _preview                  S_Sensor/admin/public/_design
+
 ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY

@@ -38,6 +38,9 @@ export interface ResponsePayload {
   notes?: string | null;
   // Dealer 상담 대상 회사 (016) — dealer 응답은 필수
   target_company?: string | null;
+  // Dealer v2 (025) — 6 가치축 점수 + 가설 segment
+  preference_axes?: Record<string, number> | null;
+  dealer_hypothesis_segment?: string | null;
   // V-026 — visitor bot 방지 (옵션). HCAPTCHA_SECRET env 설정 시 backend가 검증.
   hcaptcha_token?: string | null;
 }
@@ -172,6 +175,8 @@ export async function handle(req: Request): Promise<Response> {
                             : (payload.contact_opted_in ? (payload.notes ?? null) : null),
       p_contact_opted_in: payload.contact_opted_in ?? false,
       p_target_company:   payload.target_company ?? null,
+      p_preference_axes:  payload.preference_axes ?? null,
+      p_dealer_hypothesis_segment: payload.dealer_hypothesis_segment ?? null,
     });
     if (error) {
       if (error.code === '23503') {
@@ -305,6 +310,10 @@ function parseAndValidate(text: string, identity: { role: string }): ResponsePay
     contact_email: saveContact ? trimStr(o.contact_email) : null,
     notes:         saveContact ? trimStr(o.notes)         : null,
     target_company: targetCompany,
+    preference_axes: (o.preference_axes && typeof o.preference_axes === 'object' && !Array.isArray(o.preference_axes))
+      ? (o.preference_axes as Record<string, number>)
+      : null,
+    dealer_hypothesis_segment: trimStr(o.dealer_hypothesis_segment, 50),
     hcaptcha_token: typeof o.hcaptcha_token === 'string' ? o.hcaptcha_token.slice(0, 4000) : null,
   };
 }

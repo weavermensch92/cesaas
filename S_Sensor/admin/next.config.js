@@ -14,8 +14,12 @@ const nextConfig = {
     return [
       { source: '/dealer',       destination: '/dealer/index.html' },
       { source: '/dealer/',      destination: '/dealer/index.html' },
+      { source: '/dealer/v2',    destination: '/dealer/v2/index.html' },
+      { source: '/dealer/v2/',   destination: '/dealer/v2/index.html' },
       { source: '/visitor',      destination: '/visitor/index.html' },
       { source: '/visitor/',     destination: '/visitor/index.html' },
+      { source: '/_design/voice-wireframes',  destination: '/_design/voice-wireframes/index.html' },
+      { source: '/_design/voice-wireframes/', destination: '/_design/voice-wireframes/index.html' },
     ];
   },
 };

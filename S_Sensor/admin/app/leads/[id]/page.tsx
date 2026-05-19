@@ -271,7 +271,7 @@ function AssociatePanel({ leadId, defaultCrm, onSuccess }: {
       // ApiClientError가 details 동봉 — parse 시도
       try {
         const match = /:\s*({.+})$/.exec(msg);
-        if (match) {
+        if (match && match[1]) {
           const parsed = JSON.parse(match[1]);
           if (parsed?.target_lead_id) {
             setConflict({
