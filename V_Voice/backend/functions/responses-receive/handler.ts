@@ -38,6 +38,30 @@ export interface ResponsePayload {
   notes?: string | null;
   // Dealer 상담 대상 회사 (016) — dealer 응답은 필수
   target_company?: string | null;
+  // V-026 — visitor bot 방지 (옵션). HCAPTCHA_SECRET env 설정 시 backend가 검증.
+  hcaptcha_token?: string | null;
+}
+
+// V-026 — hCaptcha siteverify. HCAPTCHA_SECRET 미설정 시 OFF (honeypot만).
+// visitor + 토큰 있을 때만 fire. dealer는 Bearer JWT 이미 검증되므로 skip.
+async function verifyHCaptcha(token: string | null | undefined): Promise<{ ok: boolean; reason?: string }> {
+  const secret = Deno.env.get('HCAPTCHA_SECRET');
+  if (!secret) return { ok: true };                  // OFF
+  if (!token) return { ok: false, reason: 'token_missing' };
+  try {
+    const params = new URLSearchParams({ secret, response: token });
+    const res = await fetch('https://api.hcaptcha.com/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+    });
+    if (!res.ok) return { ok: false, reason: `siteverify_http_${res.status}` };
+    const data = await res.json() as { success?: boolean; 'error-codes'?: string[] };
+    if (data.success === true) return { ok: true };
+    return { ok: false, reason: (data['error-codes'] ?? ['siteverify_fail']).join(',') };
+  } catch (e) {
+    return { ok: false, reason: e instanceof Error ? e.message : 'siteverify_throw' };
+  }
 }
 
 export async function handle(req: Request): Promise<Response> {
@@ -64,6 +88,17 @@ export async function handle(req: Request): Promise<Response> {
 
     // 3) payload 검증
     const payload = parseAndValidate(bodyText, identity);
+
+    // 3.5) V-026 hCaptcha — visitor만. HCAPTCHA_SECRET 미설정이면 OFF.
+    if (payload.respondent_type === 'visitor') {
+      const captcha = await verifyHCaptcha(payload.hcaptcha_token);
+      if (!captcha.ok) {
+        log.warn('hCaptcha failed', { reason: captcha.reason });
+        throw new ApiError('validation_failed', 'hCaptcha verification failed', {
+          hcaptcha_reason: captcha.reason,
+        });
+      }
+    }
 
     // 4) 서버측 segment 재계산
     let segment      = payload.segment ?? null;
@@ -270,5 +305,6 @@ function parseAndValidate(text: string, identity: { role: string }): ResponsePay
     contact_email: saveContact ? trimStr(o.contact_email) : null,
     notes:         saveContact ? trimStr(o.notes)         : null,
     target_company: targetCompany,
+    hcaptcha_token: typeof o.hcaptcha_token === 'string' ? o.hcaptcha_token.slice(0, 4000) : null,
   };
 }

@@ -380,6 +380,7 @@
     online: navigator.onLine,
     deviceId: null,
     honeypot:'',             // bot이 채울 hidden input
+    hcaptchaToken:null,      // V-026 — hCaptcha widget 콜백에서 채움. HCAPTCHA_SITE_KEY 있을 때만 활용.
   };
 
   // device_id 생성·저장
@@ -659,22 +660,73 @@
 
   function renderOptional(){
     const step = SURVEY.steps[3];
+    const captchaSlot = HCAPTCHA_SITE_KEY
+      ? `<div class="hd-captcha-wrap" style="margin-top:14px;display:flex;justify-content:center;">
+           <div id="hcaptchaSlot"></div>
+         </div>`
+      : '';
     root.innerHTML = `
       <div class="progress"><i style="width:100%"></i></div>
       <div class="card">
         <h2 class="step-h">${t(step.title_key)}</h2>
         <p class="step-sub ghost">${t('optin_body')}</p>
         ${step.questions.map(renderQuestion).join('')}
+        ${captchaSlot}
       </div>
       <div class="nav">
         <button class="btn"        id="skipBtn" >${t('skip')}</button>
-        <button class="btn primary full" id="submitBtn">${t('submit')}</button>
+        <button class="btn primary full" id="submitBtn"${HCAPTCHA_SITE_KEY ? ' disabled aria-disabled="true"' : ''}>${t('submit')}</button>
       </div>
       <div class="hp"><label>Leave this empty<input type="text" id="hpInput" tabindex="-1" autocomplete="off" /></label></div>
     `;
     bindHandlers();
     document.getElementById('skipBtn').onclick   = () => finalize(false);
-    document.getElementById('submitBtn').onclick = () => finalize(true);
+    document.getElementById('submitBtn').onclick = () => { if (canSubmit()) finalize(true); };
+    renderHCaptcha();   // SITE_KEY 없으면 noop
+  }
+
+  // Visitor bot 방지 — hCaptcha (V-026). HCAPTCHA_SITE_KEY 미설정 시 OFF.
+  // 백엔드도 HCAPTCHA_SECRET 미설정 시 verify skip — 양쪽이 짝.
+  const HCAPTCHA_SITE_KEY = (window.HD_HCAPTCHA_SITE_KEY || '').trim();
+  let hcaptchaWidgetId = null;
+  function canSubmit(){
+    if (state.honeypot && state.honeypot.length > 0) return true;   // bot은 가짜 성공 경로 (silently)
+    if (!HCAPTCHA_SITE_KEY) return true;                            // captcha OFF
+    return !!state.hcaptchaToken;
+  }
+  function renderHCaptcha(){
+    if (!HCAPTCHA_SITE_KEY) return;
+    const slot = document.getElementById('hcaptchaSlot');
+    if (!slot) return;
+    const tryRender = () => {
+      const hc = window.hcaptcha;
+      if (!hc || !hc.render) { setTimeout(tryRender, 200); return; }
+      // 이미 render된 widget은 재사용 — DOM 재생성 시 reset
+      try {
+        if (hcaptchaWidgetId != null) { hc.reset(hcaptchaWidgetId); }
+        hcaptchaWidgetId = hc.render(slot, {
+          sitekey: HCAPTCHA_SITE_KEY,
+          theme: 'light',
+          callback: (token) => {
+            state.hcaptchaToken = token;
+            const btn = document.getElementById('submitBtn');
+            if (btn) { btn.disabled = false; btn.setAttribute('aria-disabled', 'false'); }
+          },
+          'expired-callback': () => { state.hcaptchaToken = null; },
+          'error-callback':   () => { state.hcaptchaToken = null; },
+        });
+      } catch (_e) { /* sample 한 번 더 시도 */ }
+    };
+    tryRender();
+  }
+  if (HCAPTCHA_SITE_KEY) {
+    // hCaptcha 스크립트 1회 load (idempotent — 이미 있으면 skip)
+    if (!document.querySelector('script[data-hd="hcaptcha"]')) {
+      const s = document.createElement('script');
+      s.src = 'https://js.hcaptcha.com/1/api.js'; s.async = true; s.defer = true;
+      s.setAttribute('data-hd', 'hcaptcha');
+      document.head.appendChild(s);
+    }
   }
 
   async function finalize(withOptIn){
@@ -728,6 +780,8 @@
       contact_phone: withOptIn ? (state.answers['contact_phone'] ?? null) : null,
       contact_email: withOptIn ? (state.answers['contact_email'] ?? null) : null,
       notes:         withOptIn ? (state.answers['q_v1v_notes']   ?? null) : null,
+      // V-026 — backend가 HCAPTCHA_SECRET 설정 시만 검증. 토큰 1회용.
+      hcaptcha_token: state.hcaptchaToken ?? null,
     };
 
     const id = crypto.randomUUID();
@@ -767,6 +821,7 @@
     document.getElementById('navReset').onclick = () => {
       // device_id는 유지 (24h rate limit), 답변만 초기화
       state.step = 0; state.answers = {}; state.honeypot = '';
+      state.hcaptchaToken = null;   // V-026 — 토큰은 1회용, 새 응답마다 widget 재발급
       state.showResult = false; state.showOptinPrompt = false; state.showOptional = false; state.result = null;
       render();
     };
