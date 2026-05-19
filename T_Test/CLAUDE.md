@@ -3,7 +3,7 @@
 > **모듈**: 가설 측정·E2E·우회 시나리오.
 > **상위**: `../CLAUDE.md`
 > **하네스 룰 원본**: `../../../hd-hyundai-poc-harness-v1/hd-hyundai-poc/T_Test/CLAUDE.md`
-> **v0.3 상태**: T_04 + T_05 + T_06 + **T_08 통과 판정 페이지** (Admin Next.js `/t-test` · 9 정량 지표 자동 채점·가설 누적·최근 runs).
+> **v0.4 상태**: T_04 + T_05 + T_06 + **T_07.02 외부 컨트롤 사이클** (mechanics 자동화) + T_07.04·.05 (문서·매뉴얼) + T_08 통과 판정 페이지.
 
 ---
 
@@ -27,6 +27,9 @@
 | T_04 Sensor 시나리오 | `runner/bin/run-t04.ts` |
 | T_05 Voice 시나리오 | `runner/bin/run-t05.ts` |
 | **T_06 통합 시나리오** | `runner/bin/run-t06.ts` |
+| **T_07.02 외부 컨트롤 사이클** (publish_rule rotation + retrigger queue) | `runner/bin/run-t07.ts` |
+| T_07.04 5 시나리오 (VPN·독립·청크·Studio·HD) — 문서 | `T_07_docs/T_07.04_documentation_scenarios.md` |
+| T_07.05 부스 회복 매뉴얼 — 30초 cheat-sheet | `T_07_docs/T_07.05_booth_recovery_manual.md` |
 | 일괄 실행 (T_04+T_05+T_06) | `runner/bin/run-all.ts` |
 | **T_08 통과 판정 — 9 지표 자동 채점 API** | `backend/functions/admin-test-summary/index.ts` |
 | **T_08 통과 판정 페이지 (KPI + 가설 표 + runs)** | `../S_Sensor/admin/app/t-test/page.tsx` |
@@ -45,6 +48,7 @@
 | T_05 quota (옵션) | V_가설 | 6번째 시도 429 rate_limited |
 | **T_06 unified** | **H_채널통합** | 같은 entity → 1 lead, sensor_count≥1 AND voice_count≥1, score>0, dealer_outputs(active)=1, lead_links 양 source |
 | T_06 score / output | H_채널통합 | leads.score>0 + dealer_outputs(active) priority/segment 결정 |
+| **T_07.02 외부 컨트롤** | **H_외부컨트롤·H_하네스2** | publish_rule rotation (이전 archived + 새 active + rule_audit 1 row) + enqueue_normalize_priority로 normalize_queue에 high priority row 추가. cleanup 시 baseline 직접 복원 (test 잔재 0) |
 
 ---
 
@@ -62,6 +66,7 @@ Copy-Item T_Test\runner\.env.example T_Test\runner\.env.local
 npm run t04 -w @hd/t-test
 npm run t05 -w @hd/t-test
 npm run t06 -w @hd/t-test
+npm run t07 -w @hd/t-test  # 외부 컨트롤 사이클 — publish_rule + retrigger. LLM 비용 X
 
 # 일괄 (T_04+T_05+T_06)
 npm run all -w @hd/t-test
@@ -111,7 +116,8 @@ SELECT count(*) FILTER (WHERE status='pass') AS v_passed,
 | 우선 | 영역 |
 |---|---|
 | H | T_06 확장 — Visitor + Sensor 통합 (현재는 Dealer만), 다국어 응답, R_10.07 풀 payload 검증 |
-| H | T_07 우회 시나리오 (호스팅 전환·외부 컨트롤·정규화 개선) — 실측 3 시나리오 자동화 |
+| M | T_07.01 호스팅 전환 — Fly.io Edge fallback 배포 후 dual-send 자동화 (현재 fallback 인프라 미배포) |
+| M | T_07.03 multi-image 다양화 — LLM 비용 의존, --llm 플래그로 |
 | ✓ | ~~T_08 통과 판정~~ — v0.3에서 `/t-test` 페이지 완성 |
 | M | T_02 H1 측정 — 실 부스 트래픽 (출장 중) — runner를 daemon으로 |
 | L | fixture 다양화 — Bitrix24 실 캡쳐 샘플 5장 + 다국어 응답 |
@@ -125,3 +131,4 @@ SELECT count(*) FILTER (WHERE status='pass') AS v_passed,
 | 2026-05-18 | v0.1 — `011_test_runs.sql` + `@hd/t-test` runner (T_04 Sensor 풀 + T_05 Voice 풀 + assertion 저장) |
 | 2026-05-18 | v0.2 — `run-t06.ts` 통합 E2E (Sensor capture + Voice response 같은 entity_id → leads UNIQUE, sensor/voice count, score, dealer_outputs, lead_links 양 source 검증) + `lib/voice-helpers.ts` |
 | 2026-05-18 | v0.3 — `admin-test-summary` Edge Function (9 정량 지표 자동 채점·verdict pass/partial/fail·가설별 누적·최근 runs) + Next.js `/t-test` 페이지 (verdict 카드·KPI 그리드·표) |
+| 2026-05-19 | v0.4 — Phase T_07: `run-t07.ts` 외부 컨트롤 사이클 mechanics 자동화 (R_10.06 publish_rule rotation + cluster 준비 + enqueue_normalize_priority retrigger + baseline 복원). T_07.04 5 시나리오 문서 (VPN·독립·청크·Studio·HD) + T_07.05 부스 회복 매뉴얼 (30초 cheat-sheet). T_07.01·.03은 인프라/LLM 의존 — runner 후속 |
