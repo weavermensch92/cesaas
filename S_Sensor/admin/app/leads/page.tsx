@@ -13,7 +13,7 @@ const LANG: Lang = 'ko';
 
 export default function LeadsPage() {
   return (
-    <AuthGate>{(s) => <View email={s.user.email ?? ''} />}</AuthGate>
+    <AuthGate>{({ session: s }) => <View email={s.user.email ?? ''} />}</AuthGate>
   );
 }
 

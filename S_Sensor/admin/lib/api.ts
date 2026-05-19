@@ -537,3 +537,46 @@ export async function rotateAnthropicKey(key: string): Promise<AnthropicKeyMeta>
 export async function getLlmUsage(days: number): Promise<LlmUsageSummary> {
   return request('GET', '/admin-llm-usage', { days: String(days) });
 }
+
+// ============================================================================
+// Auth · 회원 관리
+// ============================================================================
+
+export type UserRole = 'super_admin' | 'admin' | 'regular';
+
+export interface MeProfile {
+  sub: string;
+  email: string;
+  role: UserRole;
+  password_set: boolean;
+}
+
+export interface MemberRow {
+  user_id: string;
+  email: string;
+  role: UserRole;
+  password_set: boolean;
+  created_at: string;
+  last_login_at: string | null;
+  invited_by_email: string | null;
+}
+
+export async function getMe(): Promise<MeProfile> {
+  return request('GET', '/auth-me');
+}
+
+export async function markPasswordSet(): Promise<{ status: 'ok' }> {
+  return request('POST', '/auth-mark-password-set', undefined, {});
+}
+
+export async function listMembers(): Promise<{ data: MemberRow[] }> {
+  return request('GET', '/admin-members');
+}
+
+export async function inviteMember(email: string, role: UserRole): Promise<{ status: 'invited' | 're_invited' }> {
+  return request('POST', '/admin-members', undefined, { email, role });
+}
+
+export async function updateMemberRole(userId: string, role: UserRole): Promise<{ profile: MemberRow }> {
+  return request('PATCH', '/admin-members', undefined, { user_id: userId, role });
+}

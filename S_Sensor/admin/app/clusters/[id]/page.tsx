@@ -36,7 +36,7 @@ const FIELD_LABELS: Record<string, string> = {
 export default function ClusterPage({ params }: { params: { id: string } }) {
   return (
     <AuthGate>
-      {(session) => (
+      {({ session }) => (
         <ClusterView idOrEntity={decodeURIComponent(params.id)} email={session.user.email ?? ''} />
       )}
     </AuthGate>

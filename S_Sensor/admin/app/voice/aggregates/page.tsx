@@ -24,7 +24,7 @@ const SEG_COLOR: Record<string, string> = {
 export default function VoiceAggregatesPage() {
   return (
     <AuthGate>
-      {(s) => <View email={s.user.email ?? ''} />}
+      {({ session: s }) => <View email={s.user.email ?? ''} />}
     </AuthGate>
   );
 }

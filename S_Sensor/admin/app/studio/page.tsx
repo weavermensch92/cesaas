@@ -24,7 +24,7 @@ const EXAMPLES = [
 export default function StudioPage() {
   return (
     <AuthGate>
-      {(session) => <View email={session.user.email ?? ''} />}
+      {({ session }) => <View email={session.user.email ?? ''} />}
     </AuthGate>
   );
 }

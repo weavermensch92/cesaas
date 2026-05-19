@@ -1,7 +1,8 @@
 'use client';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Lang } from '@hd/design/i18n';
-import { AuthGate } from '../components/AuthGate';
+import { AuthGate, isAdminRole } from '../components/AuthGate';
+import type { MeProfile } from '@/lib/api';
 import { TopBar } from '../components/TopBar';
 import { SectionNav } from '../components/SectionNav';
 import { getSupabase } from '@/lib/supabase';
@@ -13,10 +14,11 @@ import {
 const LANG: Lang = 'ko';
 
 export default function LlmPage() {
-  return <AuthGate>{(s) => <LlmView email={s.user.email ?? ''} />}</AuthGate>;
+  return <AuthGate>{({ session, me }) => <LlmView email={session.user.email ?? ''} me={me} />}</AuthGate>;
 }
 
-function LlmView({ email }: { email: string }) {
+function LlmView({ email, me }: { email: string; me: MeProfile }) {
+  const isAdmin = isAdminRole(me.role);
   const [keyMeta, setKeyMeta] = useState<AnthropicKeyMeta | null>(null);
   const [usage, setUsage] = useState<LlmUsageSummary | null>(null);
   const [days, setDays] = useState(7);
@@ -25,6 +27,7 @@ function LlmView({ email }: { email: string }) {
   const signOut = () => { getSupabase().auth.signOut(); };
 
   const refresh = useCallback(async (d: number) => {
+    if (!isAdmin) return;
     setLoading(true);
     setErr(null);
     try {
@@ -36,9 +39,24 @@ function LlmView({ email }: { email: string }) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAdmin]);
 
   useEffect(() => { refresh(days).catch(() => {}); }, [days, refresh]);
+
+  if (!isAdmin) {
+    return (
+      <>
+        <TopBar lang={LANG} email={email} onSignOut={signOut} />
+        <SectionNav />
+        <main style={{ padding: 18 }}>
+          <div className="hd-card" style={{ padding: 18 }}>
+            <h2 className="hd-h2" style={{ margin: 0, marginBottom: 8 }}>접근 권한 없음</h2>
+            <p className="hd-meta">LLM 운영은 Admin / Super Admin 만 가능합니다.</p>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>

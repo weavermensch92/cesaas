@@ -20,7 +20,7 @@ const SEGMENTS = ['mining','key_account','construction_heavy','agriculture','for
 export default function VoiceResponsesPage() {
   return (
     <AuthGate>
-      {(session) => <View email={session.user.email ?? ''} />}
+      {({ session }) => <View email={session.user.email ?? ''} />}
     </AuthGate>
   );
 }

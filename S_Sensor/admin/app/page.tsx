@@ -18,7 +18,7 @@ const LANG: Lang = 'ko';
 export default function CapturesPage() {
   return (
     <AuthGate>
-      {(session) => <CapturesView email={session.user.email ?? ''} />}
+      {({ session }) => <CapturesView email={session.user.email ?? ''} />}
     </AuthGate>
   );
 }

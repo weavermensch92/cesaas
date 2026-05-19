@@ -26,7 +26,7 @@ const VERDICT_LABEL_KO = {
 
 export default function TTestPage() {
   return (
-    <AuthGate>{(s) => <View email={s.user.email ?? ''} />}</AuthGate>
+    <AuthGate>{({ session: s }) => <View email={s.user.email ?? ''} />}</AuthGate>
   );
 }
 

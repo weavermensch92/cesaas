@@ -1,11 +1,13 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useMaybeAuth, isAdminRole } from './AuthGate';
 
 interface Item {
   href: string;
   label: string;
   match?: (path: string) => boolean;
+  adminOnly?: boolean;
 }
 
 const ITEMS: Item[] = [
@@ -15,14 +17,19 @@ const ITEMS: Item[] = [
   { href: '/voice/aggregates',  label: 'Voice · Insight',    match: (p) => p.startsWith('/voice/aggregates') },
   { href: '/studio',            label: 'Studio · V_60',      match: (p) => p.startsWith('/studio') },
   { href: '/t-test',            label: 'T_08 · 통과 판정',     match: (p) => p.startsWith('/t-test') },
-  { href: '/llm',               label: 'LLM · 운영',          match: (p) => p.startsWith('/llm') },
+  { href: '/llm',               label: 'LLM · 운영',          match: (p) => p.startsWith('/llm'),     adminOnly: true },
+  { href: '/members',           label: '회원 관리',           match: (p) => p.startsWith('/members'), adminOnly: true },
+  { href: '/account',           label: '내 계정',             match: (p) => p.startsWith('/account') },
 ];
 
 export function SectionNav() {
   const path = usePathname();
+  const auth = useMaybeAuth();
+  const isAdmin = !!auth && isAdminRole(auth.me.role);
+
   return (
     <div className="hd-subnav" style={{ overflowX: 'auto' }}>
-      {ITEMS.map((it) => {
+      {ITEMS.filter((it) => !it.adminOnly || isAdmin).map((it) => {
         const active = it.match ? it.match(path ?? '') : (path === it.href);
         return (
           <Link key={it.href} href={it.href} className={`hd-snav ${active ? 'active' : ''}`}>
