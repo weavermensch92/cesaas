@@ -153,8 +153,12 @@ export async function callRule(
   promptKey: string,
   opts: CallOptions = {},
 ): Promise<CallResult> {
-  const { body, version } = await loadRule<Record<string, PromptTemplate>>(ruleId);
-  const tpl = body[promptKey];
+  const { body, version } = await loadRule<Record<string, unknown>>(ruleId);
+  // harness1 스키마: body.templates[promptKey]. 레거시: body[promptKey]. 전환기 양쪽 지원.
+  const templates = (body as { templates?: Record<string, PromptTemplate> }).templates;
+  const tpl = (templates?.[promptKey] ?? (body as Record<string, PromptTemplate>)[promptKey]) as
+    | PromptTemplate
+    | undefined;
   if (!tpl || typeof tpl.system !== 'string' || typeof tpl.user !== 'string') {
     throw new ApiError('internal_error', `prompt template missing: ${ruleId}#${promptKey}`);
   }

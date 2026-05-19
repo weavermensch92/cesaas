@@ -92,14 +92,19 @@ export class LlmClient {
   /**
    * R_10.06 룰 이름으로 프롬프트 로드 → 호출.
    *   const out = await llm.callRule('R_10.06_PromptTemplates', 'sensor_13_fields', { images });
+   *
+   * harness1 스키마: body.templates[promptKey]. 레거시: body[promptKey]. 둘 다 지원 (전환기).
    */
   async callRule(
     ruleName: string,
     promptKey: string,
     opts: CallOptions = {},
   ): Promise<CallResult> {
-    const rules = await loadRules<Record<string, PromptTemplate>>(ruleName);
-    const tpl = rules[promptKey];
+    const rules = await loadRules<Record<string, unknown>>(ruleName);
+    const templates = (rules as { templates?: Record<string, PromptTemplate> }).templates;
+    const tpl = (templates?.[promptKey] ?? (rules as Record<string, PromptTemplate>)[promptKey]) as
+      | PromptTemplate
+      | undefined;
     if (!tpl || typeof tpl.system !== 'string' || typeof tpl.user !== 'string') {
       throw new ApiError('internal_error', `prompt template missing: ${ruleName}#${promptKey}`);
     }

@@ -4,52 +4,58 @@
 # V_60 Studio가 R_10.08 SurveyBuildPrompt와 함께 사용 — .08은 "설문 통째 빌드",
 # .09는 "추적 데이터 → 추가 질문 보강".
 #
-# 스키마: R_10.06과 동일 (system / user / max_tokens / version).
 # 호출부에서 {data_points_json}·{existing_questions_json}·{industry}·{target_respondent}·{language} 치환.
 
-version: 0.1
-updated_at: '2026-05-19'
+rule_id: R_10.09_DataPointToQuestion
+version: 1
+description: '추적 데이터 포인트 → 설문 질문 자동 설계 (직접/우회/검증) prompt template'
+harness: 2
+v1_v2: v1
+status: active
+last_modified: '2026-05-19T00:00:00Z'
+modified_by: 'weaver@gridge.co.kr'
 
-data_point_to_question:
-  version: '2026-05-19.001'
-  max_tokens: 4000
-  temperature: 0
-  system: |
-    당신은 산업 영업·마케팅 설문 설계 전문가다.
+templates:
+  data_point_converter:
+    id: R_10.09.001
+    model: claude-opus-4-7
+    max_tokens: 4000
+    temperature: 0
+    system: |
+      당신은 산업 영업·마케팅 설문 설계 전문가다.
 
-    ## 입력
-    마케팅팀이 추적하고 싶은 데이터 포인트 목록.
+      ## 입력
+      마케팅팀이 추적하고 싶은 데이터 포인트 목록.
 
-    ## 출력
-    각 데이터 포인트를 유추할 수 있는 설문 질문 스펙(JSON) 한 덩어리. 설명 텍스트·markdown fence 금지.
+      ## 출력
+      각 데이터 포인트를 유추할 수 있는 설문 질문 스펙(JSON) 한 덩어리. 설명 텍스트·markdown fence 금지.
 
-    ## 규칙
-    1. **직접 묻지 않는다** — "구매 시기가 언제입니까?"보다 "향후 장비 투자 계획이 있으십니까?"가 응답률 높음.
-    2. **1 데이터 포인트 → 1~3 질문** — 직접/우회/검증 질문 조합. 우회·검증은 선택.
-    3. 각 질문에 `reasoning`(왜 이 질문이 그 데이터를 유추하는지) 필수.
-    4. 각 질문에 `how_to_infer`(답변에서 어떻게 원하는 데이터를 추출하는지) 필수.
-    5. existing_questions가 주어지면 중복 방지. 유사 시 warnings에 병합 제안.
-    6. 응답자 부담 최소화 — 추가 질문 총 5개 이내 권장.
-    7. 다국어: `title_ru`(필수) + `title_en` + `title_ko`.
-    8. 출력 JSON만. 다른 텍스트 금지.
+      ## 규칙
+      1. **직접 묻지 않는다** — "구매 시기가 언제입니까?"보다 "향후 장비 투자 계획이 있으십니까?"가 응답률 높음.
+      2. **1 데이터 포인트 → 1~3 질문** — 직접/우회/검증 질문 조합. 우회·검증은 선택.
+      3. 각 질문에 `reasoning`(왜 이 질문이 그 데이터를 유추하는지) 필수.
+      4. 각 질문에 `how_to_infer`(답변에서 어떻게 원하는 데이터를 추출하는지) 필수.
+      5. existing_questions가 주어지면 중복 방지. 유사 시 warnings에 병합 제안.
+      6. 응답자 부담 최소화 — 추가 질문 총 5개 이내 권장.
+      7. 다국어: `title_ru`(필수) + `title_en` + `title_ko`.
+      8. 출력 JSON만. 다른 텍스트 금지.
 
-    ## 산업 맥락
-    건설기계 산업. 응답자는 딜러·방문객 (러시아·글로벌).
-    기존 6 axis(scale·usage·hours·deal·fleet·role) + 8 segment + NPS 프레임 위에 얹는다.
+      ## 산업 맥락
+      건설기계 산업. 응답자는 딜러·방문객 (러시아·글로벌).
+      기존 6 axis(scale·usage·hours·deal·fleet·role) + 8 segment + NPS 프레임 위에 얹는다.
+    user: |
+      ## 추적하고 싶은 데이터 포인트
+      {data_points_json}
 
-  user: |
-    ## 추적하고 싶은 데이터 포인트
-    {data_points_json}
+      ## 맥락
+      - 산업: {industry}
+      - 응답 대상: {target_respondent}
+      - 기본 언어: {language}
 
-    ## 맥락
-    - 산업: {industry}
-    - 응답 대상: {target_respondent}
-    - 기본 언어: {language}
+      ## 기존 설문 질문 (중복 방지)
+      {existing_questions_json}
 
-    ## 기존 설문 질문 (중복 방지)
-    {existing_questions_json}
-
-    위 데이터 포인트 각각에 대해 질문을 설계하라. JSON만.
+      위 데이터 포인트 각각에 대해 질문을 설계하라. JSON만.
 
 # UI 가이드 — Studio에서 마케터가 카테고리 선택 후 자유 입력 가능.
 data_point_categories:

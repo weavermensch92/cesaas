@@ -1,16 +1,86 @@
 # R_10.08 — Survey Build Prompt
 # V_60 Studio가 자연어 → 설문 정의(JSON) 생성에 사용.
-# 시스템 프롬프트는 R_10.06 voice_studio_survey_build 와 같은 의도이나,
-# 이 파일은 Studio 전용 schema / validation rule을 분리 관리.
+# 시스템 프롬프트 자체는 R_10.06.voice_studio_survey_build와 의도가 동일.
+# 이 파일은 Studio 전용 schema·validation·defaults를 분리 관리.
+#
+# 소비자: lib/survey_builder.ts (예정 — Phase B에선 미작성)
+# 현재 V_Voice/backend/functions/studio-build-survey/index.ts는 R_10.06만 호출.
 
-version: 0.1
-updated_at: '2026-05-18'
+rule_id: R_10.08_SurveyBuildPrompt
+version: 1
+description: 'Studio 자연어 → 설문 JSON 빌드 prompt template + Studio 전용 schema/validation'
+harness: 2
+v1_v2: v1
+status: active
+last_modified: '2026-05-19T00:00:00Z'
+modified_by: 'weaver@gridge.co.kr'
 
+# ============================================================================
+# Prompt template — harness1 스키마 (templates: { survey_builder })
+# ============================================================================
+templates:
+  survey_builder:
+    id: R_10.08.001
+    model: claude-opus-4-7
+    max_tokens: 4000
+    temperature: 0
+    system: |
+      당신은 HD건설기계 영업 설문 빌더이다.
+      자연어 요구를 받아 6 axis(설문 분류축) 기반의 설문 정의(JSON)를 생성한다.
+      필수 axis: scale · usage · budget · timeline.
+      선택 axis: funding · expansion. 8 segment 중 어느 segment를 변별할 의도인지 명시.
+      출력 JSON만. 설명 텍스트·markdown fence 금지.
+    user: |
+      아래 자연어 요청에 맞는 설문 정의를 R_10.05 Classification 스키마와 호환되도록 JSON으로 작성하라.
+
+      ## Studio target schema
+      audience: dealer | visitor
+      language: ko / ru / en
+      duration_minutes_max: {duration_minutes_max}
+      question_kinds: single_select · multi_select · scale_1_10 · nps · text_short · text_long · consent
+
+      ## Validation
+      - NPS(0~10) 1개 필수
+      - 향후 수신 동의 consent 1개 필수
+      - Visitor 18문항 중 핵심 4 axis(scale·usage·budget·timeline) 필수 매핑
+
+      ## 요청
+      {input}
+
+# ============================================================================
+# Studio target schema (UI guidance — harness1 schema의 output_schema 자리)
+# ============================================================================
+output_schema:
+  example: |
+    {
+      "id": "survey_<auto>",
+      "title": "string",
+      "audience": "dealer | visitor",
+      "language_default": "ru",
+      "languages_available": ["ru", "en", "ko"],
+      "duration_minutes_estimate": 2,
+      "questions": [
+        {
+          "id": "q_<auto>",
+          "type": "single_select",
+          "axis": "scale",
+          "title_ru": "string",
+          "title_en": "string (optional)",
+          "title_ko": "string (optional)",
+          "options": [{ "value": "S", "label_ru": "string" }],
+          "required": true
+        }
+      ]
+    }
+
+# ============================================================================
+# Studio 전용 메타 (prd-v1 확장)
+# ============================================================================
 target_schema:
   surveys:
     audience: [dealer, visitor]
     language: [ko, ru, en]
-    duration_minutes_max: 2  # Visitor PWA 필수 (NF-V03)
+    duration_minutes_max: 2   # Visitor PWA 필수 (NF-V03)
   question_kinds:
     - single_select
     - multi_select
@@ -32,6 +102,7 @@ defaults:
   dealer_question_count_target: 31
   visitor_question_count_target: 18
 
+# 현재 운영은 R_10.06.voice_studio_survey_build 호출 — Phase D에서 본 파일로 이전 예정
 llm_call:
   rule: R_10.06_PromptTemplates
   prompt_key: voice_studio_survey_build

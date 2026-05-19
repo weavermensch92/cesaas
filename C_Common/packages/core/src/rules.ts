@@ -1,9 +1,16 @@
 /**
  * R_10 룰 YAML 로더 — C_05_LLM_정책.md § 6 + 하네스 CLAUDE.md § 5.4.
  *
+ * 단순 filesystem reader. Node·Deno 양쪽. R_10 메타(rule_id·version·harness)는 검증 안 함.
+ * 검증·hot-reload·apply가 필요하면 R_Runtime/lib/load_rules.ts 사용.
+ *
  * Hot reload: R10_HOT_RELOAD=true 일 때 매 호출 새로 읽음 (dev).
  * Production: 1회 캐시 후 process 수명 동안 유지.
  *
+ * harness1 스키마 (Phase B.2 이후):
+ *   loadRules('R_10.06_PromptTemplates').templates.sensor_13_fields
+ *
+ * 레거시 (Phase B.2 이전 — DB에 잔존):
  *   loadRules('R_10.06_PromptTemplates')['sensor_13_fields']
  */
 

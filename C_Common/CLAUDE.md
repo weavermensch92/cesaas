@@ -210,3 +210,4 @@ export function CapturesPage({ lang }: { lang: Lang }) {
 |---|---|
 | 2026-05-18 | v0.1 — 골격 (8 core modules · 5 R_10 stubs · 2 base migrations · 디자인 패키지) |
 | 2026-05-19 | v0.2 — R_10.02 LeadQuality (A/B/C/D 임계 80/50/25) + R_10.09 DataPointToQuestion (Studio 추가 질문 보강 프롬프트) YAML 시드. 하네스 2 본질 R-002·R-009 PRD-03 § 4 충족 (Phase A — lib·publish·hot reload는 Phase B~D 후속) |
+| 2026-05-19 | v0.3 — R_10.01·.02·.05·.06·.07·.08·.09 7개 YAML을 harness1 스키마(rule_id·version·harness·v1_v2·last_modified·modified_by + templates/rules/thresholds/voice_segment 평탄 배열)로 통일. core/llm.ts·V_Voice·S_Sensor shared/llm.ts callRule에 templates[promptKey] 접근 + 레거시 body[promptKey] 후방 호환. 018_reseed_r10_06_harness1_schema.sql 마이그레이션으로 DB rule_versions 갱신 (Phase B.2 + B.3) |

@@ -1,14 +1,20 @@
-# R_10.06 — Prompt Templates (LLM 시스템·user 프롬프트)
-# 하네스 2 (Runtime). 모든 LLM 호출은 이 파일의 templates를 로드 — 하드코드 금지 (C_05_LLM_정책 § 6).
-#
-# 운영 시 prod truth는 DB rule_versions(status='active').body_yaml. 이 YAML은 시드.
-# 변경 흐름: 위버가 여기 편집 → r20/bin/publish-rule.ts → publish_rule() RPC → DB 갱신.
-#
-# 접근 패턴 (shared/llm.ts callRule):
-#   body.templates[promptKey]   ← 신규
-#   body[promptKey]             ← 레거시 호환 (Phase B.2d 전환기)
+-- 018_reseed_r10_06_harness1_schema.sql
+-- R_10.06 PromptTemplates 시드를 harness1 스키마(rule_id·templates:{}·model·temperature)로 재발급.
+-- C_Common/r_10_rules/R_10.06_PromptTemplates.yaml 와 동기화.
+-- shared/llm.ts callRule이 body.templates[key] 와 body[key] 양쪽 지원 — 기존 deploy 안 끊김.
+--
+-- 변경 사유:
+-- 1) rule_id·version·harness·v1_v2 메타 추가 (R_10 룰 일관성)
+-- 2) templates:{} 래퍼로 sensor_13_fields·sensor_screen_classify·voice_studio_survey_build 묶음
+--    (이전 005 시드는 sensor_13_fields만 — 나머지 2개는 누락된 채 YAML과 드리프트)
+-- 3) 각 템플릿에 id·model·temperature·max_tokens 명시 (R_10.06.001~.003)
 
-rule_id: R_10.06_PromptTemplates
+DO $migration$
+BEGIN
+  PERFORM publish_rule(
+    'R_10.06_PromptTemplates',
+    '2026-05-19.001',
+    $yaml$rule_id: R_10.06_PromptTemplates
 version: 1
 description: 'LLM 호출에 사용하는 시스템·user 프롬프트 템플릿 (Sensor 13 필드 추출·화면 분류·Studio 빌드)'
 harness: 2
@@ -23,10 +29,6 @@ templates:
     model: claude-opus-4-7
     max_tokens: 2000
     temperature: 0
-    # 컬럼 매핑은 normalized_fields 테이블 (S_40.04)과 1:1.
-    # 13 필드 = deal_id · deal_code · company_name · contact_name · contact_phone
-    #         · contact_email · amount · currency · stage · product_model
-    #         · region · date_created · responsible_dealer
     system: |
       당신은 HD건설기계의 러시아 영업 깔때기 데이터 추출 어시스턴트이다.
       Bitrix24 CRM 스크린샷 1~5장을 받아 동일 deal의 13개 표준 필드를 JSON으로 반환한다.
@@ -99,3 +101,10 @@ multi_image_guide:
   max_images: 5
   ordering: chronological
   diversification: true
+$yaml$,
+    NULL,
+    'system_migration',
+    '018 — harness1 스키마 통일 (templates:{} 래핑 + rule_id 메타 + 3 템플릿 완전 시드)'
+  );
+END
+$migration$;
