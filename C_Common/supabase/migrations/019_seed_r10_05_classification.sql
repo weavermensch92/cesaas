@@ -1,0 +1,167 @@
+-- 019_seed_r10_05_classification.sql
+-- R_10.05_Classification 을 DB rule_versions(active)로 시드.
+-- C_Common/r_10_rules/R_10.05_Classification.yaml 의 1.0 스냅샷.
+--
+-- Phase D.2 의존:
+--   V_Voice/backend/shared/segments.ts 가 더 이상 inline RULES 미러를 사용하지 않고,
+--   shared/rules.ts loadRule('R_10.05_Classification') 후 lib.classifyVoiceSegmentCore 호출로 전환.
+--   이 migration 적용 전에는 not_found 에러로 segments 매칭 실패.
+--
+-- 후속 변경은 r20/bin/publish-rule.ts 로:
+--   npm run publish-rule -w @hd/r20 -- --rule R_10.05_Classification --version 2026-05-XX.NNN
+
+DO $migration$
+BEGIN
+  PERFORM publish_rule(
+    'R_10.05_Classification',
+    '2026-05-19.001',
+    $yaml$rule_id: R_10.05_Classification
+version: 1
+description: 'Voice segment · Sensor screen · LeadPriority 분류'
+harness: 2
+v1_v2: v1
+status: active
+last_modified: '2026-05-19T00:00:00Z'
+modified_by: 'weaver@gridge.co.kr'
+
+voice_segment:
+  - id: R_10.05.001_key_account
+    description: 'annual_deal_rub == large → 키 어카운트 우선'
+    condition: "axis.annual_deal_rub == 'large'"
+    segment: key_account
+    severity: MUST
+
+  - id: R_10.05.002_mining
+    description: '광업 사용 + 대형 스케일'
+    condition: "axis.usage == 'mining' AND axis.scale in ['L', 'XL']"
+    segment: mining
+    severity: MUST
+
+  - id: R_10.05.003_construction_heavy
+    description: '대규모 건설 + 중대형 스케일'
+    condition: "axis.usage == 'construction_heavy' AND axis.scale in ['M', 'L', 'XL']"
+    segment: construction_heavy
+    severity: MUST
+
+  - id: R_10.05.004_forestry
+    description: '임업'
+    condition: "axis.usage == 'forestry'"
+    segment: forestry
+    severity: MUST
+
+  - id: R_10.05.005_agriculture
+    description: '농업'
+    condition: "axis.usage == 'agriculture'"
+    segment: agriculture
+    severity: MUST
+
+  - id: R_10.05.006_general_construction
+    description: '일반 건설'
+    condition: "axis.usage == 'general_construction'"
+    segment: general_construction
+    severity: MUST
+
+  - id: R_10.05.007_rental
+    description: '렌탈'
+    condition: "axis.usage == 'rental'"
+    segment: rental
+    severity: MUST
+
+  - id: R_10.05.008_other
+    description: 'fallback'
+    condition: 'default'
+    segment: other
+    severity: MAY
+
+voice_segment_labels:
+  key_account:
+    ko: '키 어카운트'
+    ru: 'Ключ. клиент'
+    en: 'Key Account'
+  mining:
+    ko: '광업'
+    ru: 'Горнодобыча'
+    en: 'Mining'
+  construction_heavy:
+    ko: '대규모 건설'
+    ru: 'Крупное строит.'
+    en: 'Heavy Construction'
+  forestry:
+    ko: '임업'
+    ru: 'Лесное хоз-во'
+    en: 'Forestry'
+  agriculture:
+    ko: '농업'
+    ru: 'С/х'
+    en: 'Agriculture'
+  general_construction:
+    ko: '일반 건설'
+    ru: 'Общ. строит.'
+    en: 'General Construction'
+  rental:
+    ko: '렌탈'
+    ru: 'Аренда'
+    en: 'Rental'
+  other:
+    ko: '기타'
+    ru: 'Прочее'
+    en: 'Other'
+
+sensor_screen:
+  source: 'crm_url_path'
+  default_crm: 'bitrix24'
+  fallback_classifier: 'crm_screen_identifier'
+
+  bitrix24_patterns:
+    - screen: deal_detail
+      url_regex: '/crm/deal/details/'
+    - screen: deal_list
+      url_regex: '/crm/deal/'
+    - screen: company
+      url_regex: '/crm/company/details/'
+    - screen: contact
+      url_regex: '/crm/contact/details/'
+    - screen: activity
+      url_regex: '/crm/activity/'
+    - screen: funnel
+      url_regex: '/crm/funnel/'
+    - screen: task
+      url_regex: '/crm/task/'
+
+lead_priority:
+  - id: R_10.05.101_p1
+    description: 'score >= 85 → P1 즉시'
+    condition: 'score >= 85'
+    priority: P1
+    severity: MUST
+
+  - id: R_10.05.102_p2
+    description: 'score 70~84 → P2'
+    condition: 'score >= 70 AND score < 85'
+    priority: P2
+    severity: MUST
+
+  - id: R_10.05.103_p3
+    description: 'score 55~69 → P3'
+    condition: 'score >= 55 AND score < 70'
+    priority: P3
+    severity: MUST
+
+  - id: R_10.05.104_p4
+    description: 'score 40~54 → P4'
+    condition: 'score >= 40 AND score < 55'
+    priority: P4
+    severity: MUST
+
+  - id: R_10.05.105_p5
+    description: 'score < 40 → P5'
+    condition: 'score < 40'
+    priority: P5
+    severity: MUST
+$yaml$,
+    NULL,
+    'system_migration',
+    '019 — R_10.05_Classification 초기 시드 (Phase D.2 — segments.ts가 inline 미러 대신 DB+lib 사용)'
+  );
+END
+$migration$;

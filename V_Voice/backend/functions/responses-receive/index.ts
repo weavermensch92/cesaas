@@ -85,7 +85,7 @@ Deno.serve(async (req: Request) => {
     let segmentMethod = payload.segment_method ?? null;
     let segmentConf  = payload.segment_confidence ?? null;
     if (payload.axis_data) {
-      const serverSide = classifyServerSide(payload.axis_data);
+      const serverSide = await classifyServerSide(payload.axis_data);
       if (!segment) {
         segment = serverSide.segment;
         segmentMethod = serverSide.method;
@@ -93,10 +93,10 @@ Deno.serve(async (req: Request) => {
       } else if (segment !== serverSide.segment) {
         // 클라이언트·서버 mismatch — 서버를 우선하지만 confidence 낮춤.
         log.warn('segment mismatch — server overrides', {
-          client: segment, server: serverSide.segment,
+          client: segment, server: serverSide.segment, method: serverSide.method,
         });
         segment = serverSide.segment;
-        segmentMethod = 'server_rule';
+        segmentMethod = serverSide.method;
         segmentConf = Math.min(serverSide.confidence, 0.8);
       } else {
         segmentConf = Math.max(segmentConf ?? 0, serverSide.confidence);

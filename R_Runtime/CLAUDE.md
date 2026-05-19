@@ -11,7 +11,7 @@
 |---|---|
 | R_10 룰 YAML 시드 | `../C_Common/r_10_rules/*.yaml` |
 | R_10 DB 관리 (rule_versions·publish_rule RPC) | `../C_Common/supabase/migrations/005_runtime.sql` + `018_reseed_r10_06_harness1_schema.sql` |
-| harness2 lib (Edge Function이 R_10 YAML 로드·적용) | `lib/` — `types.ts`·`load_rules.ts`·`evaluator.ts`·`apply_rules.ts`·`mod.ts` |
+| harness2 lib (Edge Function이 R_10 YAML 로드·적용) | `lib/` — `types.ts`·`load_rules.ts`·`evaluator.ts`·`apply_rules.ts`·`mod.ts`. `*Core(rules, ...)` 함수는 미리 로드된 룰로 동작 (DB·filesystem 무관) |
 | R_20 위버 도구 (dealer 토큰·룰 publish·재정규화 큐잉) | `r20/` (`@hd/r20`) |
 
 ## 0.5. lib 키워드 → 위치
@@ -64,8 +64,7 @@
 
 | 우선 | 영역 |
 |---|---|
-| H | Phase D — `score_lead()` plpgsql을 lib 기반 Edge Function 호출로 교체 (NF-P01 60s hot reload 실 동작) |
-| H | Phase D — `V_Voice/backend/shared/segments.ts`를 lib.classifyVoiceSegment 호출로 교체 |
+| H | Phase D.3 — `score_lead()` / `generate_dealer_output()` plpgsql trigger를 lib 기반 Edge Function 호출로 교체. R_10.01·.07 DB 시드 + `shared/lead_scoring.ts` helper + `responses-receive`·`normalize-worker`에서 호출 + 020 migration이 트리거 라인 제거. NF-P01 60s hot reload 완전 실 동작 |
 | M | Phase E — `dealer/index.html` 인라인 R_10.05·.07을 fetch 또는 build-time 주입으로 |
 | M | R_20 HTTP 게이트웨이 (Fly.io basic auth) — 위버 외부 접근 |
 | L | `r20/bin/issue-csv-out.ts` — 발급 결과를 print용 PDF로 출력 |

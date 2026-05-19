@@ -18,14 +18,19 @@ export {
 // 조건 / action 평가
 export { applyAction, evaluateCondition } from './evaluator.ts';
 
-// R_10 룰 적용
+// R_10 룰 적용 — *Core(rules, ...)는 미리 로드된 룰 객체 입력 (DB·filesystem 무관)
 export {
   applyFullPipeline,
   applyLeadQuality,
+  applyLeadQualityCore,
   applyLeadScoring,
+  applyLeadScoringCore,
   classifyLeadPriority,
+  classifyLeadPriorityCore,
   classifySensorScreen,
+  classifySensorScreenCore,
   classifyVoiceSegment,
+  classifyVoiceSegmentCore,
 } from './apply_rules.ts';
 
 export type { LeadFullPipelineResult } from './apply_rules.ts';

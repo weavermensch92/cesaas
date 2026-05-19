@@ -41,7 +41,7 @@
 | Admin Dealer 계정 발급·목록·폐기 Edge Functions | `backend/functions/dealer-tokens-{issue,list,revoke}/index.ts` |
 | Admin Dealer 계정 UI (gridge_admin 전용 · 발급 폼·QR·목록·딜러별 응답 수) | `../S_Sensor/admin/app/voice/dealers/page.tsx` |
 | voice_dealer_tokens 운영 메타 (label·issued_by) | `../C_Common/supabase/migrations/017_dealer_tokens_meta.sql` |
-| 서버 측 deterministic segment 매칭 (R_10.05 미러) | `backend/shared/segments.ts` |
+| 서버 측 deterministic segment 매칭 (R_10.05 DB 로드 + harness2 lib + inline fallback) | `backend/shared/segments.ts` |
 | 공통 helpers (errors·db·hash·env·idempotency·logger) | `backend/shared/*.ts` (S_Sensor 재export) |
 | Visitor PWA (단일 HTML · Service Worker · IndexedDB · 옵트인 명함) | `visitor/index.html` · `visitor/sw.js` · `visitor/manifest.webmanifest` |
 | Visitor 옵트인 컬럼·24h quota·시드 18문항 | `../C_Common/supabase/migrations/009_voice_visitor.sql` |

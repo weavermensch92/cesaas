@@ -1,9 +1,12 @@
 // harness2/lib/apply_rules.ts — R_10 룰을 실 데이터에 적용.
 // PRD-03 § 4 R-022.
 //
-// Phase B.1 시점: lib는 완성, YAML은 아직 Phase B.2에서 통일 중.
-// applyLeadScoring 등은 R_10.01 YAML이 'rules: [{condition, action}]' 형태로
-// 재작성된 후에야 정상 동작. 그 전까지 호출 시 evaluator 에러.
+// 각 함수는 두 형태:
+//   - *Core(rules, ...)   — 미리 로드된 YAML 객체로 동작 (DB·filesystem 무관)
+//   - <name>(...)         — load_rules.ts의 filesystem 로더 + Core 호출
+//
+// Edge Function (Deno)은 shared/rules.ts(DB) → *Core 직접 호출 권장.
+// Phase D: V_Voice/backend/shared/segments.ts가 classifyVoiceSegmentCore 사용.
 
 import { loadRules } from './load_rules.ts';
 import { applyAction, evaluateCondition } from './evaluator.ts';
@@ -24,9 +27,10 @@ import type {
 // § 1. LeadScoring (R_10.01) → 0~100
 // ============================================================================
 
-export async function applyLeadScoring(context: EvaluationContext): Promise<ScoringResult> {
-  const rules = await loadRules<LeadScoringYaml>('R_10.01_LeadScoring');
-
+export function applyLeadScoringCore(
+  rules: LeadScoringYaml,
+  context: EvaluationContext,
+): ScoringResult {
   let state: { score: number } = { score: rules.output.default };
   const applied: { id: string; delta: number }[] = [];
 
@@ -47,28 +51,57 @@ export async function applyLeadScoring(context: EvaluationContext): Promise<Scor
   return { score: state.score, applied_rules: applied };
 }
 
+export async function applyLeadScoring(context: EvaluationContext): Promise<ScoringResult> {
+  const rules = await loadRules<LeadScoringYaml>('R_10.01_LeadScoring');
+  return applyLeadScoringCore(rules, context);
+}
+
 // ============================================================================
 // § 2. LeadQuality (R_10.02) → A/B/C/D
 // ============================================================================
 
-export async function applyLeadQuality(score: number): Promise<Grade> {
-  const rules = await loadRules<LeadQualityYaml>('R_10.02_LeadQuality');
+export function applyLeadQualityCore(rules: LeadQualityYaml, score: number): Grade {
   for (const t of rules.thresholds) {
     if (evaluateCondition(t.condition, { score })) return t.grade;
   }
   return rules.output.default;
 }
 
+export async function applyLeadQuality(score: number): Promise<Grade> {
+  const rules = await loadRules<LeadQualityYaml>('R_10.02_LeadQuality');
+  return applyLeadQualityCore(rules, score);
+}
+
 // ============================================================================
 // § 3. Classification (R_10.05)
 // ============================================================================
 
-export async function classifyVoiceSegment(axis: VoiceResponse['axis']): Promise<Segment> {
-  const rules = await loadRules<ClassificationYaml>('R_10.05_Classification');
+export function classifyVoiceSegmentCore(
+  rules: ClassificationYaml,
+  axis: VoiceResponse['axis'],
+): Segment {
   for (const rule of rules.voice_segment) {
     if (evaluateCondition(rule.condition, { axis })) return rule.segment;
   }
   return 'other';
+}
+
+export async function classifyVoiceSegment(axis: VoiceResponse['axis']): Promise<Segment> {
+  const rules = await loadRules<ClassificationYaml>('R_10.05_Classification');
+  return classifyVoiceSegmentCore(rules, axis);
+}
+
+export function classifySensorScreenCore(
+  rules: ClassificationYaml,
+  url_path: string,
+  crm_id = 'bitrix24',
+): ScreenType | null {
+  const patterns = rules.sensor_screen[`${crm_id}_patterns`];
+  if (!Array.isArray(patterns)) return null;
+  for (const p of patterns) {
+    if (new RegExp(p.url_regex).test(url_path)) return p.screen;
+  }
+  return null;
 }
 
 export async function classifySensorScreen(
@@ -76,21 +109,19 @@ export async function classifySensorScreen(
   crm_id = 'bitrix24',
 ): Promise<ScreenType | null> {
   const rules = await loadRules<ClassificationYaml>('R_10.05_Classification');
-  const patterns = rules.sensor_screen[`${crm_id}_patterns`];
-  if (!Array.isArray(patterns)) return null;
-
-  for (const p of patterns) {
-    if (new RegExp(p.url_regex).test(url_path)) return p.screen;
-  }
-  return null;
+  return classifySensorScreenCore(rules, url_path, crm_id);
 }
 
-export async function classifyLeadPriority(score: number): Promise<Priority> {
-  const rules = await loadRules<ClassificationYaml>('R_10.05_Classification');
+export function classifyLeadPriorityCore(rules: ClassificationYaml, score: number): Priority {
   for (const rule of rules.lead_priority) {
     if (evaluateCondition(rule.condition, { score })) return rule.priority;
   }
   return 'P5';
+}
+
+export async function classifyLeadPriority(score: number): Promise<Priority> {
+  const rules = await loadRules<ClassificationYaml>('R_10.05_Classification');
+  return classifyLeadPriorityCore(rules, score);
 }
 
 // ============================================================================
