@@ -19,6 +19,7 @@ out/
 
 # Extension 빌드 시 주입되는 시크릿
 S_Sensor/extension/config.js
+S_Sensor/extension/register_key.sql
 
 # R_20 발급된 토큰·QR 출력 (대량 시크릿)
 R_Runtime/r20/out/

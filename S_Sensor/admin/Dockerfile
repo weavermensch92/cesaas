@@ -27,6 +27,10 @@ COPY C_Common/packages/core    C_Common/packages/core
 COPY C_Common/packages/design  C_Common/packages/design
 COPY S_Sensor/admin            S_Sensor/admin
 
+# V_Voice Dealer HTML + Visitor PWA — 같은 도메인 정적 호스팅
+COPY V_Voice/dealer            S_Sensor/admin/public/dealer
+COPY V_Voice/visitor           S_Sensor/admin/public/visitor
+
 ENV NEXT_TELEMETRY_DISABLED=1
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -36,6 +40,11 @@ ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+
+# Dealer / Visitor 의 window.HD_API_BASE 자동 주입
+RUN sed -i "s|</head>|<script>window.HD_API_BASE='${NEXT_PUBLIC_API_BASE}';</script></head>|" \
+      S_Sensor/admin/public/dealer/index.html \
+      S_Sensor/admin/public/visitor/index.html
 
 RUN npm run build -w @hd/sensor-admin
 
