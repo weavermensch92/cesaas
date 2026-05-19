@@ -38,6 +38,7 @@
 | 응답 수신 핸들러 — Bearer/Anonymous + idempotency + segment 재검증 + scoreLead. Supabase Edge + Fly.io Edge fallback이 양쪽에서 import | `backend/functions/responses-receive/handler.ts` |
 | Dealer Bearer JWT 검증 + jti revoke 차단 + Anonymous device_id | `backend/shared/bearer.ts` |
 | 딜러 본인 상담 이력 Edge Function (`list_dealer_consultations` RPC 래퍼) | `backend/functions/dealer-consultations/index.ts` |
+| 딜러 Playbook fetch Edge Function (lead_id별 active dealer_outputs · 소유권 검증) | `backend/functions/dealer-playbook/index.ts` |
 | `responses.target_company` 컬럼 + `list_dealer_consultations` RPC + `save_response` 시그니처 확장 | `../C_Common/supabase/migrations/016_dealer_consultation.sql` |
 | Admin Dealer 계정 발급·목록·폐기 Edge Functions | `backend/functions/dealer-tokens-{issue,list,revoke}/index.ts` |
 | Admin Dealer 계정 UI (gridge_admin 전용 · 발급 폼·QR·목록·딜러별 응답 수) | `../S_Sensor/admin/app/voice/dealers/page.tsx` |
@@ -110,3 +111,4 @@ RLS: service_role 전권 / `is_hd_admin()` read.
 | 2026-05-19 | v0.5.3 — target_company 자동완성: dealer-consultations prefetch → distinct 회사명 20개를 `<datalist>`로 노출. 신규 입력 회사명도 즉시 최상단 반영. 표기 통일(예: Hyundai/Хёндэ/현대) 효과. |
 | 2026-05-19 | v0.5.4 — /voice/responses 검색·필터 확장: voice-responses Edge에 `target_company` ilike(부분 일치) + `dealer_id` eq 파라미터, Admin UI에 검색 바 (350ms debounce) + 활성 필터 표시. |
 | 2026-05-19 | v0.6 — Phase D.3 scoring 이전: `shared/lead_scoring.ts` (R_10.01·.02·.05 DB 로드 + lib *Core + leads UPDATE + dealer_outputs INSERT). responses-receive가 save 후 호출. `021_disable_trigger_scoring.sql`이 trigger의 `PERFORM score_lead` 제거. NF-P01 hot reload 완전 실 동작. |
+| 2026-05-19 | v0.7 — Phase F (V-009 서버 Playbook 갱신): `022_seed_r10_07_dealer_output.sql`로 R_10.07 DB 시드. `lead_scoring.ts`가 R_10.07 로드 후 segment lookup → dealer_outputs.{title·weapons·pitch·models·next_action} 풀 payload 채움 (이전: title만). `dealer-playbook` Edge Function (Bearer JWT + lead_id 소유권 검증 + active output 조회). responses-receive 응답에 lead_id 포함 (단말 fetch 용이). 다음: Phase E — dealer/index.html이 fetch한 playbook 표시 (현재 inline). |

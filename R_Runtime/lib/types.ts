@@ -164,6 +164,13 @@ export interface PlaybookEntry {
   pitch_examples: string[];
   related_models: string[];
   next_action_template: string;
+  // prd-v1 다국어 확장 — R_10.07 YAML이 이 키들도 사용
+  title_ko?: string;
+  title_ru?: string;
+  talking_points_ko?: string[];
+  talking_points_ru?: string[];
+  pitch_examples_ko?: string[];
+  pitch_examples_ru?: string[];
 }
 
 export interface PriorityTemplate {

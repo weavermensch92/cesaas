@@ -1,12 +1,14 @@
-// shared/lead_scoring.ts — Lead scoring helper (Phase D.3).
+// shared/lead_scoring.ts — Lead scoring helper (Phase D.3 + F).
 // SQL trigger의 score_lead/generate_dealer_output을 대체.
 //
 // 흐름:
-//   1. R_10.01·.02·.05 룰 로드 (DB rule_versions.active)
+//   1. R_10.01·.02·.05·.07 룰 로드 (DB rule_versions.active)
 //   2. lead + 최신 voice response + (선택) normalized_fields fetch
 //   3. EvaluationContext 빌드 → *Core 적용 (applyLeadScoring·applyLeadQuality·classifyLeadPriority)
 //   4. UPDATE leads { score, grade, priority, score_at, score_version }
-//   5. dealer_outputs supersede + 새 active INSERT (R_10.07 텍스트 렌더는 Phase E)
+//   5. dealer_outputs supersede + 새 active INSERT
+//      Phase F (V-009): R_10.07 playbook을 lookup해 title·weapons·pitch·models·next_action 채움.
+//      R_10.07 로드 실패 시 title만으로 fallback (기존 동작 유지).
 //
 // 호출:
 //   - V_Voice/backend/functions/responses-receive: save_response 후
@@ -27,6 +29,7 @@ import type {
   EvaluationContext,
   LeadQualityYaml,
   LeadScoringYaml,
+  PlaybookEntry,
   Segment,
 } from 'harness2/types.ts';
 
@@ -137,14 +140,53 @@ export async function scoreLead(leadId: string): Promise<ScoreLeadResult> {
     return { ok: false, lead_id: leadId, reason: 'leads_update_failed' };
   }
 
-  // ---- 6. dealer_outputs supersede + INSERT ----------------------------
-  // R_10.07 텍스트 렌더는 Phase E. v1은 segment + priority + score만 기록.
+  // ---- 6. dealer_outputs supersede + INSERT (V-009 Phase F) -----------
+  // R_10.07 로드 후 segment lookup → talking_points·pitch_examples·next_action 풀 payload.
+  // 로드 실패 시 title fallback (이전 v1 동작 보존).
   if (lead.segment) {
+    let title = `Playbook · ${lead.segment} · ${priority}`;
+    let weapons: Record<string, unknown> | null = null;
+    let pitch:   Record<string, unknown> | null = null;
+    let models:  string[] | null = null;
+    let nextAction: Record<string, unknown> | null = null;
+    let r10_07_version: string | null = null;
+
+    try {
+      const r10_07 = await loadRule<Record<string, unknown>>('R_10.07_DealerOutput');
+      const pb = (r10_07.body?.playbook as Record<string, PlaybookEntry> | undefined)?.[lead.segment];
+      if (pb) {
+        title = pb.title_ko ?? pb.title_ru ?? title;
+        weapons = {
+          ko: pb.talking_points_ko ?? [],
+          ru: pb.talking_points_ru ?? [],
+          items: pb.sales_weapons ?? [],
+        };
+        pitch = {
+          ko: pb.pitch_examples_ko ?? [],
+          ru: pb.pitch_examples_ru ?? [],
+        };
+        models = pb.related_models ?? [];
+        nextAction = pb.next_action_template
+          ? { ko: pb.next_action_template, ru: pb.next_action_template }
+          : null;
+      }
+      r10_07_version = r10_07.version;
+    } catch (e) {
+      log('warn', 'scoreLead: R_10.07 load failed (title-only fallback)', {
+        lead_id: leadId,
+        reason: e instanceof Error ? e.message : String(e),
+      });
+    }
+
     await db()
       .from('dealer_outputs')
       .update({ status: 'superseded' })
       .eq('lead_id', leadId)
       .eq('status', 'active');
+
+    const ruleVersion = r10_07_version
+      ? `${scoreVersion}|r10.07@${r10_07_version}`
+      : scoreVersion;
 
     const { error: insErr } = await db()
       .from('dealer_outputs')
@@ -153,9 +195,13 @@ export async function scoreLead(leadId: string): Promise<ScoreLeadResult> {
         segment: lead.segment,
         priority,
         score_snapshot: score,
-        title: `Playbook · ${lead.segment} · ${priority}`,
+        title,
+        weapons,
+        pitch,
+        models,
+        next_action: nextAction,
         source: 'rule',
-        rule_version: scoreVersion,
+        rule_version: ruleVersion,
       });
     if (insErr) {
       // dealer_output INSERT 실패는 scoring 자체는 성공 — warn 로깅만.

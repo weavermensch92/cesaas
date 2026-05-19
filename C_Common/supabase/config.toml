@@ -98,3 +98,20 @@ verify_jwt = false
 # T_08 — 통과 판정 (정량 9 지표 집계)
 [functions.admin-test-summary]
 verify_jwt = false
+
+# V_30 Dealer 본인용 — Bearer JWT 자체 검증 (verifyDealerBearer)
+[functions.dealer-consultations]
+verify_jwt = false
+
+[functions.dealer-playbook]
+verify_jwt = false
+
+# V_30.04 Admin Dealer 계정 발급·목록·폐기 (admin_auth)
+[functions.dealer-tokens-issue]
+verify_jwt = false
+
+[functions.dealer-tokens-list]
+verify_jwt = false
+
+[functions.dealer-tokens-revoke]
+verify_jwt = false

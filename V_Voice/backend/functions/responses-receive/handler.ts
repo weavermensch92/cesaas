@@ -145,8 +145,29 @@ export async function handle(req: Request): Promise<Response> {
       throw new ApiError('internal_error', 'save_response failed', { db: error.message });
     }
 
+    // Phase D.3 — Edge에서 lib 기반 scoring (trigger의 PERFORM 제거 후)
+    // Phase F.4 — lead_id를 응답 body에 포함 (Dealer가 dealer-playbook 호출 위해 필요).
+    let leadId: string | null = null;
+    try {
+      const { data: leadIdRow } = await db()
+        .from('responses')
+        .select('lead_id')
+        .eq('id', data)
+        .maybeSingle();
+      leadId = (leadIdRow?.lead_id as string | null | undefined) ?? null;
+      if (leadId) {
+        const result = await scoreLead(leadId);
+        if (!result.ok) {
+          log.warn('scoreLead failed (non-fatal)', { lead_id: leadId, reason: result.reason });
+        }
+      }
+    } catch (e) {
+      log.warn('scoreLead path failed (non-fatal)', { reason: e instanceof Error ? e.message : String(e) });
+    }
+
     const body = {
       id: data,
+      lead_id: leadId,
       survey_id: payload.survey_id,
       segment,
       segment_method: segmentMethod,
@@ -158,28 +179,10 @@ export async function handle(req: Request): Promise<Response> {
     }
 
     log.info('response saved', {
-      id: data, survey: payload.survey_id, segment,
+      id: data, lead_id: leadId, survey: payload.survey_id, segment,
       dealer_id: identity.role === 'dealer' ? identity.sub : null,
       device_id: identity.role === 'visitor' ? identity.device_id : null,
     });
-
-    // Phase D.3 — Edge에서 lib 기반 scoring (trigger의 PERFORM 제거 후)
-    try {
-      const { data: leadIdRow } = await db()
-        .from('responses')
-        .select('lead_id')
-        .eq('id', data)
-        .maybeSingle();
-      const leadId = leadIdRow?.lead_id as string | null | undefined;
-      if (leadId) {
-        const result = await scoreLead(leadId);
-        if (!result.ok) {
-          log.warn('scoreLead failed (non-fatal)', { lead_id: leadId, reason: result.reason });
-        }
-      }
-    } catch (e) {
-      log.warn('scoreLead path failed (non-fatal)', { reason: e instanceof Error ? e.message : String(e) });
-    }
 
     return jsonResponse(200, body, log.requestId);
   } catch (err) {
