@@ -4,270 +4,195 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>HD건설기계 · Dealer v2</title>
-<link rel="stylesheet" as="style" crossorigin
-  href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
-<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300..700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Geist+Mono:wght@300..700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #FAFAFA;
-    --fg: #0A0A0A;
-    --fg-2: #525252;
-    --fg-3: #A3A3A3;
-    --line: #E5E5E5;
-    --line-2: #F0F0F0;
-    --panel: #FFFFFF;
-    --code-bg: #F5F5F5;
-    --studio: #8B5CF6;
-    --dealer: #2563EB;
-    --visitor: #059669;
-    --insight: #D97706;
-    --hd-heritage: #00AD1D;
-    --sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
-    --mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
-  }
-  *,*::before,*::after { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { height: 100%; }
-  body {
-    background: var(--bg); color: var(--fg);
-    font-family: var(--sans); font-size: 14px; line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-  }
-  body::before {
-    content: ""; position: fixed; inset: 0;
-    background-image:
-      linear-gradient(var(--line-2) 1px, transparent 1px),
-      linear-gradient(90deg, var(--line-2) 1px, transparent 1px);
-    background-size: 32px 32px; opacity: 0.4;
-    pointer-events: none; z-index: -1;
-  }
-  button { font: inherit; cursor: pointer; }
-  input, textarea, select { font: inherit; color: inherit; }
+/* ============================================================================
+   HD CI 2026 — C_Common/packages/design 미러
+   ============================================================================ */
+:root {
+  --hd-eco:#00E600; --hd-heritage:#00AD1D; --hd-prosperity:#008233; --hd-dark-green:#024638;
+  --hd-bright-green:#79D97C; --hd-light-green:#C7E995; --hd-green-gray:#BFCEC2;
+  --hd-discovery:#003087; --hd-trust:#002554; --hd-light-blue:#B1E4E3; --hd-blue-gray:#DBE2E9;
+  --hd-gray:#63666A; --hd-paper:#FFFFFF; --hd-bg:#f6f8f6;
+  --hd-ink:var(--hd-trust); --hd-ink-2:var(--hd-discovery); --hd-ink-text:var(--hd-gray);
+  --hd-accent:var(--hd-heritage); --hd-accent-2:var(--hd-prosperity); --hd-accent-50:#e8f7eb;
+  --hd-steel-900:#2b2f33; --hd-steel-700:#4f535a; --hd-steel-500:var(--hd-gray);
+  --hd-steel-400:#91969d; --hd-steel-300:#b8bcc2; --hd-steel-200:#d6dadf;
+  --hd-steel-100:#e9edf0; --hd-steel-50:#f3f5f7;
+  --hd-red:#b91c1c; --hd-amber:#b45309;
+  --hd-radius:6px; --hd-radius-lg:10px;
+  --hd-border:1px solid var(--hd-steel-200);
+  --hd-font:'Noto Sans KR','Malgun Gothic',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  --hd-mono:'Geist Mono',ui-monospace,'SF Mono',monospace;
+  --hd-shadow-1:0 2px 6px rgba(0,0,0,0.06);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{background:var(--hd-bg);color:var(--hd-ink-text);font-family:var(--hd-font);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased;}
+button{font:inherit;cursor:pointer;}
+input,textarea,select{font:inherit;color:inherit;}
+.num{font-feature-settings:"tnum";font-variant-numeric:tabular-nums;}
+.mono{font-family:var(--hd-mono);}
 
-  /* ─── Top bar ─── */
-  .topbar {
-    display: flex; align-items: center; gap: 12px;
-    padding: 14px 24px;
-    background: var(--panel);
-    border-bottom: 1px solid var(--line);
-  }
-  .topbar .brand {
-    display: flex; align-items: center; gap: 10px;
-    font-weight: 700; letter-spacing: -0.01em;
-  }
-  .brand-mark {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 28px; height: 28px;
-    background: var(--hd-heritage); color: #fff;
-    font-family: var(--mono); font-weight: 700; font-size: 14px;
-    border-radius: 6px;
-  }
-  .topbar .meta {
-    font-family: var(--mono); font-size: 11px; color: var(--fg-2);
-    letter-spacing: 0.04em;
-  }
-  .topbar .spacer { flex: 1; }
-  .topbar select {
-    height: 28px; padding: 0 8px;
-    border: 1px solid var(--line); background: var(--panel);
-    font-family: var(--mono); font-size: 11px;
-  }
-  .net-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: var(--visitor);
-  }
-  .net-dot.off { background: var(--insight); }
+/* Top bar */
+.topbar{display:flex;align-items:center;gap:12px;padding:12px 22px;background:var(--hd-paper);border-bottom:var(--hd-border);box-shadow:var(--hd-shadow-1);}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-mark{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:var(--hd-heritage);color:#fff;font-weight:800;font-size:16px;border-radius:var(--hd-radius);}
+.brand-name{font-weight:700;color:var(--hd-ink);letter-spacing:-0.01em;}
+.brand-name b{color:var(--hd-heritage);}
+.crumb{font-size:11.5px;color:var(--hd-gray);}
+.spacer{flex:1;}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--hd-steel-50);border:var(--hd-border);border-radius:999px;font-size:11.5px;color:var(--hd-gray);font-family:var(--hd-mono);}
+.pill.green{background:var(--hd-accent-50);border-color:#cce5d0;color:var(--hd-prosperity);}
+.pill.amber{background:#fffbeb;border-color:#fde68a;color:var(--hd-amber);}
+.net-dot{width:7px;height:7px;border-radius:50%;background:var(--hd-prosperity);}
+.net-dot.off{background:var(--hd-amber);}
+.lang-sel{height:28px;padding:0 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-family:var(--hd-mono);font-size:11.5px;}
 
-  /* ─── Container 3-col ─── */
-  .stage { display: grid; grid-template-columns: 220px 1fr 360px; gap: 0; min-height: calc(100vh - 57px); }
-  .col { background: var(--panel); border-right: 1px solid var(--line); padding: 18px 16px; overflow: hidden; }
-  .col:last-child { border-right: none; }
-  .col-head {
-    font-family: var(--mono); font-size: 10px; color: var(--fg-2);
-    letter-spacing: 0.08em; text-transform: uppercase;
-    margin-bottom: 14px;
-  }
-  @media (max-width: 1023px) {
-    .stage { grid-template-columns: 1fr; }
-    .col { border-right: none; border-bottom: 1px solid var(--line); }
-  }
+/* Stage */
+.stage{display:grid;grid-template-columns:240px 1fr 440px;gap:14px;padding:14px;min-height:calc(100vh - 56px);}
+.panel{background:var(--hd-paper);border:var(--hd-border);border-radius:var(--hd-radius-lg);padding:16px;overflow:hidden;}
+.panel-head{font-family:var(--hd-mono);font-size:10.5px;color:var(--hd-gray);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;}
+.panel-head b{color:var(--hd-heritage);font-weight:600;}
+@media (max-width:1100px){.stage{grid-template-columns:1fr;gap:10px;}}
 
-  /* ─── Col 1: Segments ─── */
-  .seg-list { display: flex; flex-direction: column; gap: 4px; }
-  .seg {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px 10px;
-    border: 1px solid var(--line);
-    background: var(--panel);
-    cursor: pointer;
-    font-size: 12px;
-    transition: border-color 0.1s, background 0.1s;
-  }
-  .seg:hover { border-color: var(--fg-3); }
-  .seg.active { border-color: var(--fg); background: var(--code-bg); }
-  .seg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .seg-name { line-height: 1.2; }
-  .hypothesis-help {
-    margin-top: 14px; padding: 10px 12px;
-    background: var(--code-bg);
-    border-left: 3px solid var(--dealer);
-    font-size: 11px; color: var(--fg-2); line-height: 1.5;
-  }
+/* Segments */
+.seg-list{display:flex;flex-direction:column;gap:5px;}
+.seg{display:flex;align-items:center;gap:8px;padding:8px 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-size:12.5px;color:var(--hd-ink);cursor:pointer;transition:border-color 0.1s,background 0.1s;}
+.seg:hover{border-color:var(--hd-steel-400);}
+.seg.active{border-color:var(--hd-heritage);background:var(--hd-accent-50);font-weight:600;}
+.seg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.hint{margin-top:14px;padding:10px 12px;background:var(--hd-steel-50);border-left:3px solid var(--hd-discovery);border-radius:4px;font-size:11.5px;color:var(--hd-gray);line-height:1.55;}
+.survey-meta{margin-top:12px;padding:10px 12px;background:var(--hd-accent-50);border-left:3px solid var(--hd-heritage);border-radius:4px;font-size:11.5px;color:var(--hd-prosperity);line-height:1.5;font-family:var(--hd-mono);}
 
-  /* ─── Col 2: Radar + Target ─── */
-  .target-block {
-    margin-bottom: 14px; padding: 12px;
-    border: 1px solid var(--line); background: var(--bg);
-  }
-  .target-row { display: grid; grid-template-columns: 80px 1fr; gap: 10px; align-items: center; margin-bottom: 8px; }
-  .target-row:last-child { margin-bottom: 0; }
-  .target-row label {
-    font-family: var(--mono); font-size: 10px; color: var(--fg-2);
-    letter-spacing: 0.04em; text-transform: uppercase;
-  }
-  .target-row input, .target-row textarea {
-    width: 100%; padding: 6px 10px;
-    border: 1px solid var(--line);
-    background: var(--panel);
-    font-size: 13px;
-  }
-  .target-row textarea { min-height: 50px; resize: vertical; }
+/* Target */
+.target{display:grid;grid-template-columns:90px 1fr;gap:8px 12px;margin-bottom:14px;padding:12px;background:var(--hd-steel-50);border:var(--hd-border);border-radius:var(--hd-radius);}
+.target label{font-family:var(--hd-mono);font-size:10.5px;color:var(--hd-gray);letter-spacing:0.04em;align-self:center;text-transform:uppercase;}
+.target input,.target textarea{width:100%;padding:7px 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-size:13px;}
+.target textarea{min-height:46px;resize:vertical;}
+.target input:focus,.target textarea:focus{outline:none;border-color:var(--hd-heritage);}
 
-  .radar-wrap {
-    display: flex; align-items: center; justify-content: center;
-    padding: 8px; min-height: 380px;
-    border: 1px solid var(--line); background: var(--panel);
-  }
-  .radar-wrap svg { max-width: 100%; height: auto; }
+/* Radar */
+.radar-wrap{display:flex;align-items:center;justify-content:center;padding:10px;min-height:380px;border:var(--hd-border);border-radius:var(--hd-radius);background:linear-gradient(180deg,var(--hd-paper) 0%,var(--hd-steel-50) 100%);}
+.radar-wrap svg{max-width:100%;height:auto;}
+.radar-empty{font-size:12px;color:var(--hd-gray);font-family:var(--hd-mono);}
 
-  /* ─── Col 3: Q&A ─── */
-  .qa-list { display: flex; flex-direction: column; gap: 10px; }
-  .qa {
-    padding: 10px 12px;
-    border: 1px solid var(--line);
-  }
-  .qa-axis {
-    font-family: var(--mono); font-size: 9px; color: var(--fg-2);
-    letter-spacing: 0.08em; margin-bottom: 4px;
-  }
-  .qa-title {
-    font-size: 12px; font-weight: 600; margin-bottom: 8px;
-  }
-  .qa-scores {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px;
-  }
-  .qa-scores.eleven { grid-template-columns: repeat(11, 1fr); }
-  .qa-score {
-    text-align: center; padding: 6px 0;
-    border: 1px solid var(--line);
-    font-family: var(--mono); font-size: 11px;
-    cursor: pointer;
-    background: var(--panel);
-    transition: background 0.1s, color 0.1s, border-color 0.1s;
-  }
-  .qa-score:hover { border-color: var(--fg-3); }
-  .qa-score.selected {
-    background: var(--fg); color: var(--bg); border-color: var(--fg);
-  }
-  .consent {
-    display: flex; align-items: flex-start; gap: 8px;
-    padding: 10px 12px;
-    border: 1px solid var(--line);
-    font-size: 12px; line-height: 1.5;
-    cursor: pointer;
-  }
-  .consent input { margin-top: 3px; }
-  .consent.required .req { color: var(--insight); }
+/* Summary */
+.summary{margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.metric{padding:10px 12px;border:var(--hd-border);border-radius:var(--hd-radius);background:var(--hd-paper);}
+.metric-label{font-family:var(--hd-mono);font-size:9.5px;color:var(--hd-gray);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;}
+.metric-value{font-weight:700;font-size:16px;color:var(--hd-ink);}
 
-  .submit-block { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-  .crm-sync-btn {
-    padding: 11px; text-align: center;
-    background: var(--fg); color: var(--bg);
-    border: 1px solid var(--fg);
-    font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em;
-    text-transform: uppercase;
-    transition: opacity 0.1s;
-  }
-  .crm-sync-btn:hover { opacity: 0.85; }
-  .crm-sync-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-  .reset-btn {
-    padding: 8px; text-align: center;
-    background: var(--panel); color: var(--fg-2);
-    border: 1px solid var(--line);
-    font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em;
-  }
-  .toast {
-    padding: 10px 12px; margin-top: 10px;
-    border: 1px solid var(--line);
-    font-family: var(--mono); font-size: 11px;
-  }
-  .toast.ok    { border-left: 3px solid var(--visitor); color: var(--visitor); }
-  .toast.err   { border-left: 3px solid #DC2626; color: #DC2626; }
-  .toast.warn  { border-left: 3px solid var(--insight); color: var(--insight); }
+/* Q&A */
+.qa-list{display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 200px);overflow-y:auto;padding-right:4px;}
+.qa-list::-webkit-scrollbar{width:6px;} .qa-list::-webkit-scrollbar-thumb{background:var(--hd-steel-300);border-radius:3px;}
+.qa{padding:12px 14px;border:var(--hd-border);border-radius:var(--hd-radius);background:var(--hd-paper);}
+.qa.answered{border-color:var(--hd-bright-green);background:#f4fbf5;}
+.qa-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.qa-axis{display:inline-block;padding:2px 8px;background:var(--hd-steel-100);border-radius:999px;font-family:var(--hd-mono);font-size:9.5px;color:var(--hd-gray);letter-spacing:0.06em;text-transform:uppercase;}
+.qa.answered .qa-axis{background:var(--hd-accent-50);color:var(--hd-prosperity);}
+.qa-kind{font-family:var(--hd-mono);font-size:9.5px;color:var(--hd-steel-400);letter-spacing:0.04em;}
+.qa-title{font-size:13px;font-weight:500;color:var(--hd-ink);margin-bottom:10px;line-height:1.4;}
+.qa-title .req{color:var(--hd-red);font-weight:600;margin-left:4px;}
+
+.opts{display:flex;flex-direction:column;gap:5px;}
+.opt{display:flex;align-items:center;gap:10px;padding:8px 10px;border:var(--hd-border);border-radius:var(--hd-radius);background:var(--hd-paper);font-size:12.5px;color:var(--hd-ink-text);cursor:pointer;transition:border-color 0.1s,background 0.1s;}
+.opt:hover{border-color:var(--hd-steel-400);}
+.opt.selected{border-color:var(--hd-heritage);background:var(--hd-accent-50);color:var(--hd-ink);font-weight:500;}
+.opt-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:var(--hd-border);border-radius:999px;font-family:var(--hd-mono);font-size:11px;font-weight:600;background:var(--hd-paper);color:var(--hd-gray);flex-shrink:0;}
+.opt.selected .opt-num{background:var(--hd-heritage);color:var(--hd-paper);border-color:var(--hd-heritage);}
+
+.scale-grid{display:grid;gap:4px;}
+.scale-grid.s5{grid-template-columns:repeat(5,1fr);}
+.scale-grid.s10{grid-template-columns:repeat(10,1fr);}
+.scale-grid.nps{grid-template-columns:repeat(11,1fr);}
+.scale-cell{padding:8px 0;text-align:center;border:var(--hd-border);border-radius:var(--hd-radius);background:var(--hd-paper);font-family:var(--hd-mono);font-size:11px;font-weight:600;color:var(--hd-gray);cursor:pointer;}
+.scale-cell:hover{border-color:var(--hd-steel-400);}
+.scale-cell.selected{background:var(--hd-heritage);color:#fff;border-color:var(--hd-heritage);}
+.scale-cell.lo{color:var(--hd-red);}
+.scale-cell.mid{color:var(--hd-amber);}
+.scale-cell.hi{color:var(--hd-prosperity);}
+.scale-cell.selected.lo{background:var(--hd-red);border-color:var(--hd-red);color:#fff;}
+.scale-cell.selected.mid{background:var(--hd-amber);border-color:var(--hd-amber);color:#fff;}
+.scale-cell.selected.hi{background:var(--hd-prosperity);border-color:var(--hd-prosperity);color:#fff;}
+
+.txt-input,.txt-area{width:100%;padding:8px 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-size:13px;}
+.txt-area{min-height:64px;resize:vertical;}
+.txt-input:focus,.txt-area:focus{outline:none;border-color:var(--hd-heritage);}
+.num-input{width:140px;padding:8px 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-family:var(--hd-mono);font-size:13px;}
+
+.consent{display:flex;align-items:flex-start;gap:9px;padding:10px 14px;border:var(--hd-border);border-radius:var(--hd-radius);font-size:12.5px;line-height:1.45;color:var(--hd-ink);cursor:pointer;background:var(--hd-paper);}
+.consent input{margin-top:2px;accent-color:var(--hd-heritage);}
+.req{color:var(--hd-red);font-weight:600;}
+
+/* Submit */
+.submit-row{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.btn{padding:12px 16px;border:var(--hd-border);border-radius:var(--hd-radius);background:var(--hd-paper);color:var(--hd-ink);font-weight:600;font-size:13px;transition:background 0.1s,opacity 0.1s;}
+.btn:hover{background:var(--hd-steel-50);}
+.btn.primary{background:var(--hd-heritage);border-color:var(--hd-heritage);color:#fff;}
+.btn.primary:hover{background:var(--hd-prosperity);border-color:var(--hd-prosperity);}
+.btn:disabled{opacity:0.45;cursor:not-allowed;}
+.btn:disabled:hover{background:var(--hd-paper);}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--hd-gray);font-weight:400;}
+.btn.ghost:hover{background:var(--hd-steel-50);}
+
+.toast{padding:10px 14px;border:var(--hd-border);border-radius:var(--hd-radius);font-size:12.5px;}
+.toast.ok{background:var(--hd-accent-50);border-color:#b6e0bf;color:var(--hd-prosperity);}
+.toast.err{background:#fef2f2;border-color:#fecaca;color:var(--hd-red);}
+.toast.warn{background:#fffbeb;border-color:#fde68a;color:var(--hd-amber);}
+
+.loading{padding:40px 20px;text-align:center;color:var(--hd-gray);font-family:var(--hd-mono);font-size:12px;}
 </style>
 </head>
 <body>
 
-<!-- ─── Top bar ─── -->
 <header class="topbar">
-  <span class="brand"><span class="brand-mark">H</span>HD건설기계 · Dealer v2</span>
-  <span class="meta" id="tokenStatus">no token</span>
+  <span class="brand"><span class="brand-mark">H</span><span class="brand-name"><b>HD</b>건설기계 · Dealer v2</span></span>
+  <span class="crumb" id="surveyCrumb">설문 로딩…</span>
   <span class="spacer"></span>
-  <span class="meta"><span class="net-dot" id="netDot"></span>&nbsp;<span id="netLabel">Online</span></span>
-  <span class="meta" id="queueLabel">큐 0</span>
-  <select id="langSel">
-    <option value="ru">RU</option>
-    <option value="en">EN</option>
-    <option value="ko">KO</option>
+  <span class="pill" id="tokenStatus">no token</span>
+  <span class="pill" id="netPill"><span class="net-dot" id="netDot"></span><span id="netLabel">Online</span></span>
+  <span class="pill" id="queuePill">큐 0</span>
+  <select id="langSel" class="lang-sel">
+    <option value="ru">RU</option><option value="en">EN</option><option value="ko">KO</option>
   </select>
 </header>
 
-<!-- ─── 3-col stage ─── -->
 <main class="stage">
 
-  <!-- COL 1: Segment hypothesis -->
-  <aside class="col">
-    <div class="col-head" id="lbl_segments">8 Segments · 가설</div>
+  <!-- COL 1 — Segments hypothesis -->
+  <aside class="panel">
+    <div class="panel-head"><b>8</b> Segments · <span id="lbl_hypothesis">가설</span></div>
     <div class="seg-list" id="segList"></div>
-    <div class="hypothesis-help" id="lbl_hypothesis_help">
-      딜러가 인터뷰 중 가정하는 segment 라벨. 서버는 자동 재분류 — 가설 vs 자동 정확도가 측정됨.
-    </div>
+    <div class="hint" id="lbl_hypothesis_help"></div>
+    <div class="survey-meta" id="surveyMeta" style="display:none;"></div>
   </aside>
 
-  <!-- COL 2: Target + Radar -->
-  <section class="col">
-    <div class="col-head" id="lbl_target">상담 대상</div>
-    <div class="target-block">
-      <div class="target-row">
-        <label id="lbl_target_company">Company *</label>
-        <input id="inp_company" type="text" autocomplete="off" />
-      </div>
-      <div class="target-row">
-        <label id="lbl_target_contact">Contact</label>
-        <input id="inp_contact" type="text" autocomplete="off" />
-      </div>
-      <div class="target-row">
-        <label id="lbl_target_phone">Phone</label>
-        <input id="inp_phone" type="text" inputmode="tel" autocomplete="off" />
-      </div>
-      <div class="target-row">
-        <label id="lbl_target_notes">Notes</label>
-        <textarea id="inp_notes" autocomplete="off"></textarea>
-      </div>
+  <!-- COL 2 — Target + Radar + Summary -->
+  <section class="panel">
+    <div class="panel-head" id="lbl_target_head">상담 대상</div>
+    <div class="target">
+      <label id="lbl_company">Company *</label><input id="inp_company" type="text" autocomplete="off"/>
+      <label id="lbl_contact">Contact</label><input id="inp_contact" type="text" autocomplete="off"/>
+      <label id="lbl_phone">Phone</label><input id="inp_phone" type="text" inputmode="tel" autocomplete="off"/>
+      <label id="lbl_notes">Notes</label><textarea id="inp_notes" autocomplete="off"></textarea>
     </div>
-
-    <div class="col-head" id="lbl_radar">Positioning Map · 6 가치축</div>
-    <div class="radar-wrap">
-      <svg id="radar" width="380" height="380" viewBox="0 0 380 380"></svg>
+    <div class="panel-head" id="lbl_radar_head">포지셔닝 맵 · 답변 기반 자동 도출</div>
+    <div class="radar-wrap" id="radarWrap">
+      <span class="radar-empty">설문 응답이 시작되면 표시됩니다</span>
     </div>
+    <div class="summary" id="summary"></div>
   </section>
 
-  <!-- COL 3: Interview Q&A -->
-  <aside class="col">
-    <div class="col-head" id="lbl_interview">Customer Interview</div>
-    <div class="qa-list" id="qaList"></div>
-    <div class="submit-block">
-      <button class="crm-sync-btn" id="btnSubmit" disabled>저장 + CRM Sync</button>
-      <button class="reset-btn" id="btnReset" style="display:none;">새 상담</button>
+  <!-- COL 3 — Interview -->
+  <aside class="panel">
+    <div class="panel-head"><span id="lbl_interview">고객 인터뷰</span> · <span id="progress">0/0</span></div>
+    <div id="qaList" class="qa-list"><div class="loading">로딩 중…</div></div>
+    <div class="submit-row">
+      <button class="btn primary" id="btnSubmit" disabled>저장 + CRM Sync</button>
+      <button class="btn ghost" id="btnReset" style="display:none;">새 상담</button>
       <div id="toastSlot"></div>
     </div>
   </aside>
@@ -275,93 +200,70 @@
 </main>
 
 <script>
-// ============================================================================
-// SURVEY · 6 preference axes + NPS + 2 consents
-// ============================================================================
-const SURVEY_ID = 'survey_v2_dealer_preference';
-const AXES = [
-  { id: 'price',       i18n: { ru:'Цена',          en:'Price',       ko:'가격'    } },
-  { id: 'fuel',        i18n: { ru:'Расход топлива', en:'Fuel',        ko:'연비'    } },
-  { id: 'durability',  i18n: { ru:'Долговечность', en:'Durability',  ko:'내구성'  } },
-  { id: 'service',     i18n: { ru:'Сервис',         en:'Service',     ko:'서비스'  } },
-  { id: 'reference',   i18n: { ru:'Репутация',      en:'Reference',   ko:'평판'    } },
-  { id: 'versatility', i18n: { ru:'Универсальность',en:'Versatility', ko:'범용성'  } },
-];
+/* ============================================================================
+   SEGMENTS · R_10.05 8 segment (서버 시드와 동기)
+   ============================================================================ */
 const SEGMENTS = [
-  { id: 'mining',                color: '#F87171', i18n:{ru:'Горнодобыча',en:'Mining',           ko:'광업'        }},
-  { id: 'key_account',           color: '#8B5CF6', i18n:{ru:'Ключ. клиент',en:'Key Account',      ko:'키 어카운트'  }},
-  { id: 'construction_heavy',    color: '#F97316', i18n:{ru:'Крупное стр.',en:'Heavy constr.',     ko:'대형 건설'   }},
-  { id: 'agriculture',           color: '#EAB308', i18n:{ru:'С/х',          en:'Agriculture',      ko:'농업'        }},
-  { id: 'forestry',              color: '#14B8A6', i18n:{ru:'Лесн. хоз-во', en:'Forestry',         ko:'임업'        }},
-  { id: 'general_construction',  color: '#38BDF8', i18n:{ru:'Общ. стр.',    en:'General constr.',  ko:'일반 건설'   }},
-  { id: 'rental',                color: '#1E293B', i18n:{ru:'Аренда',       en:'Rental',           ko:'렌탈'        }},
-  { id: 'other',                 color: '#EC4899', i18n:{ru:'Прочее',       en:'Other',            ko:'기타'        }},
+  { id:'mining',                color:'#F87171', i18n:{ru:'Горнодобыча',  en:'Mining',          ko:'광업'      }},
+  { id:'key_account',           color:'#8B5CF6', i18n:{ru:'Ключ. клиент', en:'Key Account',     ko:'키 어카운트'}},
+  { id:'construction_heavy',    color:'#F97316', i18n:{ru:'Крупное стр.', en:'Heavy constr.',   ko:'대형 건설'  }},
+  { id:'agriculture',           color:'#EAB308', i18n:{ru:'С/х',           en:'Agriculture',     ko:'농업'      }},
+  { id:'forestry',              color:'#14B8A6', i18n:{ru:'Лесн. хоз-во',  en:'Forestry',        ko:'임업'      }},
+  { id:'general_construction',  color:'#38BDF8', i18n:{ru:'Общ. стр.',     en:'General constr.', ko:'일반 건설'  }},
+  { id:'rental',                color:'#1E293B', i18n:{ru:'Аренда',        en:'Rental',          ko:'렌탈'      }},
+  { id:'other',                 color:'#EC4899', i18n:{ru:'Прочее',        en:'Other',           ko:'기타'      }},
 ];
+
 const I18N = {
-  ru: { segments:'8 Сегментов · гипотеза', target:'Клиент',
-        target_company:'Компания *', target_contact:'Контакт', target_phone:'Телефон', target_notes:'Заметки',
-        radar:'Карта · 6 ценностей', interview:'Интервью клиента',
-        net_on:'Online', net_off:'Offline', queue:'Очередь',
-        submit:'Сохранить + CRM Sync', reset:'Новое интервью',
-        ok_sent:'Отправлено', ok_offline:'Сохранено локально',
-        nps:'NPS — рекомендация 0—10', consent_subscribe:'Подписка на обновления',
-        consent_data:'Согласие на обработку данных (обязательно)',
-        hypothesis_help:'Дилер выбирает гипотетический сегмент. Сервер автоматически переклассифицирует — измеряется точность гипотезы.',
-        score_hint:'1 (нет) → 5 (критично)' },
-  en: { segments:'8 Segments · hypothesis', target:'Customer',
-        target_company:'Company *', target_contact:'Contact', target_phone:'Phone', target_notes:'Notes',
-        radar:'Positioning Map · 6 axes', interview:'Customer Interview',
-        net_on:'Online', net_off:'Offline', queue:'Queue',
-        submit:'Save + CRM Sync', reset:'New interview',
-        ok_sent:'Sent', ok_offline:'Saved offline',
-        nps:'NPS — recommend 0—10', consent_subscribe:'Subscribe to updates',
-        consent_data:'Data processing consent (required)',
-        hypothesis_help:'Dealer toggles hypothesized segment. Server re-classifies — hypothesis accuracy measured.',
-        score_hint:'1 (none) → 5 (critical)' },
-  ko: { segments:'8 세그먼트 · 가설', target:'상담 대상',
-        target_company:'회사명 *', target_contact:'담당자', target_phone:'연락처', target_notes:'메모',
-        radar:'포지셔닝 맵 · 6 가치축', interview:'고객 인터뷰',
-        net_on:'Online', net_off:'Offline', queue:'큐',
-        submit:'저장 + CRM Sync', reset:'새 상담',
-        ok_sent:'송출 완료', ok_offline:'오프라인 저장됨',
-        nps:'NPS — 추천 의향 0—10', consent_subscribe:'향후 업데이트 수신 동의',
-        consent_data:'개인정보 처리 동의 (필수)',
-        hypothesis_help:'딜러가 인터뷰 중 가정하는 segment 라벨. 서버는 자동 재분류 — 가설 vs 자동 정확도가 측정됨.',
-        score_hint:'1 (관심 없음) → 5 (결정 요인)' },
+  ru:{ hypothesis:'гипотеза', hypothesis_help:'Дилер выбирает гипотетический сегмент. Сервер автоматически переклассифицирует — измеряется точность гипотезы.',
+       target_head:'Информация о клиенте', company:'Компания *', contact:'Контакт', phone:'Телефон', notes:'Заметки',
+       radar_head:'Карта позиционирования · автовывод по ответам', interview:'Интервью клиента',
+       net_on:'Online', net_off:'Offline', queue:'Очередь',
+       submit:'Сохранить + CRM Sync', reset:'Новое интервью',
+       ok_sent:'Сохранено + отправлено', ok_offline:'Сохранено локально (offline)',
+       loading:'Загрузка опроса…', radar_empty:'Появится после ответов', survey_id:'Опрос',
+       avg:'Среднее', strong:'Сильнейшая ось', weak:'Слабейшая' },
+  en:{ hypothesis:'hypothesis', hypothesis_help:'Dealer toggles hypothesized segment. Server re-classifies independently — hypothesis accuracy measured.',
+       target_head:'Customer information', company:'Company *', contact:'Contact', phone:'Phone', notes:'Notes',
+       radar_head:'Positioning Map · derived from answers', interview:'Customer Interview',
+       net_on:'Online', net_off:'Offline', queue:'Queue',
+       submit:'Save + CRM Sync', reset:'New interview',
+       ok_sent:'Saved + sent', ok_offline:'Saved locally (offline)',
+       loading:'Loading survey…', radar_empty:'Shows up after answers', survey_id:'Survey',
+       avg:'Average', strong:'Strongest axis', weak:'Weakest' },
+  ko:{ hypothesis:'가설', hypothesis_help:'딜러가 인터뷰 중 가정하는 segment 라벨. 서버는 별도로 자동 재분류 — 가설 vs 자동 정확도가 측정됨.',
+       target_head:'상담 대상 정보', company:'회사명 *', contact:'담당자', phone:'연락처', notes:'메모',
+       radar_head:'포지셔닝 맵 · 답변 기반 자동 도출', interview:'고객 인터뷰',
+       net_on:'Online', net_off:'Offline', queue:'큐',
+       submit:'저장 + CRM Sync', reset:'새 상담',
+       ok_sent:'저장 + 송출 완료', ok_offline:'오프라인 저장됨',
+       loading:'설문 로딩 중…', radar_empty:'답변 시작되면 표시', survey_id:'설문',
+       avg:'평균', strong:'최강 축', weak:'최약 축' },
 };
 
-// ============================================================================
-// State
-// ============================================================================
+/* ============================================================================ */
 const state = {
-  lang: 'ru',
-  segment: null,          // 'mining' | ... | null
-  scores: {},             // {price:1-5,fuel:...}
-  nps: null,              // 0-10
-  consent_subscribe: false,
-  consent_data: false,
-  target_company: '',
-  contact_name: '',
-  contact_phone: '',
-  notes: '',
-  token: null, dealerId: null, event: null,
-  online: navigator.onLine,
-  queueCount: 0,
-  showResult: false,
-  toast: null,
+  lang:'ru', segment:null, answers:{},
+  target_company:'', contact_name:'', contact_phone:'', notes:'',
+  token:null, dealerId:null, event:null,
+  online:navigator.onLine, queueCount:0,
+  survey:null, questions:[], axes:[],   // fetched
+  loadError:null,
 };
-function tx(o){ return o[state.lang] || o.ru || o.en || o.ko || ''; }
+function tx(o){ return (o && (o[state.lang] || o.ru || o.en || o.ko)) || ''; }
 function t(k){ return (I18N[state.lang] || I18N.ru)[k] || k; }
+function questionTitle(q){
+  const k = `title_${state.lang}`;
+  return q[k] || q.title_ru || q.title_en || q.title_ko || q.id;
+}
 
-// ============================================================================
-// Bootstrap — JWT from URL/localStorage
-// ============================================================================
-(function bootIdentity(){
+/* JWT bootstrap */
+(function(){
   const usp = new URLSearchParams(location.search);
   const tok = usp.get('token');
   if (tok) {
-    try { localStorage.setItem('hd_dealer_token', tok); } catch(_) {}
-    const p = decodeJwtPayload(tok);
+    try { localStorage.setItem('hd_dealer_token', tok); } catch(_){}
+    const p = decodeJwt(tok);
     if (p) {
       if (p.sub)   try { localStorage.setItem('hd_dealer_id', p.sub); } catch(_){}
       if (p.event) try { localStorage.setItem('hd_event', p.event); } catch(_){}
@@ -372,334 +274,351 @@ function t(k){ return (I18N[state.lang] || I18N.ru)[k] || k; }
   state.dealerId = localStorage.getItem('hd_dealer_id');
   state.event    = localStorage.getItem('hd_event');
 })();
-function decodeJwtPayload(tok){
-  try{
-    const parts = tok.split('.');
-    if (parts.length < 2) return null;
-    return JSON.parse(atob(parts[1].replace(/-/g,'+').replace(/_/g,'/')));
-  }catch(_){ return null; }
-}
+function decodeJwt(tok){ try{ const p=tok.split('.'); return JSON.parse(atob(p[1].replace(/-/g,'+').replace(/_/g,'/')));} catch(_){return null;} }
 
-// ============================================================================
-// IndexedDB queue (offline drain)
-// ============================================================================
+/* IndexedDB queue */
 const DB_NAME='hd_voice_dealer_v2', STORE='queue';
-function openDb(){
-  return new Promise((res, rej) => {
-    const r = indexedDB.open(DB_NAME, 1);
-    r.onupgradeneeded = (e) => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(STORE)) {
-        const s = db.createObjectStore(STORE, { keyPath:'id' });
-        s.createIndex('status','status');
-      }
-    };
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => rej(r.error);
-  });
-}
-async function queueAdd(rec){
-  const db = await openDb();
-  rec.id = rec.id || crypto.randomUUID();
-  rec.status = 'pending'; rec.attempts = 0; rec.enqueued_at = new Date().toISOString();
-  await new Promise((res, rej) => {
-    const tx_ = db.transaction(STORE,'readwrite');
-    tx_.objectStore(STORE).add(rec);
-    tx_.oncomplete = res; tx_.onerror = () => rej(tx_.error);
-  });
-  return rec.id;
-}
-async function queueListPending(){
-  const db = await openDb();
-  return new Promise((res) => {
-    const out=[];
-    const tx_ = db.transaction(STORE,'readonly');
-    const idx = tx_.objectStore(STORE).index('status');
-    const cur = idx.openCursor(IDBKeyRange.only('pending'));
-    cur.onsuccess = (e) => { const c = e.target.result; if (c) { out.push(c.value); c.continue(); } else res(out); };
-    cur.onerror = () => res(out);
-  });
-}
-async function queueUpdate(id, patch){
-  const db = await openDb();
-  return new Promise((res) => {
-    const tx_ = db.transaction(STORE,'readwrite');
-    const st = tx_.objectStore(STORE);
-    const get = st.get(id);
-    get.onsuccess = () => { const r = get.result; if (r){ Object.assign(r, patch); st.put(r); } res(); };
-    get.onerror = () => res();
-  });
-}
-async function queueCountFn(){
-  const db = await openDb();
-  return new Promise((res) => {
-    const tx_ = db.transaction(STORE,'readonly');
-    const idx = tx_.objectStore(STORE).index('status');
-    const r = idx.count(IDBKeyRange.only('pending'));
-    r.onsuccess = () => res(r.result);
-    r.onerror = () => res(0);
-  });
-}
+function openDb(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,1); r.onupgradeneeded=(e)=>{const db=e.target.result; if(!db.objectStoreNames.contains(STORE)){const s=db.createObjectStore(STORE,{keyPath:'id'}); s.createIndex('status','status');}}; r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);});}
+async function queueAdd(rec){const db=await openDb(); rec.status='pending'; rec.attempts=0; rec.enqueued_at=new Date().toISOString(); await new Promise((res,rej)=>{const tx_=db.transaction(STORE,'readwrite'); tx_.objectStore(STORE).add(rec); tx_.oncomplete=res; tx_.onerror=()=>rej(tx_.error);}); return rec.id;}
+async function queueCountFn(){const db=await openDb(); return new Promise((res)=>{const tx_=db.transaction(STORE,'readonly'); const r=tx_.objectStore(STORE).index('status').count(IDBKeyRange.only('pending')); r.onsuccess=()=>res(r.result); r.onerror=()=>res(0);});}
+async function queueListPending(){const db=await openDb(); return new Promise((res)=>{const out=[]; const tx_=db.transaction(STORE,'readonly'); const cur=tx_.objectStore(STORE).index('status').openCursor(IDBKeyRange.only('pending')); cur.onsuccess=(e)=>{const c=e.target.result; if(c){out.push(c.value);c.continue();}else res(out);}; cur.onerror=()=>res(out);});}
+async function queueUpdate(id,patch){const db=await openDb(); return new Promise((res)=>{const tx_=db.transaction(STORE,'readwrite'); const st=tx_.objectStore(STORE); const get=st.get(id); get.onsuccess=()=>{const r=get.result; if(r){Object.assign(r,patch); st.put(r);} res();}; get.onerror=()=>res();});}
+async function refreshQueue(){state.queueCount=await queueCountFn(); const el=document.getElementById('queuePill'); if(el) el.textContent=`${t('queue')} ${state.queueCount}`;}
 
-// ============================================================================
-// API
-// ============================================================================
+/* API */
 const API_BASE = (window.HD_API_BASE || '').replace(/\/$/,'');
-
 async function postOne(rec){
   if (!API_BASE) throw new Error('API_BASE 미설정');
   const res = await fetch(`${API_BASE}/responses-receive`, {
     method:'POST',
     headers:{
       'Content-Type':'application/json',
-      ...(state.token ? { 'Authorization': `Bearer ${state.token}` } : {}),
+      ...(state.token ? {'Authorization': `Bearer ${state.token}`} : {}),
       'Idempotency-Key': rec.idempotency_key || rec.id,
     },
     body: JSON.stringify(rec.payload),
   });
-  if (!res.ok) {
-    const txt = await res.text();
-    throw new Error(`${res.status}: ${txt}`);
-  }
+  if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
   return res.json();
 }
-
 async function drainQueue(){
   if (!state.online) return;
-  const pending = await queueListPending();
-  for (const rec of pending) {
-    try {
-      await postOne(rec);
-      await queueUpdate(rec.id, { status:'sent', sent_at: new Date().toISOString() });
-    } catch (e) {
-      await queueUpdate(rec.id, { status:'pending', attempts: (rec.attempts||0)+1, last_error: String(e).slice(0,300) });
-    }
+  const p = await queueListPending();
+  for (const rec of p) {
+    try { await postOne(rec); await queueUpdate(rec.id,{status:'sent',sent_at:new Date().toISOString()}); }
+    catch (e) { await queueUpdate(rec.id,{status:'pending',attempts:(rec.attempts||0)+1,last_error:String(e).slice(0,300)}); }
   }
-  refreshQueueBadge();
+  refreshQueue();
 }
 
-async function refreshQueueBadge(){
-  state.queueCount = await queueCountFn();
-  const lbl = document.getElementById('queueLabel');
-  if (lbl) lbl.textContent = `${t('queue')} ${state.queueCount}`;
+async function loadSurvey(){
+  if (!API_BASE) { state.loadError = 'API_BASE 미설정'; renderQA(); return; }
+  try {
+    const r = await fetch(`${API_BASE}/surveys-get?audience=dealer`);
+    if (!r.ok) throw new Error(`${r.status}: ${await r.text()}`);
+    const d = await r.json();
+    state.survey = d.survey;
+    state.questions = d.questions || [];
+    state.axes = [...new Set(state.questions.map((q) => q.axis).filter(Boolean))];
+    state.loadError = null;
+    document.getElementById('surveyCrumb').textContent = `${t('survey_id')}: ${state.survey.id}`;
+    const meta = document.getElementById('surveyMeta');
+    meta.textContent = `${state.survey.id} · ${state.questions.length} q · ${state.axes.length} axes`;
+    meta.style.display = '';
+    renderQA(); renderRadar(); refreshSubmit();
+  } catch (e) {
+    state.loadError = String(e);
+    renderQA();
+  }
 }
 
-// ============================================================================
-// Render — segments, radar, Q&A
-// ============================================================================
+/* ============================================================================
+   Scoring — answer → 1~5 normalized
+   ============================================================================ */
+function scoreOf(q, ans){
+  if (ans == null || ans === '') return null;
+  if (q.type === 'scale_1_5' && typeof ans === 'number') return Math.max(1, Math.min(5, ans));
+  if (q.type === 'scale_1_10' && typeof ans === 'number') return Math.max(1, Math.min(5, ans / 2));
+  if (q.type === 'nps' && typeof ans === 'number') return Math.max(0, Math.min(5, ans / 2));
+  if (q.type === 'slider' && typeof ans === 'number') return Math.max(1, Math.min(5, ans));
+  if (q.type === 'number' && typeof ans === 'number') return null; // 자유 숫자 — axis 미반영
+  if (q.type === 'single_select') {
+    const opts = q.options || [];
+    const idx = opts.findIndex((o) => o.value === ans);
+    if (idx < 0) return null;
+    return ((idx + 1) / opts.length) * 5;
+  }
+  if (q.type === 'multi_select' && Array.isArray(ans)) {
+    return Math.min(5, Math.max(1, ans.length));
+  }
+  if (q.type === 'consent') return ans === true ? 5 : 0;
+  if (q.type === 'text_short' || q.type === 'text_long') return null;
+  return null;
+}
+function computeAxes(){
+  const out = {};
+  for (const ax of state.axes) {
+    const qs = state.questions.filter((q) => q.axis === ax);
+    const vals = qs.map((q) => scoreOf(q, state.answers[q.id])).filter((v) => v != null);
+    out[ax] = vals.length ? vals.reduce((s,v) => s+v, 0) / vals.length : null;
+  }
+  return out;
+}
+
+/* ============================================================================
+   Render
+   ============================================================================ */
 function renderSegments(){
   const list = document.getElementById('segList');
   list.innerHTML = '';
   for (const s of SEGMENTS) {
     const el = document.createElement('div');
     el.className = 'seg' + (state.segment === s.id ? ' active' : '');
-    el.innerHTML = `<span class="seg-dot" style="background:${s.color}"></span><span class="seg-name">${tx(s.i18n)}</span>`;
-    el.onclick = () => {
-      state.segment = state.segment === s.id ? null : s.id;
-      renderSegments(); renderRadar(); refreshSubmit();
-    };
+    el.innerHTML = `<span class="seg-dot" style="background:${s.color}"></span><span>${tx(s.i18n)}</span>`;
+    el.onclick = () => { state.segment = state.segment === s.id ? null : s.id; renderSegments(); renderRadar(); };
     list.appendChild(el);
   }
 }
 
 function renderRadar(){
-  const svg = document.getElementById('radar');
-  const cx = 190, cy = 190, R = 130;
-  const N = AXES.length;
-  const angle = (i) => -Math.PI/2 + i * (2 * Math.PI / N);
-  const pt = (i, frac) => ({ x: cx + Math.cos(angle(i)) * R * frac, y: cy + Math.sin(angle(i)) * R * frac });
+  const wrap = document.getElementById('radarWrap');
+  const N = state.axes.length;
+  if (N < 3) {
+    wrap.innerHTML = `<span class="radar-empty">${state.axes.length ? `radar 필요 axes ≥ 3 (현재 ${N})` : t('radar_empty')}</span>`;
+    document.getElementById('summary').innerHTML = '';
+    return;
+  }
+  const cx=200, cy=200, R=130;
+  const angle=(i)=>-Math.PI/2 + i*(2*Math.PI/N);
+  const pt=(i,f)=>({x:cx+Math.cos(angle(i))*R*f, y:cy+Math.sin(angle(i))*R*f});
+  const axes = computeAxes();
 
-  let out = '';
-  // Grid hexagons (1..5)
-  for (let lv = 1; lv <= 5; lv++) {
-    const f = lv / 5;
-    const pts = AXES.map((_, i) => { const p = pt(i, f); return `${p.x.toFixed(1)},${p.y.toFixed(1)}`; }).join(' ');
-    out += `<polygon points="${pts}" fill="none" stroke="#E5E5E5" stroke-width="0.6"/>`;
+  let out = `<svg width="400" height="400" viewBox="0 0 400 400">`;
+  for (let lv=1; lv<=5; lv++) {
+    const f = lv/5;
+    const pts = state.axes.map((_,i)=>{const p=pt(i,f); return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;}).join(' ');
+    out += `<polygon points="${pts}" fill="none" stroke="${lv===5?'#d6dadf':'#e9edf0'}" stroke-width="${lv===5?1:0.6}"/>`;
   }
-  // Axis lines
-  for (let i = 0; i < N; i++) {
-    const p = pt(i, 1);
-    out += `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="#F0F0F0" stroke-width="0.6"/>`;
+  for (let i=0; i<N; i++) {
+    const p = pt(i,1);
+    out += `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="#e9edf0" stroke-width="0.6"/>`;
   }
-  // Axis labels
-  for (let i = 0; i < N; i++) {
-    const p = pt(i, 1.16);
-    const a = AXES[i];
-    out += `<text x="${p.x.toFixed(1)}" y="${p.y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" font-family="Geist Mono, monospace" font-size="10" fill="#525252">${tx(a.i18n)}</text>`;
+  for (let i=0; i<N; i++) {
+    const p = pt(i, 1.18);
+    const ax = state.axes[i];
+    const v = axes[ax];
+    const vStr = v != null ? v.toFixed(1) : '–';
+    out += `<text x="${p.x.toFixed(1)}" y="${(p.y-4).toFixed(1)}" text-anchor="middle" font-family="Noto Sans KR" font-size="11" font-weight="600" fill="#002554">${ax}</text>`;
+    out += `<text x="${p.x.toFixed(1)}" y="${(p.y+8).toFixed(1)}" text-anchor="middle" font-family="Geist Mono" font-size="9.5" fill="#63666A">${vStr}</text>`;
   }
-  // Customer polygon (from scores; missing = 0)
-  const scored = AXES.map((a, i) => {
-    const v = Number(state.scores[a.id] || 0);
-    const f = Math.max(0, Math.min(5, v)) / 5;
-    return pt(i, f);
-  });
-  const hasAny = AXES.some((a) => state.scores[a.id] > 0);
+  const hasAny = state.axes.some((a) => axes[a] != null);
   if (hasAny) {
-    const pts = scored.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-    out += `<polygon points="${pts}" fill="rgba(37,99,235,0.10)" stroke="#2563EB" stroke-width="1.8"/>`;
-    // Dots
-    for (const p of scored) {
+    const pts = state.axes.map((a,i)=>{const v=axes[a]||0; const f=Math.max(0,Math.min(5,v))/5; return pt(i,f);});
+    const ptsStr = pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    out += `<polygon points="${ptsStr}" fill="rgba(0,173,29,0.12)" stroke="#00AD1D" stroke-width="2"/>`;
+    for (const p of pts) {
       if (p.x === cx && p.y === cy) continue;
-      out += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3" fill="#2563EB"/>`;
+      out += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="#00AD1D"/>`;
     }
   }
-  // Active segment ring highlight
   if (state.segment) {
     const seg = SEGMENTS.find((s) => s.id === state.segment);
-    if (seg) {
-      out += `<circle cx="${cx}" cy="${cy}" r="${R + 6}" fill="none" stroke="${seg.color}" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.6"/>`;
-      out += `<text x="${cx}" y="${cy + R + 24}" text-anchor="middle" font-family="Geist Mono, monospace" font-size="10" fill="${seg.color}" font-weight="600">${tx(seg.i18n).toUpperCase()}</text>`;
-    }
+    if (seg) out += `<circle cx="${cx}" cy="${cy}" r="${R+7}" fill="none" stroke="${seg.color}" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.55"/>`;
   }
-  svg.innerHTML = out;
+  out += `</svg>`;
+  wrap.innerHTML = out;
+
+  // Summary
+  const sum = document.getElementById('summary');
+  const all = state.axes.map((a) => ({ id: a, v: axes[a] })).filter((x) => x.v != null);
+  const avg = all.length ? all.reduce((s, x) => s + x.v, 0) / all.length : null;
+  const strong = all.length ? all.reduce((m, x) => x.v > m.v ? x : m) : null;
+  const weak   = all.length ? all.reduce((m, x) => x.v < m.v ? x : m) : null;
+  sum.innerHTML = `
+    <div class="metric"><div class="metric-label">${t('avg')}</div><div class="metric-value num">${avg != null ? avg.toFixed(2) : '–'}</div></div>
+    <div class="metric"><div class="metric-label">${t('strong')}</div><div class="metric-value num">${strong ? `${strong.id} · ${strong.v.toFixed(1)}` : '–'}</div></div>
+    <div class="metric"><div class="metric-label">${t('weak')}</div><div class="metric-value num">${weak ? `${weak.id} · ${weak.v.toFixed(1)}` : '–'}</div></div>
+  `;
 }
 
 function renderQA(){
   const list = document.getElementById('qaList');
   list.innerHTML = '';
 
-  // 6 axis questions
-  for (const a of AXES) {
-    const cur = state.scores[a.id];
-    const qa = document.createElement('div'); qa.className = 'qa';
-    qa.innerHTML = `
-      <div class="qa-axis">${a.id.toUpperCase()}</div>
-      <div class="qa-title">${tx(a.i18n)}</div>
-      <div class="qa-scores">${[1,2,3,4,5].map((n) => `<span class="qa-score${cur === n ? ' selected' : ''}" data-axis="${a.id}" data-score="${n}">${n}</span>`).join('')}</div>
-    `;
-    list.appendChild(qa);
+  if (state.loadError) {
+    list.innerHTML = `<div class="toast err">설문 로드 실패: ${state.loadError}</div>`;
+    document.getElementById('progress').textContent = '–';
+    return;
   }
-  // NPS
-  const nps = document.createElement('div'); nps.className = 'qa';
-  nps.innerHTML = `
-    <div class="qa-axis">NPS</div>
-    <div class="qa-title">${t('nps')}</div>
-    <div class="qa-scores eleven">${[0,1,2,3,4,5,6,7,8,9,10].map((n) => `<span class="qa-score${state.nps === n ? ' selected' : ''}" data-nps="${n}">${n}</span>`).join('')}</div>
-  `;
-  list.appendChild(nps);
-  // Consents
-  const c1 = document.createElement('label'); c1.className = 'consent';
-  c1.innerHTML = `<input type="checkbox" ${state.consent_subscribe ? 'checked' : ''} data-consent="subscribe"/>${t('consent_subscribe')}`;
-  list.appendChild(c1);
-  const c2 = document.createElement('label'); c2.className = 'consent required';
-  c2.innerHTML = `<input type="checkbox" ${state.consent_data ? 'checked' : ''} data-consent="data"/><span>${t('consent_data')} <span class="req">*</span></span>`;
-  list.appendChild(c2);
+  if (!state.questions.length) {
+    list.innerHTML = `<div class="loading">${t('loading')}</div>`;
+    return;
+  }
 
-  // Bind
-  list.querySelectorAll('.qa-score[data-axis]').forEach((el) => {
-    el.onclick = () => {
-      const axis = el.dataset.axis;
-      const n = Number(el.dataset.score);
-      state.scores[axis] = state.scores[axis] === n ? null : n;
-      if (state.scores[axis] === null) delete state.scores[axis];
+  for (const q of state.questions) {
+    list.appendChild(renderQuestion(q));
+  }
+
+  // Progress (only required + answered)
+  const reqQs = state.questions.filter((q) => q.required);
+  const done = reqQs.filter((q) => hasAnswer(q)).length;
+  document.getElementById('progress').textContent = `${done}/${reqQs.length}`;
+}
+
+function hasAnswer(q){
+  const v = state.answers[q.id];
+  if (q.type === 'consent') return v === true;
+  if (q.type === 'multi_select') return Array.isArray(v) && v.length > 0;
+  return v !== undefined && v !== null && v !== '';
+}
+
+function renderQuestion(q){
+  const cur = state.answers[q.id];
+  const answered = hasAnswer(q);
+  const wrap = document.createElement('div');
+  wrap.className = 'qa' + (answered ? ' answered' : '');
+
+  const axisLabel = q.axis ? `<span class="qa-axis">${q.axis}</span>` : '';
+  const kindLabel = `<span class="qa-kind">${q.type}</span>`;
+  const title = `<div class="qa-title">${questionTitle(q)}${q.required ? `<span class="req">*</span>` : ''}</div>`;
+
+  let body = '';
+  if (q.type === 'single_select') {
+    const opts = q.options || [];
+    body = `<div class="opts">${opts.map((o, i) => `
+      <div class="opt${cur === o.value ? ' selected' : ''}" data-q="${q.id}" data-v="${escapeAttr(o.value)}" data-kind="single">
+        <span class="opt-num">${i+1}</span><span>${optionLabel(o)}</span>
+      </div>`).join('')}</div>`;
+  } else if (q.type === 'multi_select') {
+    const arr = Array.isArray(cur) ? cur : [];
+    const opts = q.options || [];
+    body = `<div class="opts">${opts.map((o, i) => `
+      <div class="opt${arr.includes(o.value) ? ' selected' : ''}" data-q="${q.id}" data-v="${escapeAttr(o.value)}" data-kind="multi">
+        <span class="opt-num">${arr.includes(o.value) ? '✓' : i+1}</span><span>${optionLabel(o)}</span>
+      </div>`).join('')}</div>`;
+  } else if (q.type === 'scale_1_5') {
+    body = `<div class="scale-grid s5">${[1,2,3,4,5].map((n) => `
+      <div class="scale-cell${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`).join('')}</div>`;
+  } else if (q.type === 'scale_1_10') {
+    body = `<div class="scale-grid s10">${[1,2,3,4,5,6,7,8,9,10].map((n) => {
+      const tone = n <= 4 ? 'lo' : n <= 7 ? 'mid' : 'hi';
+      return `<div class="scale-cell ${tone}${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`;
+    }).join('')}</div>`;
+  } else if (q.type === 'nps') {
+    body = `<div class="scale-grid nps">${[0,1,2,3,4,5,6,7,8,9,10].map((n) => {
+      const tone = n <= 6 ? 'lo' : n <= 8 ? 'mid' : 'hi';
+      return `<div class="scale-cell ${tone}${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`;
+    }).join('')}</div>`;
+  } else if (q.type === 'slider') {
+    body = `<div class="scale-grid s5">${[1,2,3,4,5].map((n) => `
+      <div class="scale-cell${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`).join('')}</div>`;
+  } else if (q.type === 'number') {
+    body = `<input class="num-input" type="number" data-q="${q.id}" data-kind="number" value="${cur != null ? cur : ''}"/>`;
+  } else if (q.type === 'text_short') {
+    body = `<input class="txt-input" type="text" data-q="${q.id}" data-kind="text" value="${escapeAttr(cur || '')}"/>`;
+  } else if (q.type === 'text_long') {
+    body = `<textarea class="txt-area" data-q="${q.id}" data-kind="text">${escapeText(cur || '')}</textarea>`;
+  } else if (q.type === 'consent') {
+    wrap.className = 'consent';
+    wrap.innerHTML = `<input type="checkbox" ${cur === true ? 'checked' : ''} data-q="${q.id}" data-kind="consent"/><span>${questionTitle(q)}${q.required ? ` <span class="req">*</span>` : ''}</span>`;
+    bindOne(wrap);
+    return wrap;
+  }
+
+  wrap.innerHTML = `<div class="qa-top">${axisLabel}${kindLabel}</div>${title}${body}`;
+  bindOne(wrap);
+  return wrap;
+}
+
+function optionLabel(o){
+  const k = `label_${state.lang}`;
+  return o[k] || o.label_ru || o.label_en || o.label_ko || o.value || '';
+}
+function escapeAttr(s){ return String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeText(s){ return String(s).replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+function bindOne(wrap){
+  wrap.querySelectorAll('.opt[data-kind="single"]').forEach((el) => {
+    el.onclick = () => { const q=el.dataset.q, v=el.dataset.v;
+      state.answers[q] = state.answers[q] === v ? null : v;
+      if (state.answers[q] === null) delete state.answers[q];
       renderQA(); renderRadar(); refreshSubmit();
     };
   });
-  list.querySelectorAll('.qa-score[data-nps]').forEach((el) => {
-    el.onclick = () => {
-      const n = Number(el.dataset.nps);
-      state.nps = state.nps === n ? null : n;
-      renderQA(); refreshSubmit();
+  wrap.querySelectorAll('.opt[data-kind="multi"]').forEach((el) => {
+    el.onclick = () => { const q=el.dataset.q, v=el.dataset.v;
+      const cur = Array.isArray(state.answers[q]) ? state.answers[q].slice() : [];
+      const i = cur.indexOf(v); if (i>=0) cur.splice(i,1); else cur.push(v);
+      state.answers[q] = cur;
+      renderQA(); renderRadar(); refreshSubmit();
     };
   });
-  list.querySelectorAll('input[type=checkbox][data-consent]').forEach((el) => {
-    el.onchange = () => {
-      if (el.dataset.consent === 'subscribe') state.consent_subscribe = el.checked;
-      else state.consent_data = el.checked;
-      refreshSubmit();
+  wrap.querySelectorAll('.scale-cell[data-kind="scale"]').forEach((el) => {
+    el.onclick = () => { const q=el.dataset.q, v=Number(el.dataset.v);
+      state.answers[q] = state.answers[q] === v ? null : v;
+      if (state.answers[q] === null) delete state.answers[q];
+      renderQA(); renderRadar(); refreshSubmit();
     };
+  });
+  wrap.querySelectorAll('input[data-kind="number"]').forEach((el) => {
+    el.oninput = () => { const v = el.value === '' ? null : Number(el.value); state.answers[el.dataset.q] = v; refreshSubmit(); };
+  });
+  wrap.querySelectorAll('input[data-kind="text"],textarea[data-kind="text"]').forEach((el) => {
+    el.oninput = () => { state.answers[el.dataset.q] = el.value; refreshSubmit(); };
+  });
+  wrap.querySelectorAll('input[type="checkbox"][data-kind="consent"]').forEach((el) => {
+    el.onchange = () => { state.answers[el.dataset.q] = el.checked; refreshSubmit(); renderQA(); };
   });
 }
 
 function refreshSubmit(){
   const btn = document.getElementById('btnSubmit');
-  const hasAllAxes = AXES.every((a) => state.scores[a.id]);
-  const hasNps = typeof state.nps === 'number';
+  const reqQs = state.questions.filter((q) => q.required);
+  const allOk = reqQs.every((q) => hasAnswer(q));
   const hasCompany = !!state.target_company.trim();
-  const ok = hasAllAxes && hasNps && state.consent_data && hasCompany;
-  btn.disabled = !ok;
+  btn.disabled = !(allOk && hasCompany);
   btn.textContent = t('submit');
 }
 
-// ============================================================================
-// Net / Lang / Inputs
-// ============================================================================
-function applyI18N(){
-  document.documentElement.lang = state.lang;
-  const set = (id, k) => { const el = document.getElementById(id); if (el) el.textContent = t(k); };
-  set('lbl_segments', 'segments');
-  set('lbl_target', 'target');
-  set('lbl_target_company', 'target_company');
-  set('lbl_target_contact', 'target_contact');
-  set('lbl_target_phone', 'target_phone');
-  set('lbl_target_notes', 'target_notes');
-  set('lbl_radar', 'radar');
-  set('lbl_interview', 'interview');
-  document.getElementById('lbl_hypothesis_help').textContent = t('hypothesis_help');
-  document.getElementById('netLabel').textContent = state.online ? t('net_on') : t('net_off');
-  refreshQueueBadge();
-  renderSegments(); renderRadar(); renderQA(); refreshSubmit();
-  const ts = document.getElementById('tokenStatus');
-  ts.textContent = state.dealerId ? `dealer:${state.dealerId.slice(0, 12)}` : 'no token';
-}
-
-function bindInputs(){
-  const wire = (id, prop) => {
-    const el = document.getElementById(id);
-    el.value = state[prop] || '';
-    el.addEventListener('input', () => { state[prop] = el.value; refreshSubmit(); });
-  };
-  wire('inp_company', 'target_company');
-  wire('inp_contact', 'contact_name');
-  wire('inp_phone',   'contact_phone');
-  wire('inp_notes',   'notes');
-  document.getElementById('langSel').addEventListener('change', (e) => { state.lang = e.target.value; applyI18N(); });
-}
-
-function setNet(){
-  state.online = navigator.onLine;
-  const dot = document.getElementById('netDot');
-  if (dot) dot.classList.toggle('off', !state.online);
-  const lbl = document.getElementById('netLabel');
-  if (lbl) lbl.textContent = state.online ? t('net_on') : t('net_off');
-  if (state.online) drainQueue();
-}
-window.addEventListener('online',  setNet);
-window.addEventListener('offline', setNet);
-
-// ============================================================================
-// Submit
-// ============================================================================
+/* ============================================================================
+   Submit
+   ============================================================================ */
 async function onSubmit(){
+  const axes = computeAxes();
+  const preference_axes = {};
+  for (const a of state.axes) {
+    if (axes[a] != null) preference_axes[a] = Math.round(axes[a] * 100) / 100;
+  }
+
+  // NPS / future_subscription / consent_data 추출 — 의미 추정
+  const npsQ = state.questions.find((q) => q.type === 'nps');
+  const subQ = state.questions.find((q) => q.type === 'consent' && /subscri|подписк|수신/i.test(questionTitle(q)));
+  const dataQ = state.questions.find((q) => q.type === 'consent' && (q.required === true || /process|обработ|처리/i.test(questionTitle(q))));
+
+  const answersArr = state.questions.map((q) => ({ question_id: q.id, answer: state.answers[q.id] ?? null }));
+
   const payload = {
-    survey_id: SURVEY_ID,
+    survey_id: state.survey.id,
     respondent_type: 'dealer',
     dealer_id: state.dealerId,
     event: state.event,
     language: state.lang,
-    nps: state.nps,
-    future_subscription: state.consent_subscribe,
-    consent_data_collection: state.consent_data,
-    segment: null,  // 서버가 axis_data 없을 때는 dealer_hypothesis_segment 만 추적
-    segment_method: null,
-    segment_confidence: null,
-    axis_data: null, // v2 는 R_10.05 회사 프로필 6축 수집 안 함
+    nps: npsQ ? (state.answers[npsQ.id] ?? null) : null,
+    future_subscription: subQ ? state.answers[subQ.id] === true : null,
+    consent_data_collection: dataQ ? state.answers[dataQ.id] === true : null,
+    segment: null, segment_method: null, segment_confidence: null, axis_data: null,
     captured_at: new Date().toISOString(),
-    answers: AXES.map((a) => ({ question_id: `axis_${a.id}`, answer: state.scores[a.id] })),
-    // v2 신규
-    preference_axes: { ...state.scores },
+    answers: answersArr,
+    preference_axes,
     dealer_hypothesis_segment: state.segment,
-    // 016
     target_company: state.target_company.trim(),
-    contact_name: state.contact_name.trim() || null,
+    contact_name:  state.contact_name.trim()  || null,
     contact_phone: state.contact_phone.trim() || null,
-    notes: state.notes.trim() || null,
+    notes:         state.notes.trim()         || null,
   };
 
   const id = crypto.randomUUID();
-  const idem = `${id}_v2`;
-  const rec = { id, payload, idempotency_key: idem };
-
+  const rec = { id, payload, idempotency_key: `${id}_v2` };
   setToast(null);
   try {
     if (state.online) {
@@ -711,7 +630,7 @@ async function onSubmit(){
     }
     document.getElementById('btnSubmit').style.display = 'none';
     document.getElementById('btnReset').style.display = '';
-    refreshQueueBadge();
+    refreshQueue();
   } catch (e) {
     await queueAdd(rec);
     setToast(String(e).slice(0, 200), 'err');
@@ -719,45 +638,58 @@ async function onSubmit(){
 }
 
 function setToast(msg, kind){
-  const slot = document.getElementById('toastSlot');
-  slot.innerHTML = '';
+  const slot = document.getElementById('toastSlot'); slot.innerHTML = '';
   if (!msg) return;
-  const d = document.createElement('div');
-  d.className = `toast ${kind || ''}`;
-  d.textContent = msg;
+  const d = document.createElement('div'); d.className = `toast ${kind || ''}`; d.textContent = msg;
   slot.appendChild(d);
 }
 
 function resetState(){
-  state.segment = null;
-  state.scores = {};
-  state.nps = null;
-  state.consent_subscribe = false;
-  state.consent_data = false;
-  state.target_company = '';
-  state.contact_name = '';
-  state.contact_phone = '';
-  state.notes = '';
-  document.getElementById('inp_company').value = '';
-  document.getElementById('inp_contact').value = '';
-  document.getElementById('inp_phone').value = '';
-  document.getElementById('inp_notes').value = '';
+  state.segment = null; state.answers = {};
+  state.target_company = ''; state.contact_name = ''; state.contact_phone = ''; state.notes = '';
+  ['inp_company','inp_contact','inp_phone','inp_notes'].forEach((id) => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('btnSubmit').style.display = '';
   document.getElementById('btnReset').style.display = 'none';
   setToast(null);
   renderSegments(); renderRadar(); renderQA(); refreshSubmit();
 }
 
-// ============================================================================
-// Boot
-// ============================================================================
+/* ============================================================================
+   i18n / Inputs / Net
+   ============================================================================ */
+function applyI18N(){
+  document.documentElement.lang = state.lang;
+  const set=(id,k)=>{const el=document.getElementById(id); if(el) el.textContent=t(k);};
+  set('lbl_hypothesis','hypothesis'); set('lbl_hypothesis_help','hypothesis_help');
+  set('lbl_target_head','target_head'); set('lbl_company','company'); set('lbl_contact','contact');
+  set('lbl_phone','phone'); set('lbl_notes','notes'); set('lbl_radar_head','radar_head');
+  set('lbl_interview','interview');
+  document.getElementById('netLabel').textContent = state.online ? t('net_on') : t('net_off');
+  document.getElementById('tokenStatus').textContent = state.dealerId ? `dealer:${state.dealerId.slice(0,12)}` : 'no token';
+  refreshQueue();
+  renderSegments(); renderRadar(); renderQA(); refreshSubmit();
+}
+
+function bindInputs(){
+  const wire=(id,prop)=>{const el=document.getElementById(id); el.value=state[prop]||''; el.addEventListener('input',()=>{state[prop]=el.value; refreshSubmit();});};
+  wire('inp_company','target_company'); wire('inp_contact','contact_name'); wire('inp_phone','contact_phone'); wire('inp_notes','notes');
+  document.getElementById('langSel').addEventListener('change',(e)=>{state.lang=e.target.value; applyI18N();});
+}
+
+function setNet(){
+  state.online = navigator.onLine;
+  const dot=document.getElementById('netDot'); if(dot) dot.classList.toggle('off', !state.online);
+  const lbl=document.getElementById('netLabel'); if(lbl) lbl.textContent = state.online ? t('net_on') : t('net_off');
+  if (state.online) drainQueue();
+}
+window.addEventListener('online',setNet); window.addEventListener('offline',setNet);
+
 document.addEventListener('DOMContentLoaded', () => {
   bindInputs();
   document.getElementById('btnSubmit').onclick = onSubmit;
-  document.getElementById('btnReset').onclick = resetState;
-  applyI18N();
-  setNet();
-  drainQueue();
+  document.getElementById('btnReset').onclick  = resetState;
+  applyI18N(); setNet(); drainQueue();
+  loadSurvey();
 });
 </script>
 

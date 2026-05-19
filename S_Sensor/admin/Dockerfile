@@ -44,9 +44,10 @@ ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 
-# Dealer / Visitor 의 window.HD_API_BASE 자동 주입
+# Dealer / Visitor 의 window.HD_API_BASE 자동 주입 (v1·v2·visitor 전부)
 RUN sed -i "s|</head>|<script>window.HD_API_BASE='${NEXT_PUBLIC_API_BASE}';</script></head>|" \
       S_Sensor/admin/public/dealer/index.html \
+      S_Sensor/admin/public/dealer/v2/index.html \
       S_Sensor/admin/public/visitor/index.html
 
 RUN npm run build -w @hd/sensor-admin
