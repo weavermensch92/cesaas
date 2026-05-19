@@ -47,7 +47,7 @@ function View({ email, me }: { email: string; me: MeProfile }) {
   const [result, setResult] = useState<IssueResult | null>(null);
 
   const [form, setForm] = useState({
-    dealer_id: '', name: '', affiliation: '',
+    name: '', affiliation: '',
     region: 'ru', event: 'ctt_moscow_2026',
     contact_email: '', contact_phone: '', notes: '',
   });
@@ -91,7 +91,7 @@ function View({ email, me }: { email: string; me: MeProfile }) {
       const voice_url     = r.headers.get('x-hd-voice-url')     || '';
       const voice_jti     = r.headers.get('x-hd-voice-jti')     || '';
       const sensor_key_id = r.headers.get('x-hd-sensor-key-id') || '';
-      const dealer_id     = r.headers.get('x-hd-dealer-id')     || form.dealer_id;
+      const dealer_id     = r.headers.get('x-hd-dealer-id')     || '';
       const cd = r.headers.get('content-disposition') || '';
       const m = /filename="([^"]+)"/.exec(cd);
       const zip_filename = m?.[1] || `hd-dealer-${dealer_id}.zip`;
@@ -109,7 +109,7 @@ function View({ email, me }: { email: string; me: MeProfile }) {
 
       setResult({ dealer_id, voice_url, voice_jti, sensor_key_id, zip_filename, qr_data_url });
       // 폼 일부만 초기화 (event/region 유지)
-      setForm((f) => ({ ...f, dealer_id: '', name: '', affiliation: '', contact_email: '', contact_phone: '', notes: '' }));
+      setForm((f) => ({ ...f, name: '', affiliation: '', contact_email: '', contact_phone: '', notes: '' }));
       refresh();
     } catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
@@ -152,15 +152,14 @@ function View({ email, me }: { email: string; me: MeProfile }) {
             ZIP 안에 install.bat (한국인) / install-ru.bat (러시아인) + 인쇄용 dealer-info.html 포함.
           </p>
           <form onSubmit={onSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-            <Field label="Dealer ID *" hint="소문자·숫자·_·-">
-              <input required value={form.dealer_id} onChange={set('dealer_id')} pattern="^[a-z0-9][a-z0-9_-]{1,63}$"
-                placeholder="dealer_001" style={inputStyle} />
-            </Field>
             <Field label="이름 *">
               <input required value={form.name} onChange={set('name')} placeholder="Ivan Ivanov / 김딜러" style={inputStyle} />
             </Field>
             <Field label="소속회사" hint="자유 텍스트 (향후 분할)">
               <input value={form.affiliation} onChange={set('affiliation')} placeholder="HD-Russia Trading" style={inputStyle} />
+            </Field>
+            <Field label="Dealer ID" hint="시스템 자동 발급">
+              <input value="(자동 발급)" disabled style={{ ...inputStyle, background: 'var(--hd-steel-50)', color: 'var(--hd-gray)' }} />
             </Field>
             <Field label="Region">
               <select value={form.region} onChange={set('region')} style={inputStyle}>

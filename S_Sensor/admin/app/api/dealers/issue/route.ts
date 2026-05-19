@@ -78,12 +78,20 @@ export async function POST(req: NextRequest) {
     const admin = await requireAdmin(req);
     const body = await req.json().catch(() => ({} as Record<string, unknown>)) as Partial<IssueBody>;
 
-    const dealer_id = String(body.dealer_id ?? '').trim().toLowerCase();
     const name = String(body.name ?? '').trim();
     const event = String(body.event ?? 'ctt_moscow_2026').trim();
-    if (!DEALER_ID_RE.test(dealer_id)) throw new ApiErr(400, 'validation_failed', 'dealer_id 형식 (소문자·숫자·_·- · 2~64자)');
     if (!name)                          throw new ApiErr(400, 'validation_failed', 'name required');
     if (!EVENT_RE.test(event))          throw new ApiErr(400, 'validation_failed', 'event 형식 잘못');
+
+    // dealer_id 시스템 발급 — 8 hex (충돌 시 3회 재시도)
+    let dealer_id = '';
+    for (let i = 0; i < 3; i++) {
+      const candidate = 'd_' + crypto.randomBytes(4).toString('hex');
+      const { data: exist } = await getServiceRoleClient()
+        .from('dealers').select('dealer_id').eq('dealer_id', candidate).maybeSingle();
+      if (!exist) { dealer_id = candidate; break; }
+    }
+    if (!dealer_id) throw new ApiErr(500, 'internal_error', 'dealer_id 발급 실패 (collision)');
 
     const affiliation   = body.affiliation   ? String(body.affiliation).trim()   : null;
     const region        = body.region        ? String(body.region).trim()        : null;
