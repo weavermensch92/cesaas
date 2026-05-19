@@ -1,103 +1,163 @@
 # R_10.05 — Classification
-# Dealer/Visitor 응답을 8 segment + LeadPriority로 매핑.
-# 클라이언트(v3 HTML)는 deterministic 룰 우선, 매칭 안 되면 서버 LLM 보조.
+# 응답 axis를 8 segment로, score를 P1~P5 우선순위로, Sensor URL을 화면 kind로 매핑.
 #
-# 스키마:
-#   segments:
-#     <segment_key>:
-#       label_ko / label_ru
-#       match: <when 절 expression list> — all_of / any_of / not 트리 (간이)
+# voice_segment: Voice 응답의 axis로 deterministic segment 분류. 위→아래 첫 매칭.
+# sensor_screen: Bitrix24 등 CRM URL 정규식 → 화면 kind.
+# lead_priority: R_10.01 score → P1~P5.
 #
-#   priority:
-#     thresholds:
-#       p1: ... p5: ...
-#
-#   screen_kinds: URL → kind 매핑 (Sensor 1차 분류)
+# 주의: V_Voice/backend/shared/segments.ts 가 동일 로직을 TS로 미러 (서버측 재계산).
+# 이 YAML 변경 시 미러도 같이 갱신해야 함. Phase D에서 미러를 lib loadRules 호출로 교체 예정.
 
-version: 0.1
-updated_at: '2026-05-18'
+rule_id: R_10.05_Classification
+version: 1
+description: 'Voice segment · Sensor screen · LeadPriority 분류'
+harness: 2
+v1_v2: v1
+status: active
+last_modified: '2026-05-19T00:00:00Z'
+modified_by: 'weaver@gridge.co.kr'
 
-segments:
-  mining:
-    label_ko: '광업'
-    label_ru: 'Горнодобыча'
-    match:
-      all_of:
-        - axis.usage == 'heavy'
-        - axis.industry == 'mining'
+# ============================================================================
+# Voice axis → segment (위→아래 첫 매칭)
+# ============================================================================
+voice_segment:
+  - id: R_10.05.001_key_account
+    description: 'annual_deal_rub == large → 키 어카운트 우선'
+    condition: "axis.annual_deal_rub == 'large'"
+    segment: key_account
+    severity: MUST
 
+  - id: R_10.05.002_mining
+    description: '광업 사용 + 대형 스케일'
+    condition: "axis.usage == 'mining' AND axis.scale in ['L', 'XL']"
+    segment: mining
+    severity: MUST
+
+  - id: R_10.05.003_construction_heavy
+    description: '대규모 건설 + 중대형 스케일'
+    condition: "axis.usage == 'construction_heavy' AND axis.scale in ['M', 'L', 'XL']"
+    segment: construction_heavy
+    severity: MUST
+
+  - id: R_10.05.004_forestry
+    description: '임업'
+    condition: "axis.usage == 'forestry'"
+    segment: forestry
+    severity: MUST
+
+  - id: R_10.05.005_agriculture
+    description: '농업'
+    condition: "axis.usage == 'agriculture'"
+    segment: agriculture
+    severity: MUST
+
+  - id: R_10.05.006_general_construction
+    description: '일반 건설'
+    condition: "axis.usage == 'general_construction'"
+    segment: general_construction
+    severity: MUST
+
+  - id: R_10.05.007_rental
+    description: '렌탈'
+    condition: "axis.usage == 'rental'"
+    segment: rental
+    severity: MUST
+
+  - id: R_10.05.008_other
+    description: 'fallback'
+    condition: 'default'
+    segment: other
+    severity: MAY
+
+# Label 매핑 (UI 표시용 — voice_segment 결과의 다국어 라벨)
+voice_segment_labels:
   key_account:
-    label_ko: '키 어카운트'
-    label_ru: 'Ключ. клиент'
-    match:
-      all_of:
-        - axis.scale == 'enterprise'
-        - axis.qty_gte == 10
-
+    ko: '키 어카운트'
+    ru: 'Ключ. клиент'
+    en: 'Key Account'
+  mining:
+    ko: '광업'
+    ru: 'Горнодобыча'
+    en: 'Mining'
   construction_heavy:
-    label_ko: '대규모 건설'
-    label_ru: 'Крупное строит.'
-    match:
-      all_of:
-        - axis.industry == 'construction'
-        - axis.scale == 'large'
-
-  agriculture:
-    label_ko: '농업'
-    label_ru: 'С/х'
-    match:
-      all_of:
-        - axis.industry == 'agriculture'
-
+    ko: '대규모 건설'
+    ru: 'Крупное строит.'
+    en: 'Heavy Construction'
   forestry:
-    label_ko: '임업'
-    label_ru: 'Лесное хоз-во'
-    match:
-      all_of:
-        - axis.industry == 'forestry'
-
+    ko: '임업'
+    ru: 'Лесное хоз-во'
+    en: 'Forestry'
+  agriculture:
+    ko: '농업'
+    ru: 'С/х'
+    en: 'Agriculture'
   general_construction:
-    label_ko: '일반 건설'
-    label_ru: 'Общ. строит.'
-    match:
-      all_of:
-        - axis.industry == 'construction'
-        - axis.scale == 'small_medium'
-
+    ko: '일반 건설'
+    ru: 'Общ. строит.'
+    en: 'General Construction'
   rental:
-    label_ko: '렌탈'
-    label_ru: 'Аренда'
-    match:
-      all_of:
-        - axis.usage == 'rental'
-
+    ko: '렌탈'
+    ru: 'Аренда'
+    en: 'Rental'
   other:
-    label_ko: '기타'
-    label_ru: 'Прочее'
-    match:
-      all_of: []
+    ko: '기타'
+    ru: 'Прочее'
+    en: 'Other'
 
-priority:
-  thresholds:
-    p1: { score_gte: 85, intent: 'high' }
-    p2: { score_gte: 70 }
-    p3: { score_gte: 55 }
-    p4: { score_gte: 40 }
-    p5: { score_gte: 0 }
+# ============================================================================
+# Sensor URL → 화면 kind (S_20.02 § 3)
+# ============================================================================
+sensor_screen:
+  source: 'crm_url_path'
+  default_crm: 'bitrix24'
+  fallback_classifier: 'crm_screen_identifier'   # R_10.06 LLM 보조 (현재 미사용)
 
-# Sensor URL → 화면 kind 1차 분류 (S_20.02 § 3)
-screen_kinds:
-  - pattern: '/crm/deal/details/'
-    kind: deal_detail
-  - pattern: '/crm/deal/'
-    kind: deal_list
-  - pattern: '/crm/company/details/'
-    kind: company
-  - pattern: '/crm/contact/details/'
-    kind: contact
-  - pattern: '/crm/activity/'
-    kind: activity
-  - pattern: '/crm/funnel/'
-    kind: funnel
-  - pattern: '/crm/task/'
-    kind: task
+  bitrix24_patterns:
+    - screen: deal_detail
+      url_regex: '/crm/deal/details/'
+    - screen: deal_list
+      url_regex: '/crm/deal/'
+    - screen: company
+      url_regex: '/crm/company/details/'
+    - screen: contact
+      url_regex: '/crm/contact/details/'
+    - screen: activity
+      url_regex: '/crm/activity/'
+    - screen: funnel
+      url_regex: '/crm/funnel/'
+    - screen: task
+      url_regex: '/crm/task/'
+
+# ============================================================================
+# Score → Priority (R_10.01 결과를 P1~P5로)
+# ============================================================================
+lead_priority:
+  - id: R_10.05.101_p1
+    description: 'score >= 85 → P1 즉시'
+    condition: 'score >= 85'
+    priority: P1
+    severity: MUST
+
+  - id: R_10.05.102_p2
+    description: 'score 70~84 → P2'
+    condition: 'score >= 70 AND score < 85'
+    priority: P2
+    severity: MUST
+
+  - id: R_10.05.103_p3
+    description: 'score 55~69 → P3'
+    condition: 'score >= 55 AND score < 70'
+    priority: P3
+    severity: MUST
+
+  - id: R_10.05.104_p4
+    description: 'score 40~54 → P4'
+    condition: 'score >= 40 AND score < 55'
+    priority: P4
+    severity: MUST
+
+  - id: R_10.05.105_p5
+    description: 'score < 40 → P5'
+    condition: 'score < 40'
+    priority: P5
+    severity: MUST

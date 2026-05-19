@@ -1,55 +1,59 @@
 # R_10.01 — LeadScoring
-# Sensor + Voice 데이터를 합쳐 0~100 점수 산출.
-# U_Unified.Lead.score 컬럼에 저장.
+# Voice 응답 + Sensor 활동 + CRM 데이터를 종합한 0~100 점수.
+# 코드 외부 룰. R_20.01 RuleEditor → R_20.02 Validation → R_20.03 Deployment 사이클로 정정.
+# 로드: harness2/lib loadRules('R_10.01_LeadScoring').
+#
+# 시드 4 규칙 (v1). 정밀도는 외부 컨트롤 사이클로 끌어올림 (H_외부컨트롤).
+#
+# 주의: 004_unified.sql의 score_lead() plpgsql은 v0.1의 weights 스냅샷 — Phase D에서
+# 이 YAML 기반 Edge Function 호출로 교체 예정. 그 전까지 양쪽이 약간 다른 점수를 낼 수 있음.
 
-version: 0.1
-updated_at: '2026-05-18'
+rule_id: R_10.01_LeadScoring
+version: 1
+description: '리드 점수 산출 (0~100). Voice 응답·Sensor 활동·CRM 데이터 종합.'
+harness: 2
+v1_v2: v1
+status: active
+last_modified: '2026-05-19T00:00:00Z'
+modified_by: 'weaver@gridge.co.kr'
 
-weights:
-  # Sensor 13 필드에서 도출
-  sensor:
-    company:        4
-    contact:        4
-    phone:          4
-    email:          4
-    region:         3
-    industry:       6
-    model_interest: 10
-    qty:            12
-    budget:         10
-    timeline:       12
-    funding:        8
-    stage:          8
-    notes:          5
+input_schema:
+  response:
+    nps: int                    # 0~10
+    future_subscription: bool   # 향후 수신 동의
+  lead:
+    segment: string             # 'mining' / 'key_account' / 'general' / 'other'
+    sensor_activity_count: int  # 7 화면 누적 캡쳐 수
+    deal_amount_rub: int        # 거래액 (RUB)
+    region: string              # 'ru' / 'kr'
 
-  # Voice axis 가중치
-  voice:
-    scale:    10
-    usage:    8
-    budget:   10
-    timeline: 10
-    funding:  6
-    nps:      4
+rules:
+  - id: R_10.01.001_nps_high
+    description: 'NPS ≥ 9 → 충성도 높음'
+    condition: 'response.nps >= 9'
+    action: 'score += 30'
+    severity: SHOULD
 
-  # 통합 보정
-  unified:
-    has_sensor_capture:  +5
-    has_voice_response:  +5
-    same_entity_match:   +10
-    contact_consent:     +3
+  - id: R_10.01.002_high_value_segment_with_activity
+    description: 'Mining 또는 Key Account + Sensor 활동 5건 이상'
+    condition: "lead.segment in ['mining', 'key_account'] AND lead.sensor_activity_count >= 5"
+    action: 'score += 40'
+    severity: SHOULD
 
-penalties:
-  missing_required:    -10  # 필수 axis 누락
-  ambiguous_industry:  -5
-  stale_capture_30d:   -8
+  - id: R_10.01.003_future_subscription
+    description: '후속 영업 옵트인'
+    condition: 'response.future_subscription == true'
+    action: 'score += 20'
+    severity: SHOULD
 
-normalization:
-  output_range: [0, 100]
-  rounding: integer
+  - id: R_10.01.004_high_deal_amount
+    description: '거래액 5M₽ 이상'
+    condition: 'lead.deal_amount_rub >= 5000000'
+    action: 'score += 30'
+    severity: SHOULD
 
-priority_buckets:
-  P1: { gte: 85 }
-  P2: { gte: 70, lt: 85 }
-  P3: { gte: 55, lt: 70 }
-  P4: { gte: 40, lt: 55 }
-  P5: { lt: 40 }
+output:
+  type: int
+  clamp_min: 0
+  clamp_max: 100
+  default: 0

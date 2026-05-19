@@ -2,34 +2,52 @@
 # R_10.01 LeadScoring 결과(0~100)를 4 등급(A/B/C/D)으로 매핑.
 # U_Unified.Lead.grade 컬럼에 저장. R_10.07 DealerOutput Playbook 선택에도 사용.
 #
-# 스키마:
-#   thresholds: 등급별 컷오프 (gte/lt). 우선순위는 위에서 아래로 첫 매칭.
-#   default: 입력(score)이 NULL이거나 음수일 때
+# 입력: { score: int }   (R_10.01 결과, NULL 허용)
+# 출력: 'A' | 'B' | 'C' | 'D'   (default 'D')
 #
-# 참고: priority_buckets(P1~P5)는 R_10.01이 담당 — 여기는 A/B/C/D만.
+# 우선순위: thresholds는 위에서 아래로 첫 매칭. score 큰 등급부터 정렬할 것.
 
-version: 0.1
-updated_at: '2026-05-19'
+rule_id: R_10.02_LeadQuality
+version: 1
+description: '리드 등급 분류 (4 등급)'
+harness: 2
+v1_v2: v1
+status: active
+last_modified: '2026-05-19T00:00:00Z'
+modified_by: 'weaver@gridge.co.kr'
 
 input_schema:
-  score: int   # R_10.01 결과 (0~100). NULL 허용 (정보 부족)
+  score: int   # 0~100, NULL 허용
 
 thresholds:
-  - grade: A
+  - id: R_10.02.001_grade_a
     description: 'High Priority — 즉시 본격 영업'
-    when: 'score >= 80'
+    condition: 'score >= 80'
+    grade: A
+    severity: MUST
 
-  - grade: B
+  - id: R_10.02.002_grade_b
     description: 'Standard — 일반 follow-up'
-    when: 'score >= 50 AND score < 80'
+    condition: 'score >= 50 AND score < 80'
+    grade: B
+    severity: MUST
 
-  - grade: C
+  - id: R_10.02.003_grade_c
     description: 'Low — 정기 contact'
-    when: 'score >= 25 AND score < 50'
+    condition: 'score >= 25 AND score < 50'
+    grade: C
+    severity: MUST
 
-  - grade: D
+  - id: R_10.02.004_grade_d
     description: 'Cold — 관망'
-    when: 'score < 25'
+    condition: 'score < 25'
+    grade: D
+    severity: MUST
+
+output:
+  type: string
+  enum: [A, B, C, D]
+  default: D
 
 # Playbook 매핑 힌트 — R_10.07 DealerOutput이 segment + grade로 다른 멘트 발급할 때 쓸 수 있음.
 playbook_hint:
@@ -37,8 +55,3 @@ playbook_hint:
   B: 'standard_followup'
   C: 'periodic_contact'
   D: 'watch_only'
-
-# 입력 부족 / 점수 NULL 처리
-default:
-  grade: D
-  reason: 'score_missing_or_invalid'
