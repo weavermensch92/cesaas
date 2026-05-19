@@ -6,7 +6,7 @@ import { AuthGate } from '../../components/AuthGate';
 import { TopBar } from '../../components/TopBar';
 import { SectionNav } from '../../components/SectionNav';
 import { getSupabase } from '@/lib/supabase';
-import { getVoiceAggregates, type VoiceAggregates } from '@/lib/api';
+import { getVoiceAggregates, getVoiceRealtime, type VoiceAggregates, type VoiceRealtime } from '@/lib/api';
 
 const LANG: Lang = 'ko';
 
@@ -36,6 +36,10 @@ function View({ email }: { email: string }) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  // V-034 — 실시간 응답률·에러 카드 (10s 폴링)
+  const [realtime, setRealtime] = useState<VoiceRealtime | null>(null);
+  const [rtErr, setRtErr] = useState<string | null>(null);
+
   const fetchAgg = useCallback(async () => {
     setLoading(true); setErr(null);
     try { setAgg(await getVoiceAggregates(filters)); }
@@ -43,7 +47,19 @@ function View({ email }: { email: string }) {
     finally { setLoading(false); }
   }, [filters]);
 
+  const fetchRealtime = useCallback(async () => {
+    try {
+      setRtErr(null);
+      setRealtime(await getVoiceRealtime(filters.event ? { event: filters.event } : {}));
+    } catch (e) { setRtErr(e instanceof Error ? e.message : String(e)); }
+  }, [filters.event]);
+
   useEffect(() => { fetchAgg(); }, [fetchAgg]);
+  useEffect(() => {
+    fetchRealtime();
+    const id = setInterval(fetchRealtime, 10_000);
+    return () => clearInterval(id);
+  }, [fetchRealtime]);
   const signOut = () => getSupabase().auth.signOut();
 
   return (
@@ -54,6 +70,10 @@ function View({ email }: { email: string }) {
       <main style={{ padding: 18 }}>
         <h1 className="hd-h1" style={{ margin: '6px 0 6px' }}>{t('product')} · Insight v0</h1>
         <p className="hd-meta" style={{ margin: '0 0 14px' }}>V_30.03 · segment 분포 · NPS · event·언어</p>
+
+        {/* V-034 실시간 응답률·에러 카드 (10s 폴링) */}
+        <RealtimeStrip realtime={realtime} error={rtErr} />
+
 
         <div className="hd-card" style={{ marginBottom: 12, padding: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <span className="hd-eyebrow">기간</span>
@@ -176,4 +196,61 @@ function dateStyle(w: number = 140): React.CSSProperties {
     border: 'var(--hd-border)', borderRadius: 'var(--hd-radius)',
     font: 'inherit', fontSize: 12,
   };
+}
+
+// V-034 — 실시간 응답률·에러 strip. 10s 폴링. PRD-02 § 4.
+function RealtimeStrip({ realtime, error }: { realtime: VoiceRealtime | null; error: string | null }) {
+  if (error) {
+    return (
+      <div className="hd-card" style={{ padding: 10, marginBottom: 12, borderLeft: '3px solid var(--hd-red)' }}>
+        <span className="hd-eyebrow" style={{ color: 'var(--hd-red)' }}>실시간 — 일시 오류</span>
+        <span className="hd-meta" style={{ marginLeft: 8 }}>{error}</span>
+      </div>
+    );
+  }
+  if (!realtime) {
+    return (
+      <div className="hd-card" style={{ padding: 10, marginBottom: 12 }}>
+        <span className="hd-meta">실시간 로딩…</span>
+      </div>
+    );
+  }
+  const lastSec = realtime.last_response_at
+    ? Math.floor((Date.now() - new Date(realtime.last_response_at).getTime()) / 1000)
+    : null;
+  const lastLabel = lastSec == null
+    ? '응답 없음'
+    : lastSec < 60 ? `${lastSec}초 전`
+    : lastSec < 3600 ? `${Math.floor(lastSec/60)}분 전`
+    : `${Math.floor(lastSec/3600)}시간 전`;
+  return (
+    <div className="hd-card" style={{ padding: 12, marginBottom: 14, borderLeft: '3px solid var(--hd-prosperity)' }}>
+      <div style={{ display:'flex', alignItems:'baseline', gap:8, marginBottom: 6 }}>
+        <span className="hd-eyebrow" style={{ color: 'var(--hd-prosperity)' }}>실시간 · 10초 갱신</span>
+        <span className="hd-meta">{realtime.event ?? '전체'} · 마지막 응답 {lastLabel}</span>
+        <span className="hd-meta" style={{ marginLeft: 'auto' }}>최근 {realtime.lookback_min_rate.window_min}분 평균 {realtime.lookback_min_rate.per_min}건/분</span>
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap: 10 }}>
+        <RealtimeCard label="최근 5분"  w={realtime.windows.last_5m}  />
+        <RealtimeCard label="최근 1시간" w={realtime.windows.last_1h}  />
+        <RealtimeCard label="최근 24시간" w={realtime.windows.last_24h} />
+      </div>
+    </div>
+  );
+}
+
+function RealtimeCard({ label, w }: { label: string; w: VoiceRealtime['windows']['last_5m'] }) {
+  return (
+    <div style={{ padding: 10, background:'var(--hd-paper)', borderRadius: 'var(--hd-radius)', border: 'var(--hd-border)' }}>
+      <div className="hd-eyebrow">{label}</div>
+      <div style={{ display:'flex', alignItems:'baseline', gap: 8, marginTop: 4 }}>
+        <span style={{ font: '700 22px var(--hd-font-display)', color: 'var(--hd-trust)' }}>{w.total}</span>
+        <span className="hd-meta">건 · {w.per_min}/분</span>
+      </div>
+      <div className="hd-meta" style={{ marginTop: 4, fontSize: 11 }}>
+        <span>D {w.dealer}</span> · <span>V {w.visitor}</span>
+        {w.errors > 0 && <span style={{ color: 'var(--hd-red)', marginLeft: 8 }}>오류 {w.errors}</span>}
+      </div>
+    </div>
+  );
 }

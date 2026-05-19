@@ -81,6 +81,9 @@ verify_jwt = false
 [functions.voice-csv-export]
 verify_jwt = false
 
+[functions.voice-realtime]
+verify_jwt = false
+
 # V_60 Studio — gridge_admin role 검증 (admin_auth + 함수 내부 role check)
 [functions.studio-build-survey]
 verify_jwt = false

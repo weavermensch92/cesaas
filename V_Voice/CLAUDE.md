@@ -48,7 +48,7 @@
 | 공통 helpers (errors·db·hash·env·idempotency·logger) | `backend/shared/*.ts` (S_Sensor 재export) |
 | Visitor PWA (단일 HTML · Service Worker · IndexedDB · 옵트인 명함 · hCaptcha 옵션) | `visitor/index.html` · `visitor/sw.js` · `visitor/manifest.webmanifest` |
 | Visitor 옵트인 컬럼·24h quota·시드 18문항 | `../C_Common/supabase/migrations/009_voice_visitor.sql` |
-| Voice Admin Edge Functions (목록·집계·CSV) | `backend/functions/voice-{responses,aggregates,csv-export}/index.ts` |
+| Voice Admin Edge Functions (목록·집계·CSV·실시간 카드) | `backend/functions/voice-{responses,aggregates,csv-export,realtime}/index.ts` |
 | Voice Admin UI (목록·필터·NPS·옵트인·CSV·익명 CSV·Insight v0) | `../S_Sensor/admin/app/voice/{responses,aggregates}/page.tsx` |
 | Section nav (Captures ↔ Voice·Responses ↔ Voice·Insight) | `../S_Sensor/admin/app/components/SectionNav.tsx` |
 | Studio 빌드/배포 Edge Functions + draft 테이블 + deploy_survey RPC | `backend/functions/studio-{build-survey,deploy}/index.ts` · `../C_Common/supabase/migrations/010_studio.sql` |
@@ -115,3 +115,4 @@ RLS: service_role 전권 / `is_hd_admin()` read.
 | 2026-05-20 | v0.8 — Phase E (dealer fetch wiring): dealer/index.html이 응답 송출 후 GET /dealer-playbook?lead_id=X로 server Playbook fetch → renderResult가 inline 대신 server 페이로드 표시. 실패 시 inline fallback(오프라인 부스 정상). 'live' 배지로 server fetch 표시. state.{pendingIdemKey, serverPlaybook, serverPlaybookSource} 추적, navReset 시 리셋. R_10.07 hot reload 사이클이 부스 단말까지 닫힘. |
 | 2026-05-20 | v0.9 — V-004 segment LLM fallback: R_10.06.segment_classifier (Claude Haiku) 템플릿 추가 (`023_reseed_r10_06_segment_classifier.sql`). segments.ts classifyServerSide가 deterministic이 'other' 반환 + axis.usage 있을 때만 LLM 보조 호출 — 비용 게이트. method 값 'server_llm' 추가. LLM 실패 시 deterministic 결과 유지. |
 | 2026-05-20 | v1.0 — V-026 hCaptcha (visitor bot 방지): visitor/index.html이 HCAPTCHA_SITE_KEY 설정 시 widget 자동 로드·렌더 (opt-in 화면) + token 캡쳐 후 payload `hcaptcha_token` 첨부. responses-receive handler가 HCAPTCHA_SECRET 설정 시만 siteverify 호출 — 양쪽 키 미설정 시 honeypot only 동작 (default). dealer는 Bearer JWT라 skip. |
+| 2026-05-20 | v1.1 — V-034 실시간 응답률·에러 카드: `voice-realtime` Edge Function (5m·1h·24h windows, dealer/visitor breakdown, normalize_queue 에러 count, last_response_at, lookback_min 분당 평균). Admin /voice/aggregates 상단에 RealtimeStrip 10s 폴링 — 부스 운영 중 실시간 가시성. event 필터 연동. |

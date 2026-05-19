@@ -267,6 +267,32 @@ export async function getVoiceAggregates(filters: { from?: string; to?: string; 
   });
 }
 
+// V-034 — 실시간 응답률·에러 카드 (Admin /voice/aggregates 폴링).
+export interface VoiceRealtimeWindow {
+  total: number;
+  dealer: number;
+  visitor: number;
+  errors: number;
+  per_min: number;
+}
+export interface VoiceRealtime {
+  now: string;
+  event: string | null;
+  windows: {
+    last_5m: VoiceRealtimeWindow;
+    last_1h: VoiceRealtimeWindow;
+    last_24h: VoiceRealtimeWindow;
+  };
+  last_response_at: string | null;
+  lookback_min_rate: { window_min: number; total: number; per_min: number };
+}
+export async function getVoiceRealtime(opts: { event?: string; lookback_min?: number } = {}): Promise<VoiceRealtime> {
+  return request('GET', '/voice-realtime', {
+    event: opts.event,
+    lookback_min: opts.lookback_min?.toString(),
+  });
+}
+
 /**
  * CSV는 binary 다운로드 — request() 헬퍼 대신 직접 fetch + Blob.
  */
