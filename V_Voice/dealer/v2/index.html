@@ -127,6 +127,26 @@ input,textarea,select{font:inherit;color:inherit;}
 .consent input{margin-top:2px;accent-color:var(--hd-heritage);}
 .req{color:var(--hd-red);font-weight:600;}
 
+/* 2-col profile grid (center bottom) */
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media (max-width:1400px){.profile-grid{grid-template-columns:1fr;}}
+
+/* Right column · fixed viewport-height + paginated */
+.right-fixed{display:flex;flex-direction:column;height:calc(100vh - 56px - 28px);}
+.page-nav{flex-shrink:0;display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:var(--hd-border);}
+.page-nav-dots{display:flex;gap:6px;flex:1;}
+.page-dot{flex:1;height:4px;background:var(--hd-steel-200);border-radius:2px;transition:background 0.2s;}
+.page-dot.active{background:var(--hd-heritage);}
+.page-dot.done{background:var(--hd-bright-green);}
+.page-counter{font-family:var(--hd-mono);font-size:11px;color:var(--hd-gray);font-weight:600;}
+.pager-viewport{flex:1;overflow:hidden;position:relative;}
+.pager-track{display:flex;height:100%;transition:transform 0.42s cubic-bezier(0.4,0.0,0.2,1);}
+.pager-page{flex-shrink:0;width:100%;padding-right:6px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
+.pager-page::-webkit-scrollbar{width:6px;} .pager-page::-webkit-scrollbar-thumb{background:var(--hd-steel-300);border-radius:3px;}
+.page-controls{flex-shrink:0;display:flex;gap:8px;margin-top:10px;}
+.page-controls .btn{flex:1;padding:11px 14px;}
+.page-controls .btn.ghost{flex:0 0 80px;}
+
 /* Dealer Profile card */
 .dealer-card{padding:12px;background:linear-gradient(135deg,var(--hd-trust) 0%,var(--hd-discovery) 100%);color:#fff;border-radius:var(--hd-radius);margin-bottom:14px;}
 .dealer-card .dc-row{display:flex;justify-content:space-between;align-items:center;font-family:var(--hd-mono);font-size:10.5px;letter-spacing:0.04em;opacity:0.85;text-transform:uppercase;margin-bottom:4px;}
@@ -175,29 +195,13 @@ input,textarea,select{font:inherit;color:inherit;}
 
 <main class="stage">
 
-  <!-- LEFT — Dealer Profile · Hypothesis · Axis 질문 절반 -->
+  <!-- LEFT — Dealer Profile · Target · Hypothesis -->
   <aside class="panel">
     <div class="section-block">
       <div class="panel-head" id="lbl_dealer_profile">Dealer Profile</div>
       <div id="dealerCard"></div>
     </div>
 
-    <div class="section-block">
-      <div class="panel-head"><b>8</b> Segments · <span id="lbl_hypothesis">가설</span></div>
-      <div class="seg-list" id="segList"></div>
-      <div class="hint" id="lbl_hypothesis_help"></div>
-    </div>
-
-    <div class="section-block">
-      <div class="panel-head" id="lbl_profile_left">회사 프로필 (1/2)</div>
-      <div id="qaListLeft" class="qa-list" style="max-height:none;"></div>
-    </div>
-
-    <div class="survey-meta" id="surveyMeta" style="display:none;"></div>
-  </aside>
-
-  <!-- CENTER — Target · Axis 질문 절반 · Radar -->
-  <section class="panel">
     <div class="section-block">
       <div class="panel-head" id="lbl_target_head">상담 대상</div>
       <div class="target">
@@ -209,8 +213,19 @@ input,textarea,select{font:inherit;color:inherit;}
     </div>
 
     <div class="section-block">
-      <div class="panel-head" id="lbl_profile_center">회사 프로필 (2/2)</div>
-      <div id="qaListCenter" class="qa-list" style="max-height:none;"></div>
+      <div class="panel-head"><b>8</b> Segments · <span id="lbl_hypothesis">가설</span></div>
+      <div class="seg-list" id="segList"></div>
+      <div class="hint" id="lbl_hypothesis_help"></div>
+    </div>
+
+    <div class="survey-meta" id="surveyMeta" style="display:none;"></div>
+  </aside>
+
+  <!-- CENTER — Summary · Radar · 회사 프로필 2x3 -->
+  <section class="panel">
+    <div class="section-block">
+      <div class="panel-head" id="lbl_summary_head">평균 · 최강 · 최약</div>
+      <div class="summary" id="summary"></div>
     </div>
 
     <div class="section-block">
@@ -218,19 +233,31 @@ input,textarea,select{font:inherit;color:inherit;}
       <div class="radar-wrap" id="radarWrap">
         <span class="radar-empty">설문 응답이 시작되면 표시됩니다</span>
       </div>
-      <div class="summary" id="summary"></div>
+    </div>
+
+    <div class="section-block">
+      <div class="panel-head" id="lbl_profile_head">회사 프로필 (6 axes · 2×3)</div>
+      <div class="profile-grid" id="profileGrid"></div>
     </div>
   </section>
 
-  <!-- RIGHT — 마케팅 + NPS + 동의 + Submit -->
-  <aside class="panel">
-    <div class="panel-head"><span id="lbl_interview">고객 인터뷰</span> · <span id="progress">0/0</span></div>
-    <div id="qaListRight" class="qa-list"></div>
-    <div class="submit-row">
-      <button class="btn primary" id="btnSubmit" disabled>저장 + CRM Sync</button>
-      <button class="btn ghost" id="btnReset" style="display:none;">새 상담</button>
-      <div id="toastSlot"></div>
+  <!-- RIGHT — 마케팅 + NPS + 동의 · 페이지네이션 · 슬라이드 -->
+  <aside class="panel right-fixed">
+    <div class="page-nav">
+      <span class="panel-head" style="margin:0;flex-shrink:0;"><span id="lbl_interview">고객 인터뷰</span></span>
+      <div class="page-nav-dots" id="pageDots"></div>
+      <span class="page-counter" id="pageCounter">0/0</span>
     </div>
+    <div class="pager-viewport" id="pagerViewport">
+      <div class="pager-track" id="pagerTrack"></div>
+    </div>
+    <div class="page-controls">
+      <button class="btn ghost" id="btnPrev" disabled>← 이전</button>
+      <button class="btn" id="btnNext">다음 →</button>
+      <button class="btn primary" id="btnSubmit" disabled style="display:none;">저장 + CRM Sync</button>
+      <button class="btn ghost" id="btnReset" style="display:none;">새 상담</button>
+    </div>
+    <div id="toastSlot"></div>
   </aside>
 
 </main>
@@ -253,7 +280,7 @@ const SEGMENTS = [
 const I18N = {
   ru:{ dealer_profile:'Профиль дилера',
        hypothesis:'гипотеза', hypothesis_help:'Дилер выбирает гипотетический сегмент. Сервер автоматически переклассифицирует — измеряется точность гипотезы.',
-       profile_left:'Профиль компании (1/2)', profile_center:'Профиль компании (2/2)',
+       summary_head:'Среднее · Сильная · Слабая', profile_head:'Профиль компании (6 осей)',
        target_head:'Информация о клиенте', company:'Компания *', contact:'Контакт', phone:'Телефон', notes:'Заметки',
        radar_head:'Карта позиционирования · автовывод по ответам', interview:'Интервью клиента',
        net_on:'Online', net_off:'Offline', queue:'Очередь',
@@ -263,7 +290,7 @@ const I18N = {
        avg:'Среднее', strong:'Сильнейшая ось', weak:'Слабейшая' },
   en:{ dealer_profile:'Dealer Profile',
        hypothesis:'hypothesis', hypothesis_help:'Dealer toggles hypothesized segment. Server re-classifies independently — hypothesis accuracy measured.',
-       profile_left:'Company profile (1/2)', profile_center:'Company profile (2/2)',
+       summary_head:'Avg · Strong · Weak', profile_head:'Company profile (6 axes)',
        target_head:'Customer information', company:'Company *', contact:'Contact', phone:'Phone', notes:'Notes',
        radar_head:'Positioning Map · derived from answers', interview:'Customer Interview',
        net_on:'Online', net_off:'Offline', queue:'Queue',
@@ -273,7 +300,7 @@ const I18N = {
        avg:'Average', strong:'Strongest axis', weak:'Weakest' },
   ko:{ dealer_profile:'딜러 프로필',
        hypothesis:'가설', hypothesis_help:'딜러가 인터뷰 중 가정하는 segment 라벨. 서버는 별도로 자동 재분류 — 가설 vs 자동 정확도가 측정됨.',
-       profile_left:'회사 프로필 (1/2)', profile_center:'회사 프로필 (2/2)',
+       summary_head:'평균 · 최강 · 최약', profile_head:'회사 프로필 (6 axes · 2×3)',
        target_head:'상담 대상 정보', company:'회사명 *', contact:'담당자', phone:'연락처', notes:'메모',
        radar_head:'포지셔닝 맵 · 답변 기반 자동 도출', interview:'고객 인터뷰',
        net_on:'Online', net_off:'Offline', queue:'큐',
@@ -483,37 +510,102 @@ function renderRadar(){
   `;
 }
 
+const PAGE_SIZE = 3;
+let _currentPage = 0;
+
+function getPages(){
+  const otherQs = state.questions
+    .filter((q) => !q.axis)
+    .sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+  const pages = [];
+  for (let i = 0; i < otherQs.length; i += PAGE_SIZE) {
+    pages.push(otherQs.slice(i, i + PAGE_SIZE));
+  }
+  if (!pages.length) pages.push([]);
+  return pages;
+}
+
 function renderQA(){
-  const left  = document.getElementById('qaListLeft');
-  const ctr   = document.getElementById('qaListCenter');
-  const right = document.getElementById('qaListRight');
-  [left, ctr, right].forEach((el) => { if (el) el.innerHTML = ''; });
+  const grid = document.getElementById('profileGrid');
+  const track = document.getElementById('pagerTrack');
+  if (grid) grid.innerHTML = '';
+  if (track) track.innerHTML = '';
 
   if (state.loadError) {
-    right.innerHTML = `<div class="toast err">설문 로드 실패: ${state.loadError}</div>`;
-    document.getElementById('progress').textContent = '–';
+    track.innerHTML = `<div class="pager-page"><div class="toast err">설문 로드 실패: ${state.loadError}</div></div>`;
+    renderPageNav(1);
     return;
   }
   if (!state.questions.length) {
-    right.innerHTML = `<div class="loading">${t('loading')}</div>`;
+    track.innerHTML = `<div class="pager-page"><div class="loading">${t('loading')}</div></div>`;
+    renderPageNav(1);
     return;
   }
 
-  // axis 질문: sort_order 오름차순 → 절반은 LEFT, 절반은 CENTER
-  const axisQs  = state.questions.filter((q) => q.axis).sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
-  const otherQs = state.questions.filter((q) => !q.axis).sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
-  const half = Math.ceil(axisQs.length / 2);
-  const leftQs = axisQs.slice(0, half);
-  const ctrQs  = axisQs.slice(half);
+  // CENTER · axis 질문 6개 (2×3)
+  const axisQs = state.questions
+    .filter((q) => q.axis)
+    .sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+  for (const q of axisQs) grid.appendChild(renderQuestion(q));
 
-  for (const q of leftQs)  left.appendChild(renderQuestion(q));
-  for (const q of ctrQs)   ctr.appendChild(renderQuestion(q));
-  for (const q of otherQs) right.appendChild(renderQuestion(q));
+  // RIGHT · pages
+  const pages = getPages();
+  for (const pageQs of pages) {
+    const page = document.createElement('div');
+    page.className = 'pager-page';
+    for (const q of pageQs) page.appendChild(renderQuestion(q));
+    track.appendChild(page);
+  }
 
-  // Progress
-  const reqQs = state.questions.filter((q) => q.required);
-  const done = reqQs.filter((q) => hasAnswer(q)).length;
-  document.getElementById('progress').textContent = `${done}/${reqQs.length}`;
+  if (_currentPage >= pages.length) _currentPage = pages.length - 1;
+  gotoPage(_currentPage, false);
+  renderPageNav(pages.length);
+}
+
+function renderPageNav(total){
+  const dots = document.getElementById('pageDots');
+  const counter = document.getElementById('pageCounter');
+  if (!dots || !counter) return;
+  dots.innerHTML = '';
+  const pages = getPages();
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('span');
+    let cls = 'page-dot';
+    if (i === _currentPage) cls += ' active';
+    else if (pages[i] && pages[i].every((q) => !q.required || hasAnswer(q))) cls += ' done';
+    d.className = cls;
+    d.title = `Page ${i+1}/${total}`;
+    d.onclick = () => gotoPage(i, true);
+    dots.appendChild(d);
+  }
+  counter.textContent = `${_currentPage+1}/${total}`;
+
+  const prev = document.getElementById('btnPrev');
+  const next = document.getElementById('btnNext');
+  const submit = document.getElementById('btnSubmit');
+  const reset  = document.getElementById('btnReset');
+  if (prev) prev.disabled = _currentPage === 0;
+
+  const isLast = _currentPage === total - 1;
+  const submitVisible = reset && reset.style.display === '' ? false : isLast;
+  if (next) next.style.display = isLast ? 'none' : '';
+  if (submit) submit.style.display = isLast && !(reset && reset.style.display === '') ? '' : 'none';
+}
+
+function gotoPage(n, animate){
+  const track = document.getElementById('pagerTrack');
+  if (!track) return;
+  const pages = track.querySelectorAll('.pager-page');
+  if (n < 0) n = 0;
+  if (n >= pages.length) n = pages.length - 1;
+  _currentPage = n;
+  if (!animate) track.style.transition = 'none';
+  else track.style.transition = '';
+  track.style.transform = `translateX(${-n * 100}%)`;
+  if (!animate) { void track.offsetWidth; track.style.transition = ''; }
+  // Refresh nav
+  const total = pages.length;
+  renderPageNav(total);
 }
 
 function renderDealerCard(){
@@ -659,6 +751,9 @@ function refreshSubmit(){
   const hasCompany = !!state.target_company.trim();
   btn.disabled = !(allOk && hasCompany);
   btn.textContent = t('submit');
+  // Re-render page dots in case answers state changed (done indicators)
+  const track = document.getElementById('pagerTrack');
+  if (track) renderPageNav(track.querySelectorAll('.pager-page').length);
 }
 
 /* ============================================================================
@@ -712,6 +807,9 @@ async function onSubmit(){
     document.getElementById('btnSubmit').style.display = 'none';
     document.getElementById('btnReset').style.display = '';
     refreshQueue();
+    // After submit, page nav shows reset button on last page
+    const track = document.getElementById('pagerTrack');
+    if (track) renderPageNav(track.querySelectorAll('.pager-page').length);
   } catch (e) {
     await queueAdd(rec);
     setToast(String(e).slice(0, 200), 'err');
@@ -729,9 +827,9 @@ function resetState(){
   state.segment = null; state.answers = {};
   state.target_company = ''; state.contact_name = ''; state.contact_phone = ''; state.notes = '';
   ['inp_company','inp_contact','inp_phone','inp_notes'].forEach((id) => { const el = document.getElementById(id); if (el) el.value = ''; });
-  document.getElementById('btnSubmit').style.display = '';
   document.getElementById('btnReset').style.display = 'none';
   setToast(null);
+  _currentPage = 0;
   renderSegments(); renderRadar(); renderQA(); refreshSubmit();
 }
 
@@ -743,7 +841,7 @@ function applyI18N(){
   const set=(id,k)=>{const el=document.getElementById(id); if(el) el.textContent=t(k);};
   set('lbl_dealer_profile','dealer_profile');
   set('lbl_hypothesis','hypothesis'); set('lbl_hypothesis_help','hypothesis_help');
-  set('lbl_profile_left','profile_left'); set('lbl_profile_center','profile_center');
+  set('lbl_summary_head','summary_head'); set('lbl_profile_head','profile_head');
   set('lbl_target_head','target_head'); set('lbl_company','company'); set('lbl_contact','contact');
   set('lbl_phone','phone'); set('lbl_notes','notes'); set('lbl_radar_head','radar_head');
   set('lbl_interview','interview');
@@ -771,6 +869,8 @@ document.addEventListener('DOMContentLoaded', () => {
   bindInputs();
   document.getElementById('btnSubmit').onclick = onSubmit;
   document.getElementById('btnReset').onclick  = resetState;
+  document.getElementById('btnPrev').onclick   = () => gotoPage(_currentPage - 1, true);
+  document.getElementById('btnNext').onclick   = () => gotoPage(_currentPage + 1, true);
   applyI18N(); setNet(); drainQueue();
   loadSurvey();
 });
