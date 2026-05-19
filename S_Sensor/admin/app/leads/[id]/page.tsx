@@ -7,7 +7,7 @@ import { AuthGate } from '../../components/AuthGate';
 import { TopBar } from '../../components/TopBar';
 import { SectionNav } from '../../components/SectionNav';
 import { getSupabase } from '@/lib/supabase';
-import { getLead, type LeadDetail } from '@/lib/api';
+import { getLead, associateLead, type LeadDetail } from '@/lib/api';
 
 const LANG: Lang = 'ko';
 
@@ -50,13 +50,13 @@ function View({ id, email }: { id: string; email: string }) {
           </div>
         )}
         {!detail && loading && <div className="hd-meta">로딩 중…</div>}
-        {detail && <Detail detail={detail} />}
+        {detail && <Detail detail={detail} onChange={reload} />}
       </main>
     </>
   );
 }
 
-function Detail({ detail }: { detail: LeadDetail }) {
+function Detail({ detail, onChange }: { detail: LeadDetail; onChange: () => void }) {
   const { lead, clusters, responses, normalized, dealer_output, links } = detail;
   return (
     <>
@@ -66,6 +66,10 @@ function Detail({ detail }: { detail: LeadDetail }) {
       <p className="hd-meta" style={{ margin: '0 0 14px' }}>
         entity_id {lead.entity_id ?? <em>unassociated</em>} · {lead.crm_id} · 최근 {lead.last_seen_at.slice(0, 16).replace('T', ' ')}
       </p>
+
+      {!lead.entity_id && (
+        <AssociatePanel leadId={lead.id} defaultCrm={lead.crm_id} onSuccess={onChange} />
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12, marginBottom: 14 }}>
         <KPI label="Score"    value={lead.score ?? '–'} sub={lead.score_at?.slice(5, 16).replace('T', ' ')} accent={lead.score != null && lead.score >= 85 ? 'red' : lead.score != null && lead.score >= 70 ? 'amber' : 'trust'} />
@@ -240,6 +244,93 @@ function KPI({ label, value, sub, accent }: { label: string; value: React.ReactN
       <div className="hd-eyebrow">{label}</div>
       <div style={{ font: '700 26px var(--hd-font-display)', color, marginTop: 6 }}>{value}</div>
       {sub && <div className="hd-meta" style={{ marginTop: 4 }}>{sub}</div>}
+    </div>
+  );
+}
+
+// U-004 — entity_id IS NULL 인 lead에 수동 연결. 충돌 시 target_lead_id 안내.
+function AssociatePanel({ leadId, defaultCrm, onSuccess }: {
+  leadId: string;
+  defaultCrm: string;
+  onSuccess: () => void;
+}) {
+  const [entityId, setEntityId] = useState('');
+  const [crmId, setCrmId] = useState(defaultCrm || 'bitrix24');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [conflict, setConflict] = useState<{ target_lead_id: string | null; target_company: string | null } | null>(null);
+
+  const submit = async () => {
+    setBusy(true); setErr(null); setConflict(null);
+    try {
+      await associateLead({ lead_id: leadId, entity_id: entityId.trim(), crm_id: crmId.trim() });
+      setEntityId('');
+      onSuccess();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      // ApiClientError가 details 동봉 — parse 시도
+      try {
+        const match = /:\s*({.+})$/.exec(msg);
+        if (match) {
+          const parsed = JSON.parse(match[1]);
+          if (parsed?.target_lead_id) {
+            setConflict({
+              target_lead_id: parsed.target_lead_id,
+              target_company: parsed.target_company ?? null,
+            });
+            return;
+          }
+        }
+      } catch { /* ignore */ }
+      setErr(msg);
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <div className="hd-card" style={{ padding: 14, marginBottom: 14, borderLeft: '3px solid var(--hd-amber)' }}>
+      <div className="hd-eyebrow" style={{ color: 'var(--hd-amber)' }}>Unassociated — entity_id 연결 필요</div>
+      <p className="hd-meta" style={{ margin: '6px 0 10px' }}>
+        이 lead는 entity_id가 없습니다 (Voice 응답만 있거나 회사명 lookup 실패).
+        Sensor 캡쳐의 entity_id와 매칭시켜 같은 lead로 응집:
+      </p>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <input
+          value={entityId}
+          onChange={(e) => setEntityId(e.target.value)}
+          placeholder="entity_id (CRM deal ID)"
+          style={{ height: 30, padding: '0 10px', border: 'var(--hd-border)', borderRadius: 'var(--hd-radius)', font: 'inherit', fontSize: 13, minWidth: 220 }}
+          onKeyDown={(e) => { if (e.key === 'Enter' && entityId.trim().length >= 2 && !busy) submit(); }}
+        />
+        <input
+          value={crmId}
+          onChange={(e) => setCrmId(e.target.value)}
+          placeholder="crm_id"
+          style={{ height: 30, padding: '0 10px', border: 'var(--hd-border)', borderRadius: 'var(--hd-radius)', font: 'inherit', fontSize: 13, width: 110 }}
+        />
+        <button
+          className="hd-btn primary"
+          disabled={busy || entityId.trim().length < 2}
+          onClick={submit}
+        >{busy ? '연결 중…' : '연결'}</button>
+      </div>
+      {err && (
+        <p className="hd-meta" style={{ color: 'var(--hd-red)', marginTop: 8, fontSize: 12 }}>
+          오류: {err}
+        </p>
+      )}
+      {conflict && (
+        <div style={{ marginTop: 10, padding: 10, background: 'var(--hd-amber-50)', border: '1px solid var(--hd-amber)', borderRadius: 'var(--hd-radius)' }}>
+          <strong style={{ color: 'var(--hd-amber)' }}>이미 사용 중인 entity_id</strong>
+          <p className="hd-meta" style={{ margin: '4px 0 8px', fontSize: 12 }}>
+            동일 entity_id를 가진 lead가 존재. 본 lead를 archive 또는 응답을 수동 이전 후 재시도.
+          </p>
+          {conflict.target_lead_id && (
+            <Link href={`/leads/${conflict.target_lead_id}`} className="hd-link">
+              → 기존 lead 열기 {conflict.target_company ? `(${conflict.target_company})` : ''}
+            </Link>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -24,8 +24,8 @@
 | generate_dealer_output RPC (R_10.07) | 004_unified.sql `generate_dealer_output()` |
 | upsert_lead_from_cluster · upsert_lead_from_response | 004_unified.sql |
 | 트리거 (cluster→lead, response→lead) | 004_unified.sql `trg_clusters_lead` · `trg_responses_lead` |
-| Admin Edge Functions (목록·상세) | `backend/functions/admin-leads-{,detail}/index.ts` |
-| Admin UI (Next.js 라우트) | `../S_Sensor/admin/app/leads/{page.tsx, [id]/page.tsx}` |
+| Admin Edge Functions (목록·상세·entity_id 연결) | `backend/functions/admin-{leads,leads-detail,lead-associate}/index.ts` |
+| Admin UI (Next.js 라우트 + Unassociated chip + AssociatePanel) | `../S_Sensor/admin/app/leads/{page.tsx, [id]/page.tsx}` |
 
 ---
 
@@ -91,7 +91,8 @@ trigger trg_responses_lead → upsert_lead_from_response
 | M | `score_lead` v2 — rule_versions에서 가중치 JSON 동적 로드 (`body_json -> 'weights' -> ...`) |
 | M | Linkage 다대다 (v2) — 같은 Voice 응답이 여러 Lead에 매핑되는 경우 |
 | M | DealerOutput payload 풀 (R_10.07 텍스트까지 — 현재는 segment+priority 기록만) |
-| L | Lead merge UI — Admin이 중복 Lead 수동 병합 (merged_into 컬럼 활용) |
+| M | Lead merge — `admin-lead-merge` Edge Function (responses·captures·lead_links 이전 + src.status='merged'·merged_into=dst). associate 시 충돌 시점에 alternate flow로 |
+| L | ~~Lead merge UI~~ — Phase 2로 격상 (merged_into 컬럼은 이미 있음) |
 
 ---
 
@@ -100,3 +101,4 @@ trigger trg_responses_lead → upsert_lead_from_response
 | 시점 | 변경 |
 |---|---|
 | 2026-05-18 | v0.1 — `004_unified.sql`(leads·lead_links·dealer_outputs + score_lead·generate_dealer_output·upsert_* RPC + 트리거 2개 + FK) + 2 Edge Functions(admin-leads, admin-leads-detail) + Next.js `/leads` + `/leads/[id]` + SectionNav |
+| 2026-05-20 | v0.2 — U-004 unassociated UI: admin-leads에 `unassociated` 쿼리 필터 추가, `admin-lead-associate` Edge Function (entity_id 수동 연결 + UNIQUE 충돌 시 target_lead_id 안내), /leads page에 Unassociated chip, /leads/[id]에 AssociatePanel (entity_id IS NULL 시만 표시 + 충돌 시 기존 lead 링크). merge는 Phase 2. |

@@ -88,11 +88,14 @@ verify_jwt = false
 [functions.studio-deploy]
 verify_jwt = false
 
-# U_Unified — Lead 목록·상세 (admin_auth)
+# U_Unified — Lead 목록·상세·entity_id 연결 (admin_auth)
 [functions.admin-leads]
 verify_jwt = false
 
 [functions.admin-leads-detail]
+verify_jwt = false
+
+[functions.admin-lead-associate]
 verify_jwt = false
 
 # T_08 — 통과 판정 (정량 9 지표 집계)

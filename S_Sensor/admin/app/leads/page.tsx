@@ -52,6 +52,10 @@ function View({ email }: { email: string }) {
     : filters.has_sensor === 'true' ? 'sensor'
     : filters.has_voice === 'true' ? 'voice'
     : 'all';
+  const toggleUnassoc = () => setFilters({
+    ...filters,
+    unassociated: filters.unassociated === 'true' ? undefined : 'true',
+  });
 
   return (
     <>
@@ -77,6 +81,10 @@ function View({ email }: { email: string }) {
           <Chip active={chanActive === 'both'}   onClick={() => setChan('both')}>Sensor + Voice</Chip>
           <Chip active={chanActive === 'sensor'} onClick={() => setChan('sensor')}>Sensor only</Chip>
           <Chip active={chanActive === 'voice'}  onClick={() => setChan('voice')}>Voice only</Chip>
+
+          <span style={{ width: 1, height: 18, background: 'var(--hd-steel-200)' }} />
+          <span className="hd-eyebrow">상태</span>
+          <Chip active={filters.unassociated === 'true'} onClick={toggleUnassoc}>Unassociated</Chip>
 
           <span style={{ width: 1, height: 18, background: 'var(--hd-steel-200)' }} />
           <input

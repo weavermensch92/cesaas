@@ -454,6 +454,7 @@ export interface LeadFilters {
   crm_id?: string;
   has_sensor?: 'true' | 'false';
   has_voice?: 'true' | 'false';
+  unassociated?: 'true' | 'false';   // U-004 — entity_id IS NULL 필터
   q?: string;
   status?: string;
   limit?: number;
@@ -482,6 +483,7 @@ export async function listLeads(f: LeadFilters): Promise<PaginatedLeads> {
   return request('GET', '/admin-leads', {
     priority: f.priority, segment: f.segment, crm_id: f.crm_id,
     has_sensor: f.has_sensor, has_voice: f.has_voice,
+    unassociated: f.unassociated,
     q: f.q, status: f.status,
     limit: f.limit?.toString(), cursor: f.cursor ?? undefined,
   });
@@ -489,6 +491,23 @@ export async function listLeads(f: LeadFilters): Promise<PaginatedLeads> {
 
 export async function getLead(id: string): Promise<LeadDetail> {
   return request('GET', '/admin-leads-detail', { id });
+}
+
+// U-004 — entity_id 수동 연결. 충돌 시 409 + target_lead_id 포함하여 throw.
+export interface AssociateLeadResult {
+  lead: { id: string; entity_id: string; crm_id: string; company_name: string | null; segment: string | null; priority: string | null; score: number | null; grade: string | null };
+  actor: string;
+}
+export async function associateLead(args: {
+  lead_id: string;
+  entity_id: string;
+  crm_id?: string;
+}): Promise<AssociateLeadResult> {
+  return request('POST', '/admin-lead-associate', undefined, {
+    lead_id: args.lead_id,
+    entity_id: args.entity_id,
+    crm_id: args.crm_id ?? 'bitrix24',
+  });
 }
 
 // ============================================================================

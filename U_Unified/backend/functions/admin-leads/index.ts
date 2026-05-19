@@ -11,6 +11,7 @@
  *   crm_id           단일
  *   has_sensor       'true' | 'false'
  *   has_voice        'true' | 'false'
+ *   unassociated     'true' = entity_id IS NULL 만 (U-004)
  *   status           기본 active
  *   q                회사명·entity_id 검색 (prefix)
  *   limit · cursor
@@ -56,6 +57,11 @@ Deno.serve(async (req: Request) => {
     const hasVoice = p.get('has_voice');
     if (hasVoice === 'true')   q = q.gt('voice_count', 0);
     if (hasVoice === 'false')  q = q.eq('voice_count', 0);
+
+    // U-004 — entity_id IS NULL (Voice-only standalone leads, 회사명 lookup도 실패한 경우)
+    const unassoc = p.get('unassociated');
+    if (unassoc === 'true')  q = q.is('entity_id', null);
+    if (unassoc === 'false') q = q.not('entity_id', 'is', null);
 
     const search = p.get('q');
     if (search && search.length >= 2) {
