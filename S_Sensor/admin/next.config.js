@@ -10,6 +10,14 @@ const nextConfig = {
     typedRoutes: false,
     outputFileTracingRoot: path.join(__dirname, '../../'),
   },
+  async rewrites() {
+    return [
+      { source: '/dealer',       destination: '/dealer/index.html' },
+      { source: '/dealer/',      destination: '/dealer/index.html' },
+      { source: '/visitor',      destination: '/visitor/index.html' },
+      { source: '/visitor/',     destination: '/visitor/index.html' },
+    ];
+  },
 };
 
 module.exports = nextConfig;
