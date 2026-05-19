@@ -45,12 +45,14 @@ interface ResponsePayload {
   axis_data?: AxisData | null;
   captured_at: string;
   answers: AnswerLine[];
-  // Visitor 옵트인 연락처 (V_20.04)
+  // Visitor 옵트인 연락처 (V_20.04) · Dealer 상담 대상 연락처
   contact_opted_in?: boolean;
   contact_name?: string | null;
   contact_phone?: string | null;
   contact_email?: string | null;
   notes?: string | null;
+  // Dealer 상담 대상 회사 (016) — dealer 응답은 필수
+  target_company?: string | null;
 }
 
 Deno.serve(async (req: Request) => {
@@ -137,11 +139,21 @@ Deno.serve(async (req: Request) => {
       p_axis_data: payload.axis_data ?? null,
       p_answers: payload.answers,
       p_captured_at: payload.captured_at,
-      p_contact_name:     payload.contact_opted_in ? (payload.contact_name  ?? null) : null,
-      p_contact_phone:    payload.contact_opted_in ? (payload.contact_phone ?? null) : null,
-      p_contact_email:    payload.contact_opted_in ? (payload.contact_email ?? null) : null,
-      p_notes:            payload.contact_opted_in ? (payload.notes         ?? null) : null,
+      // Dealer 는 상담 대상 정보를 항상 저장. Visitor 는 opt-in 했을 때만.
+      p_contact_name:     payload.respondent_type === 'dealer'
+                            ? (payload.contact_name ?? null)
+                            : (payload.contact_opted_in ? (payload.contact_name ?? null) : null),
+      p_contact_phone:    payload.respondent_type === 'dealer'
+                            ? (payload.contact_phone ?? null)
+                            : (payload.contact_opted_in ? (payload.contact_phone ?? null) : null),
+      p_contact_email:    payload.respondent_type === 'dealer'
+                            ? (payload.contact_email ?? null)
+                            : (payload.contact_opted_in ? (payload.contact_email ?? null) : null),
+      p_notes:            payload.respondent_type === 'dealer'
+                            ? (payload.notes ?? null)
+                            : (payload.contact_opted_in ? (payload.notes ?? null) : null),
       p_contact_opted_in: payload.contact_opted_in ?? false,
+      p_target_company:   payload.target_company ?? null,
     });
     if (error) {
       if (error.code === '23503') {
@@ -220,13 +232,21 @@ function parseAndValidate(text: string, identity: { role: string }): ResponsePay
     nps = n;
   }
 
-  // 옵트인 연락처는 visitor 한정, opted_in=true일 때만 보존
   const optedIn = typeof o.contact_opted_in === 'boolean' ? o.contact_opted_in : false;
-  const trimStr = (v: unknown): string | null => {
+  const trimStr = (v: unknown, max = 500): string | null => {
     if (typeof v !== 'string') return null;
     const t = v.trim();
-    return t === '' ? null : t.slice(0, 500);
+    return t === '' ? null : t.slice(0, max);
   };
+
+  // Dealer 응답은 target_company 필수
+  const targetCompany = trimStr(o.target_company, 200);
+  if (respondentType === 'dealer' && !targetCompany) {
+    throw new ApiError('validation_failed', 'target_company required for dealer responses');
+  }
+
+  // Dealer 는 항상 contact_* 보존 (고객측 담당자), Visitor 는 opt-in 시에만
+  const saveContact = respondentType === 'dealer' || optedIn;
 
   return {
     survey_id: surveyId,
@@ -244,9 +264,10 @@ function parseAndValidate(text: string, identity: { role: string }): ResponsePay
     captured_at: capturedAt,
     answers,
     contact_opted_in: optedIn,
-    contact_name:  respondentType === 'visitor' && optedIn ? trimStr(o.contact_name)  : null,
-    contact_phone: respondentType === 'visitor' && optedIn ? trimStr(o.contact_phone) : null,
-    contact_email: respondentType === 'visitor' && optedIn ? trimStr(o.contact_email) : null,
-    notes:         respondentType === 'visitor' && optedIn ? trimStr(o.notes)         : null,
+    contact_name:  saveContact ? trimStr(o.contact_name)  : null,
+    contact_phone: saveContact ? trimStr(o.contact_phone) : null,
+    contact_email: saveContact ? trimStr(o.contact_email) : null,
+    notes:         saveContact ? trimStr(o.notes)         : null,
+    target_company: targetCompany,
   };
 }

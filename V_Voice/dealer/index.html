@@ -95,6 +95,25 @@
 
     .hidden{display:none !important;}
     .ghost{color:var(--hd-gray);font-size:12px;}
+
+    /* tutorial — 첫 접속 온보딩 + 헤더 도움말 버튼으로 재호출 */
+    header .help-btn{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:999px;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font:700 14px var(--hd-font);padding:0;}
+    header .help-btn:hover{background:rgba(255,255,255,0.2);}
+    .tut-overlay{position:fixed;inset:0;background:rgba(0,37,84,0.55);display:flex;align-items:flex-end;justify-content:center;z-index:100;padding:0;}
+    @media (min-width:520px){ .tut-overlay{align-items:center;padding:18px;} }
+    .tut-modal{background:#fff;width:100%;max-width:520px;border-radius:16px 16px 0 0;padding:22px 22px 18px;box-shadow:0 -12px 30px rgba(0,0,0,0.18);}
+    @media (min-width:520px){ .tut-modal{border-radius:14px;padding:24px;} }
+    .tut-step-num{font:600 11px var(--hd-font);color:var(--hd-prosperity);letter-spacing:0.08em;text-transform:uppercase;}
+    .tut-t{font:700 22px/1.2 var(--hd-font-display);color:var(--hd-trust);letter-spacing:-0.01em;margin:6px 0 10px;}
+    .tut-b{font-size:15px;line-height:1.5;color:#1d1d1f;margin:0 0 14px;}
+    .tut-tip{font-size:13px;line-height:1.45;color:var(--hd-gray);background:var(--hd-steel-50);border-left:3px solid var(--hd-heritage);padding:8px 12px;border-radius:4px;}
+    .tut-dots{display:flex;gap:6px;justify-content:center;margin:16px 0 14px;}
+    .tut-dots i{width:7px;height:7px;border-radius:50%;background:var(--hd-steel-300);display:block;transition:background 0.2s;}
+    .tut-dots i.on{background:var(--hd-heritage);}
+    .tut-nav{display:flex;gap:8px;align-items:center;}
+    .tut-skip{font:600 13px var(--hd-font);color:var(--hd-gray);background:none;border:0;padding:8px 4px;cursor:pointer;}
+    .tut-skip:hover{color:var(--hd-trust);}
+    .tut-spacer{flex:1;}
   </style>
 </head>
 <body>
@@ -108,12 +127,14 @@
       <span class="spacer"></span>
       <span class="badge"><span id="netDot" class="dot"></span><span id="netLabel">Online</span></span>
       <span class="badge" id="queueBadge" title="송출 대기">큐 0</span>
+      <button id="helpBtn" class="help-btn" type="button" aria-label="help" title="?">?</button>
       <select id="langSel" aria-label="lang">
         <option value="ru">RU</option><option value="en">EN</option><option value="ko">KO</option>
       </select>
     </header>
 
     <main id="root"></main>
+    <div id="tutOverlay" class="tut-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="tutTitle"></div>
   </div>
 
   <script>
@@ -123,6 +144,11 @@
   const I18N = {
     ru: {
       product:'Опрос дилера',
+      step_target:'Информация о клиенте',
+      label_target_company:'Компания клиента *',
+      label_contact_name:'Контактное лицо',
+      label_contact_phone:'Телефон',
+      label_dealer_notes:'Заметки по встрече',
       step_axis:'Часть 1 — Профиль компании',
       step_market:'Часть 2 — Маркетинг',
       step_final:'Часть 3 — NPS и согласие',
@@ -140,9 +166,38 @@
       pb_weapons:'Инструменты продаж', pb_pitch:'Пример речи', pb_models:'Модели', pb_next:'Следующий шаг',
       consent_q1:'Подписка на дальнейшие обновления',
       consent_q2:'Согласие на обработку данных (обязательно)',
+      help_btn:'Помощь',
+      tut_skip:'Пропустить', tut_next:'Далее', tut_prev:'Назад', tut_done:'Начать',
+      tut_pages:[
+        {
+          t:'Добро пожаловать',
+          b:'Это форма интервью для клиентов на стенде. Каждый ответ автоматически сохраняется. Даже без интернета — данные останутся в очереди и уйдут позже.',
+          tip:'Индикатор «Online / Offline» в верхнем правом углу показывает связь. Бэйдж «В очереди» — сколько ответов ждёт отправки.',
+        },
+        {
+          t:'Один клиент — один ответ',
+          b:'На каждого посетителя нажимайте «Новый респондент» в конце предыдущего ответа. Название компании клиента обязательно; имя и телефон контактного лица помогут с последующим обращением.',
+          tip:'Среднее время заполнения ~5 минут. Можно прервать и продолжить — состояние сохраняется в браузере.',
+        },
+        {
+          t:'Три части опроса',
+          b:'1) Профиль компании (размер, отрасль, парк техники) · 2) Маркетинг (удовлетворённость, план закупки, факторы) · 3) NPS и согласие на обработку данных.',
+          tip:'Задавайте вопросы клиенту вслух и заполняйте поля сами. Точность профиля влияет на сегмент.',
+        },
+        {
+          t:'Playbook — что сказать клиенту',
+          b:'После отправки сразу появится Playbook: сегмент клиента, «инструменты продаж», пример речи, релевантные модели и следующий шаг. Используйте экран как шпаргалку прямо в разговоре.',
+          tip:'P1–P5 — приоритет последующей работы. Чем выше, тем быстрее головной офис свяжется с клиентом.',
+        },
+      ],
     },
     en: {
       product:'Dealer Survey',
+      step_target:'Customer information',
+      label_target_company:'Customer company *',
+      label_contact_name:'Contact person',
+      label_contact_phone:'Phone',
+      label_dealer_notes:'Visit notes',
       step_axis:'Part 1 — Company profile',
       step_market:'Part 2 — Marketing',
       step_final:'Part 3 — NPS & consent',
@@ -160,9 +215,38 @@
       pb_weapons:'Sales weapons', pb_pitch:'Pitch example', pb_models:'Related models', pb_next:'Next action',
       consent_q1:'Subscribe to future updates',
       consent_q2:'Data processing consent (required)',
+      help_btn:'Help',
+      tut_skip:'Skip', tut_next:'Next', tut_prev:'Back', tut_done:'Start',
+      tut_pages:[
+        {
+          t:'Welcome',
+          b:'This is the booth interview form. Every answer auto-saves. Even with no internet, responses queue locally and send later.',
+          tip:'The "Online / Offline" badge top-right shows connectivity. "Queue" counts answers waiting to send.',
+        },
+        {
+          t:'One customer = one response',
+          b:'After each visitor, tap "New respondent" at the end. Customer company name is required; contact name and phone help with follow-up.',
+          tip:'Roughly 5 min per response. You can pause and resume — state is kept in the browser.',
+        },
+        {
+          t:'Three survey parts',
+          b:'1) Company profile (size, industry, fleet) · 2) Marketing (satisfaction, purchase plan, top factors) · 3) NPS and consent.',
+          tip:'Ask the customer out loud and fill the fields yourself. Profile accuracy drives the segment match.',
+        },
+        {
+          t:'Playbook — what to say',
+          b:'On submit, the Playbook appears: segment, sales weapons, pitch example, related models, and the next step. Use it as an on-screen script during the chat.',
+          tip:'P1–P5 is the follow-up priority. Higher priority = faster headquarters outreach.',
+        },
+      ],
     },
     ko: {
       product:'딜러 설문',
+      step_target:'상담 대상 정보',
+      label_target_company:'상담 대상 회사 *',
+      label_contact_name:'담당자 이름',
+      label_contact_phone:'연락처',
+      label_dealer_notes:'상담 메모',
       step_axis:'1단계 — 회사 프로필',
       step_market:'2단계 — 마케팅',
       step_final:'3단계 — NPS·동의',
@@ -180,6 +264,30 @@
       pb_weapons:'영업 무기', pb_pitch:'멘트 시안', pb_models:'관련 모델', pb_next:'다음 단계',
       consent_q1:'향후 업데이트 수신 동의',
       consent_q2:'개인정보 처리 동의 (필수)',
+      help_btn:'도움말',
+      tut_skip:'건너뛰기', tut_next:'다음', tut_prev:'이전', tut_done:'시작',
+      tut_pages:[
+        {
+          t:'환영합니다',
+          b:'부스에서 만난 고객을 인터뷰하는 도구입니다. 모든 응답은 자동 저장되고, 인터넷이 끊겨도 큐에 쌓여 자동 송출됩니다.',
+          tip:'상단 우측 "Online / Offline" 표시가 연결 상태입니다. "큐" 배지는 송출 대기 중인 응답 수.',
+        },
+        {
+          t:'고객 1명 = 응답 1건',
+          b:'한 명 끝날 때마다 마지막 화면의 "새 응답자" 버튼을 누르세요. 회사명은 필수이며, 담당자 이름·전화는 후속 연락에 활용됩니다.',
+          tip:'평균 5분 소요. 중간에 멈춰도 브라우저에 상태가 남아 있어 이어서 가능.',
+        },
+        {
+          t:'설문은 3단계',
+          b:'1) 회사 프로필(규모·업종·보유 장비) · 2) 마케팅(만족도·구매 계획·중요 요소) · 3) NPS와 개인정보 동의.',
+          tip:'고객에게 직접 물어보면서 입력하세요. 프로필 정확도가 segment 매칭의 품질을 결정합니다.',
+        },
+        {
+          t:'Playbook — 즉시 활용',
+          b:'제출하면 segment·영업 무기·멘트 시안·관련 모델·다음 단계가 즉시 화면에 표시됩니다. 그 화면을 보면서 바로 고객에게 응답하세요.',
+          tip:'P1~P5는 본사 follow-up 우선순위. 등급이 높을수록 본사가 빠르게 연락합니다.',
+        },
+      ],
     },
   };
 
@@ -191,6 +299,16 @@
     id:'survey_v1_dealer',
     estimated_minutes:5,
     steps: [
+      {
+        // 016 — 딜러가 상담 끝난 뒤 매번 새 응답으로 기록. 회사명 필수.
+        title_key:'step_target',
+        questions: [
+          {id:'_target_company', type:'text',     required:true,  label_key:'label_target_company'},
+          {id:'_contact_name',   type:'text',     required:false, label_key:'label_contact_name'},
+          {id:'_contact_phone',  type:'text',     required:false, label_key:'label_contact_phone', inputmode:'tel'},
+          {id:'_dealer_notes',   type:'textarea', required:false, label_key:'label_dealer_notes'},
+        ],
+      },
       {
         title_key:'step_axis',
         questions: [
@@ -626,6 +744,7 @@
     if (!q.required) return true;
     if (q.type === 'consent') return !!v;
     if (q.type === 'multi_select') return Array.isArray(v) && v.length > 0;
+    if (q.type === 'text' || q.type === 'textarea') return typeof v === 'string' && v.trim().length > 0;
     return v !== undefined && v !== null && v !== '';
   }
   function isStepValid(){
@@ -688,6 +807,17 @@
         <input type="range" min="1" max="5" step="1" value="${cur}" data-q="${q.id}" data-type="slider" />
         <div class="slider-vals"><span>1</span><span>5</span></div>
       `;
+    } else if (q.type === 'text') {
+      const cur = typeof v === 'string' ? v : '';
+      const im = q.inputmode ? ` inputmode="${q.inputmode}"` : '';
+      const label = q.label_key ? t(q.label_key) : title;
+      inner = `<input type="text" data-q="${q.id}" data-type="text"${im} value="${escapeAttr(cur)}" autocomplete="off" style="width:100%;height:42px;padding:0 12px;border:1px solid var(--hd-steel-200);border-radius:8px;font:inherit;color:var(--hd-ink);" />`;
+      return `<div class="q"><div class="q-title">${label}${q.required ? '' : ' <span class="q-meta">(optional)</span>'}</div>${inner}</div>`;
+    } else if (q.type === 'textarea') {
+      const cur = typeof v === 'string' ? v : '';
+      const label = q.label_key ? t(q.label_key) : title;
+      inner = `<textarea data-q="${q.id}" data-type="textarea" rows="3" style="width:100%;padding:10px 12px;border:1px solid var(--hd-steel-200);border-radius:8px;font:inherit;color:var(--hd-ink);resize:vertical;">${escapeText(cur)}</textarea>`;
+      return `<div class="q"><div class="q-title">${label}${q.required ? '' : ' <span class="q-meta">(optional)</span>'}</div>${inner}</div>`;
     } else if (q.type === 'consent') {
       const label = q.label_key ? t(q.label_key) : title;
       inner = `
@@ -700,6 +830,9 @@
     }
     return `<div class="q"><div class="q-title">${title}${q.required ? '' : ' <span class="q-meta">(optional)</span>'}</div>${inner}</div>`;
   }
+
+  function escapeAttr(s){ return String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function escapeText(s){ return String(s).replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
   function bindQuestionHandlers(){
     root.querySelectorAll('.opt').forEach((el) => {
@@ -729,6 +862,14 @@
         render();
       });
     });
+    root.querySelectorAll('input[type=text][data-type=text], textarea[data-type=textarea]').forEach((el) => {
+      el.addEventListener('input', () => {
+        state.answers[el.dataset.q] = el.value;
+        // 입력 중에도 다음 버튼 활성/비활성 재계산 — 다만 전체 render 는 포커스 잃으므로 nav만 토글
+        const nav = document.getElementById('navNext');
+        if (nav) nav.disabled = !isStepValid();
+      });
+    });
   }
 
   function onAdvance(){
@@ -748,7 +889,12 @@
     const prio = priorityForResponse(axis, npsVal);
     state.result = { axis, segment: seg.segment, segment_confidence: seg.confidence, priority: prio, npsVal };
 
-    // 응답 payload 조립
+    // _ 접두 키는 메타데이터 — 응답 row 컬럼으로, answers[]에는 제외
+    const META_KEYS = ['_target_company', '_contact_name', '_contact_phone', '_dealer_notes'];
+    const filteredAnswers = Object.entries(state.answers)
+      .filter(([qid]) => !META_KEYS.includes(qid))
+      .map(([qid, val]) => ({ question_id: qid, answer: val }));
+
     const payload = {
       survey_id: SURVEY.id,
       respondent_type: 'dealer',
@@ -763,7 +909,12 @@
       segment_confidence: seg.confidence,
       axis_data: axis,
       captured_at: new Date().toISOString(),
-      answers: Object.entries(state.answers).map(([qid, val]) => ({ question_id: qid, answer: val })),
+      answers: filteredAnswers,
+      // 016 — 상담 대상 정보
+      target_company: (state.answers['_target_company'] || '').trim(),
+      contact_name:   (state.answers['_contact_name']   || '').trim() || null,
+      contact_phone:  (state.answers['_contact_phone']  || '').trim() || null,
+      notes:          (state.answers['_dealer_notes']   || '').trim() || null,
     };
 
     const id = crypto.randomUUID();
@@ -789,11 +940,13 @@
     const r = state.result;
     const pb = PLAYBOOKS[r.segment] || PLAYBOOKS.other;
     const prioLbl = t('prio')[r.priority] || r.priority.toUpperCase();
+    const target = state.answers['_target_company'] || '';
     root.innerHTML = `
       <div class="card pb">
         <span class="prio ${r.priority}">${prioLbl}</span>
         <span class="seg">${r.segment.toUpperCase()}</span>
         <h2>${tx(pb.title)}</h2>
+        ${target ? `<p style="margin:6px 0 0;font-weight:600;color:var(--hd-discovery)">${escapeText(target)}</p>` : ''}
         <p class="ghost">${t('result_sub')}</p>
 
         <h3>${t('pb_weapons')}</h3>
@@ -823,9 +976,73 @@
     };
   }
 
+  // ============================================================================
+  // 튜토리얼 — 첫 접속 시 자동 표시, 헤더 ? 버튼으로 재호출. 페이지 4장 ru/en/ko.
+  // ============================================================================
+  const TUT_SEEN_KEY = 'hd_dealer_tutorial_seen_v1';
+  const tutState = { open:false, page:0 };
+
+  function tutPages(){
+    const pages = (I18N[state.lang] && I18N[state.lang].tut_pages) || I18N.ru.tut_pages;
+    return pages || [];
+  }
+  function openTutorial(){
+    tutState.open = true; tutState.page = 0;
+    renderTutorial();
+  }
+  function closeTutorial(markSeen){
+    tutState.open = false;
+    if (markSeen) { try { localStorage.setItem(TUT_SEEN_KEY, '1'); } catch(_){} }
+    const ov = document.getElementById('tutOverlay');
+    if (ov) { ov.classList.add('hidden'); ov.innerHTML = ''; }
+  }
+  function renderTutorial(){
+    if (!tutState.open) return;
+    const pages = tutPages();
+    if (pages.length === 0) { closeTutorial(true); return; }
+    const idx = Math.max(0, Math.min(tutState.page, pages.length - 1));
+    const p = pages[idx];
+    const isLast = idx === pages.length - 1;
+    const dots = pages.map((_, i) => `<i class="${i === idx ? 'on' : ''}"></i>`).join('');
+    const ov = document.getElementById('tutOverlay');
+    ov.classList.remove('hidden');
+    ov.innerHTML = `
+      <div class="tut-modal" role="document">
+        <div class="tut-step-num">${idx + 1} / ${pages.length}</div>
+        <h2 id="tutTitle" class="tut-t">${escapeText(p.t)}</h2>
+        <p class="tut-b">${escapeText(p.b)}</p>
+        <div class="tut-tip">${escapeText(p.tip)}</div>
+        <div class="tut-dots">${dots}</div>
+        <div class="tut-nav">
+          <button class="tut-skip" id="tutSkip">${t('tut_skip')}</button>
+          <span class="tut-spacer"></span>
+          ${idx > 0 ? `<button class="btn" id="tutPrev">${t('tut_prev')}</button>` : ''}
+          <button class="btn primary" id="tutNext">${isLast ? t('tut_done') : t('tut_next')}</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('tutSkip').onclick = () => closeTutorial(true);
+    const prev = document.getElementById('tutPrev');
+    if (prev) prev.onclick = () => { tutState.page = Math.max(0, tutState.page - 1); renderTutorial(); };
+    document.getElementById('tutNext').onclick = () => {
+      if (isLast) closeTutorial(true);
+      else { tutState.page += 1; renderTutorial(); }
+    };
+    // ESC 닫기
+    ov.onkeydown = (ev) => { if (ev.key === 'Escape') closeTutorial(true); };
+  }
+
+  document.getElementById('helpBtn').onclick = openTutorial;
+  // 언어 변경 시 열려 있으면 내용 갱신
+  langSel.addEventListener('change', () => { if (tutState.open) renderTutorial(); });
+
   // 시작
   render();
   drainQueue();
+  // 첫 접속이면 튜토리얼 자동 노출 — token 진입 직후에도 1회만.
+  try {
+    if (!localStorage.getItem(TUT_SEEN_KEY)) openTutorial();
+  } catch(_){}
   </script>
 </body>
 </html>

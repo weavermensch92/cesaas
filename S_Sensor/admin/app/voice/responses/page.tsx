@@ -123,7 +123,8 @@ function View({ email }: { email: string }) {
           <table className="hd-table">
             <thead>
               <tr>
-                <th>시각</th><th>유형</th><th>Segment</th><th>NPS</th>
+                <th>시각</th><th>유형</th><th>상담 대상</th><th>담당자</th>
+                <th>Segment</th><th>NPS</th>
                 <th>언어</th><th>수신</th><th>옵트인</th><th>발신</th>
               </tr>
             </thead>
@@ -132,6 +133,8 @@ function View({ email }: { email: string }) {
                 <tr key={r.id}>
                   <td className="hd-num">{r.captured_at.slice(11, 19)} · {r.captured_at.slice(0, 10)}</td>
                   <td><RespBadge value={r.respondent_type} /></td>
+                  <td>{r.target_company ?? <span className="hd-meta">–</span>}</td>
+                  <td className="hd-meta">{r.contact_name ?? '–'}{r.contact_phone ? ` · ${r.contact_phone}` : ''}</td>
                   <td><SegBadge value={r.segment} /></td>
                   <td className="hd-num"><NpsCell value={r.nps} /></td>
                   <td>{r.language ?? '–'}</td>
@@ -141,7 +144,7 @@ function View({ email }: { email: string }) {
                 </tr>
               ))}
               {!loading && rows.length === 0 && (
-                <tr><td colSpan={8} style={{ textAlign:'center', padding:24 }} className="hd-meta">데이터 없음</td></tr>
+                <tr><td colSpan={10} style={{ textAlign:'center', padding:24 }} className="hd-meta">데이터 없음</td></tr>
               )}
             </tbody>
           </table>

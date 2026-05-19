@@ -36,16 +36,16 @@ export function parseLimit(raw: string | null | undefined): number {
   return Math.min(n, MAX_LIMIT);
 }
 
-export function buildPage<T extends { created_at: string | Date; id: string }>(
+export function buildPage<T extends { id: string } & Record<string, unknown>>(
   rows: T[],
   limit: number,
+  tsKey: string = 'created_at',
 ): PaginatedResult<T> {
   if (rows.length <= limit) return { data: rows, next_cursor: null };
   const cutoff = rows[limit - 1];
   if (!cutoff) return { data: rows.slice(0, limit), next_cursor: null };
-  const ts = cutoff.created_at instanceof Date
-    ? cutoff.created_at.toISOString()
-    : cutoff.created_at;
+  const v = cutoff[tsKey];
+  const ts = v instanceof Date ? v.toISOString() : String(v);
   return {
     data: rows.slice(0, limit),
     next_cursor: encodeCursor({ t: ts, i: cutoff.id }),

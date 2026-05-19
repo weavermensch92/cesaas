@@ -208,6 +208,8 @@ export interface VoiceResponseRow {
   contact_email: string | null;
   axis_data: Record<string, unknown> | null;
   pii_redacted_at: string | null;
+  target_company: string | null;
+  notes: string | null;
 }
 
 export interface VoiceListFilters {
@@ -292,6 +294,73 @@ export async function downloadVoiceCsv(filters: VoiceListFilters & { anonymize?:
   a.href = objUrl; a.download = filename;
   document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(objUrl), 5000);
+}
+
+// ============================================================================
+// V_30.04 Dealer Tokens — Admin이 딜러 계정(Bearer JWT) 발급·revoke
+// ============================================================================
+
+export interface DealerTokenRow {
+  id: string;
+  dealer_id: string;
+  event: string;
+  jti: string;
+  issued_at: string;
+  expires_at: string;
+  revoked_at: string | null;
+  label: string | null;
+  issued_by: string | null;
+  response_count: number;
+}
+
+export interface PaginatedDealerTokens {
+  data: DealerTokenRow[];
+  next_cursor: string | null;
+}
+
+export interface DealerTokenListFilters {
+  event?: string;
+  include_revoked?: boolean;
+  include_expired?: boolean;
+  limit?: number;
+  cursor?: string | null;
+}
+
+export interface DealerTokenIssueResult {
+  jti: string;
+  dealer_id: string;
+  event: string;
+  issued_at: string;
+  expires_at: string;
+  label: string | null;
+  issued_by: string | null;
+  url: string;
+  jwt: string;
+}
+
+export async function listDealerTokens(f: DealerTokenListFilters): Promise<PaginatedDealerTokens> {
+  return request('GET', '/dealer-tokens-list', {
+    event: f.event,
+    include_revoked: f.include_revoked ? 'true' : undefined,
+    include_expired: f.include_expired ? 'true' : undefined,
+    limit: f.limit?.toString(),
+    cursor: f.cursor ?? undefined,
+  });
+}
+
+export async function issueDealerToken(args: {
+  dealer_id: string;
+  event: string;
+  ttl_hours?: number;
+  label?: string;
+}): Promise<DealerTokenIssueResult> {
+  return request('POST', '/dealer-tokens-issue', undefined, args);
+}
+
+export async function revokeDealerToken(jti: string): Promise<{
+  id: string; dealer_id: string; event: string; jti: string; revoked_at: string; revoked_by: string;
+}> {
+  return request('PATCH', '/dealer-tokens-revoke', undefined, { jti });
 }
 
 // ============================================================================

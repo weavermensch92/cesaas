@@ -39,7 +39,8 @@ Deno.serve(async (req: Request) => {
         'id, created_at, captured_at, respondent_type, dealer_id, device_id, ' +
         'event, language, nps, segment, segment_confidence, segment_method, ' +
         'future_subscription, consent_data_collection, contact_opted_in, ' +
-        'contact_name, contact_phone, contact_email, axis_data, pii_redacted_at'
+        'contact_name, contact_phone, contact_email, axis_data, pii_redacted_at, ' +
+        'target_company, notes'
       );
 
     const rt = p.get('respondent_type');
