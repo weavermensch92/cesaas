@@ -74,6 +74,29 @@ function View({ email, me }: { email: string; me: MeProfile }) {
 
   useEffect(() => { refresh(); }, [refresh]);
 
+  async function deleteDealer(r: DealerRow) {
+    const ok = window.confirm(
+      `[삭제 확인]\n\n${r.dealer_id} · ${r.name}${r.affiliation ? ' · ' + r.affiliation : ''}\n\n` +
+      `→ Voice JWT 토큰과 Sensor 키가 함께 삭제됩니다.\n` +
+      `→ 응답(리드)·캡쳐 데이터는 유지됩니다 (dealer_id 그대로).\n\n` +
+      `진행할까요?`
+    );
+    if (!ok) return;
+    setErr(null);
+    try {
+      const init = await authedFetch();
+      const res = await fetch('/api/dealers/delete', {
+        ...init, method: 'POST',
+        headers: { ...init.headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dealer_id: r.dealer_id }),
+      });
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+      const d = await res.json();
+      alert(`삭제 완료\n· Voice 토큰 ${d.deleted_voice_tokens}건 · Sensor 키 ${d.deleted_sensor_keys}건 · 딜러 row ${d.dealer_removed ? '삭제됨' : '없음'}`);
+      refresh();
+    } catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
+  }
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setBusy(true); setErr(null); setResult(null);
@@ -228,7 +251,7 @@ function View({ email, me }: { email: string; me: MeProfile }) {
             <thead>
               <tr>
                 <th>Dealer ID</th><th>이름</th><th>소속회사</th>
-                <th>Region</th><th>Event</th><th>연락처</th><th>등록 시각</th>
+                <th>Region</th><th>Event</th><th>연락처</th><th>등록 시각</th><th>삭제</th>
               </tr>
             </thead>
             <tbody>
@@ -241,10 +264,13 @@ function View({ email, me }: { email: string; me: MeProfile }) {
                   <td className="hd-meta">{r.event ?? '–'}</td>
                   <td className="hd-meta">{r.contact_email || r.contact_phone || '–'}</td>
                   <td className="hd-num">{new Date(r.created_at).toLocaleString('ko-KR')}</td>
+                  <td>
+                    <button className="hd-btn sm" onClick={() => deleteDealer(r)} style={{ color: 'var(--hd-red)' }}>삭제</button>
+                  </td>
                 </tr>
               ))}
               {!loading && rows.length === 0 && (
-                <tr><td colSpan={7} className="hd-meta" style={{ textAlign: 'center', padding: 18 }}>등록된 딜러 없음</td></tr>
+                <tr><td colSpan={8} className="hd-meta" style={{ textAlign: 'center', padding: 18 }}>등록된 딜러 없음</td></tr>
               )}
             </tbody>
           </table>
