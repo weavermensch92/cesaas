@@ -51,6 +51,7 @@
 | Admin Edge Functions (captures·clusters·field-edit·normalize-trigger) | `backend/functions/admin-*/index.ts` |
 | Admin auth · pagination Deno mirrors | `backend/shared/{admin_auth,pagination}.ts` |
 | Admin UI (Next.js · S_50) — 캡쳐 목록·클러스터 상세·필드 편집·재정규화 | `admin/` (`@hd/sensor-admin`) |
+| Lead scoring (R_10.01·.02·.05 DB 로드 + lib *Core + leads UPDATE + dealer_outputs INSERT) | `backend/shared/lead_scoring.ts` (V_Voice와 동일, 중복 — 다른 shared/와 일관) |
 
 ---
 
@@ -104,3 +105,4 @@ RLS: service_role 전권 / `is_hd_admin()` read + normalized_fields update.
 | 2026-05-18 | v0.2 — Edge Functions `captures-chunks` / `captures-finalize` + `shared/{hmac,idempotency,classify,cluster}` |
 | 2026-05-18 | v0.3 — `005_runtime.sql`(rule_versions·publish_rule) + `007_normalize_queue.sql`(queue·lock·save·requeue RPC) + `normalize-worker` + `shared/{rules,llm,storage,normalize}` |
 | 2026-05-18 | v0.4 — `008_admin_audit.sql`(normalized_field_edits·edit_normalized_field·enqueue_normalize_priority RPC) + 4 Admin Edge Functions + `shared/{admin_auth,pagination}` + Next.js Admin UI |
+| 2026-05-19 | v0.5 — Phase D.3 — `shared/lead_scoring.ts` (V_Voice 중복) + normalize-worker가 save_normalized 후 scoreLead 호출. deno.json에 `harness2/` alias. `021_disable_trigger_scoring.sql`이 upsert_lead_from_cluster의 PERFORM 라인 제거. |

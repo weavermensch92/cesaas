@@ -3,7 +3,7 @@
 > **모듈**: 하네스 2 (Runtime) — R_10 룰 + R_20 위버 도구 + harness2 lib.
 > **상위**: `../CLAUDE.md`
 > **하네스 룰 원본**: `../../../hd-hyundai-poc-harness-v1/hd-hyundai-poc/R_Runtime/CLAUDE.md`
-> **v0.3 상태**: R_10 7 시드 YAML(harness1 스키마) + lib/ TS + R_20 4 CLI (dealer 토큰·publish-rule·retrigger-batch). PRD-03 § 4 R-002·R-009·R-010·R-012·R-020~R-022 충족 (Phase A·B·C).
+> **v0.4 상태**: R_10 7 시드 YAML(harness1 스키마) + lib/ TS (Core/wrapper 분리) + R_20 4 CLI + Edge Function scoring helper. PRD-03 § 4 R-002·R-009·R-010·R-012·R-020~R-022 + NF-P01(60s hot reload)·NF-P02(서비스 재배포 없이 룰 변경) 충족 (Phase A·B·C·D).
 
 ## 0. 정체성
 
@@ -64,7 +64,8 @@
 
 | 우선 | 영역 |
 |---|---|
-| H | Phase D.3 — `score_lead()` / `generate_dealer_output()` plpgsql trigger를 lib 기반 Edge Function 호출로 교체. R_10.01·.07 DB 시드 + `shared/lead_scoring.ts` helper + `responses-receive`·`normalize-worker`에서 호출 + 020 migration이 트리거 라인 제거. NF-P01 60s hot reload 완전 실 동작 |
+| H | Phase E — `dealer/index.html` 인라인 R_10.05·.07을 fetch / build-time 주입으로 (출장 부스 오프라인 폴백 + 운영 hot reload) |
+| H | R_10.07 DB 시드 마이그레이션 (Phase D.3 스코어링이 lead.segment + priority + score 기반 dealer_outputs는 만들지만, 실제 Playbook 텍스트는 아직 dealer/index.html 인라인) |
 | M | Phase E — `dealer/index.html` 인라인 R_10.05·.07을 fetch 또는 build-time 주입으로 |
 | M | R_20 HTTP 게이트웨이 (Fly.io basic auth) — 위버 외부 접근 |
 | L | `r20/bin/issue-csv-out.ts` — 발급 결과를 print용 PDF로 출력 |

@@ -42,6 +42,7 @@
 | Admin Dealer 계정 UI (gridge_admin 전용 · 발급 폼·QR·목록·딜러별 응답 수) | `../S_Sensor/admin/app/voice/dealers/page.tsx` |
 | voice_dealer_tokens 운영 메타 (label·issued_by) | `../C_Common/supabase/migrations/017_dealer_tokens_meta.sql` |
 | 서버 측 deterministic segment 매칭 (R_10.05 DB 로드 + harness2 lib + inline fallback) | `backend/shared/segments.ts` |
+| Lead scoring (R_10.01·.02·.05 DB 로드 + lib *Core + leads UPDATE + dealer_outputs INSERT) | `backend/shared/lead_scoring.ts` |
 | 공통 helpers (errors·db·hash·env·idempotency·logger) | `backend/shared/*.ts` (S_Sensor 재export) |
 | Visitor PWA (단일 HTML · Service Worker · IndexedDB · 옵트인 명함) | `visitor/index.html` · `visitor/sw.js` · `visitor/manifest.webmanifest` |
 | Visitor 옵트인 컬럼·24h quota·시드 18문항 | `../C_Common/supabase/migrations/009_voice_visitor.sql` |
@@ -107,3 +108,4 @@ RLS: service_role 전권 / `is_hd_admin()` read.
 | 2026-05-19 | v0.5.2 — 딜러 본인 "내 이력" 화면: `dealer-consultations` Edge Function(016 RPC 래퍼) + dealer/index.html 헤더 이력 토글 + ru/en/ko 라벨. 부스 현장에서 어제·오늘 누구 만났는지 즉시 확인. |
 | 2026-05-19 | v0.5.3 — target_company 자동완성: dealer-consultations prefetch → distinct 회사명 20개를 `<datalist>`로 노출. 신규 입력 회사명도 즉시 최상단 반영. 표기 통일(예: Hyundai/Хёндэ/현대) 효과. |
 | 2026-05-19 | v0.5.4 — /voice/responses 검색·필터 확장: voice-responses Edge에 `target_company` ilike(부분 일치) + `dealer_id` eq 파라미터, Admin UI에 검색 바 (350ms debounce) + 활성 필터 표시. |
+| 2026-05-19 | v0.6 — Phase D.3 scoring 이전: `shared/lead_scoring.ts` (R_10.01·.02·.05 DB 로드 + lib *Core + leads UPDATE + dealer_outputs INSERT). responses-receive가 save 후 호출. `021_disable_trigger_scoring.sql`이 trigger의 `PERFORM score_lead` 제거. NF-P01 hot reload 완전 실 동작. |

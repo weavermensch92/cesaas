@@ -27,6 +27,7 @@ import { db } from 'shared/db.ts';
 import { requestLogger } from 'shared/logger.ts';
 import { callRule } from 'shared/llm.ts';
 import { buildClusterImages, parseLlmFields } from 'shared/normalize.ts';
+import { scoreLead } from 'shared/lead_scoring.ts';
 
 const DEFAULT_BATCH = 5;
 const MAX_BATCH = 10;
@@ -146,6 +147,26 @@ async function processOne(
       .from('normalize_queue')
       .update({ status: 'done', completed_at: new Date().toISOString() })
       .eq('id', item.id);
+
+    // 6) Phase D.3 — trigger의 PERFORM score_lead 제거 후 Edge 측에서 lib 기반 scoring.
+    //    upsert_lead_from_cluster trigger는 여전히 entity_clusters.lead_id 세팅.
+    //    실패해도 normalize는 완료 상태 — graceful.
+    try {
+      const { data: clusterRow } = await db()
+        .from('entity_clusters')
+        .select('lead_id')
+        .eq('id', item.cluster_id)
+        .maybeSingle();
+      const leadId = clusterRow?.lead_id as string | null | undefined;
+      if (leadId) {
+        const score = await scoreLead(leadId);
+        if (!score.ok) {
+          itemLog('scoreLead failed (non-fatal)', { lead_id: leadId, reason: score.reason });
+        }
+      }
+    } catch (e) {
+      itemLog('scoreLead path failed (non-fatal)', { reason: e instanceof Error ? e.message : String(e) });
+    }
 
     itemLog('done', { normalized_fields_id: newId });
     return {

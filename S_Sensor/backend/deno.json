@@ -8,7 +8,8 @@
     "supabase-js": "npm:@supabase/supabase-js@^2.45.0",
     "anthropic": "npm:@anthropic-ai/sdk@^0.30.1",
     "yaml": "npm:yaml@^2.4.5",
-    "shared/": "./shared/"
+    "shared/": "./shared/",
+    "harness2/": "../../R_Runtime/lib/"
   },
   "fmt": {
     "lineWidth": 100,

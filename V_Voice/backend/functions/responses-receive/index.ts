@@ -25,6 +25,7 @@ import { lookupIdempotency, recordIdempotency } from 'shared/idempotency.ts';
 import { db } from 'shared/db.ts';
 import { requestLogger } from 'shared/logger.ts';
 import { classifyServerSide, type AxisData } from 'shared/segments.ts';
+import { scoreLead } from 'shared/lead_scoring.ts';
 
 const ROUTE = '/responses-receive';
 
@@ -179,6 +180,27 @@ Deno.serve(async (req: Request) => {
       dealer_id: identity.role === 'dealer' ? identity.sub : null,
       device_id: identity.role === 'visitor' ? identity.device_id : null,
     });
+
+    // Phase D.3 — trigger의 PERFORM score_lead 가 제거된 후, Edge 측에서 lib 기반 scoring.
+    // 트리거는 여전히 lead upsert를 처리하므로 responses.lead_id는 위 INSERT 시점에 세팅됨.
+    // 실패해도 응답은 이미 저장됐고 scoreLead는 자체 graceful — 메인 흐름 차단 X.
+    try {
+      const { data: leadIdRow } = await db()
+        .from('responses')
+        .select('lead_id')
+        .eq('id', data)
+        .maybeSingle();
+      const leadId = leadIdRow?.lead_id as string | null | undefined;
+      if (leadId) {
+        const result = await scoreLead(leadId);
+        if (!result.ok) {
+          log.warn('scoreLead failed (non-fatal)', { lead_id: leadId, reason: result.reason });
+        }
+      }
+    } catch (e) {
+      log.warn('scoreLead path failed (non-fatal)', { reason: e instanceof Error ? e.message : String(e) });
+    }
+
     return jsonResponse(200, body, log.requestId);
   } catch (err) {
     log.error('responses-receive failed', err);
