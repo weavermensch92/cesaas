@@ -114,6 +114,24 @@
     .tut-skip{font:600 13px var(--hd-font);color:var(--hd-gray);background:none;border:0;padding:8px 4px;cursor:pointer;}
     .tut-skip:hover{color:var(--hd-trust);}
     .tut-spacer{flex:1;}
+
+    /* history — 딜러 본인 상담 이력 */
+    header .hist-btn{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;height:26px;padding:0 10px;cursor:pointer;font:600 12px var(--hd-font);display:inline-flex;align-items:center;gap:5px;}
+    header .hist-btn:hover{background:rgba(255,255,255,0.2);}
+    header .hist-btn.on{background:var(--hd-heritage);border-color:var(--hd-heritage);}
+    .hist-list{display:flex;flex-direction:column;gap:8px;}
+    .hist-row{background:var(--hd-paper);border:1px solid var(--hd-steel-200);border-radius:var(--hd-radius);padding:12px 14px;display:flex;flex-direction:column;gap:4px;}
+    .hist-row .top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+    .hist-row .co{font:700 15px var(--hd-font-display);color:var(--hd-trust);min-width:0;flex:1;}
+    .hist-row .when{font-size:11px;color:var(--hd-gray);font-variant-numeric:tabular-nums;}
+    .hist-row .meta{font-size:13px;color:#1d1d1f;}
+    .hist-row .meta .seg{display:inline-flex;align-items:center;padding:1px 7px;border-radius:999px;background:var(--hd-steel-50);font-size:11px;font-weight:600;color:var(--hd-discovery);margin-right:6px;}
+    .hist-row .meta .nps{font-weight:700;}
+    .hist-row .meta .nps.lo{color:var(--hd-red);}
+    .hist-row .meta .nps.mid{color:var(--hd-amber);}
+    .hist-row .meta .nps.hi{color:var(--hd-prosperity);}
+    .hist-row .notes{font-size:13px;color:var(--hd-gray);white-space:pre-wrap;}
+    .hist-empty{padding:32px 14px;text-align:center;color:var(--hd-gray);font-size:14px;}
   </style>
 </head>
 <body>
@@ -127,6 +145,7 @@
       <span class="spacer"></span>
       <span class="badge"><span id="netDot" class="dot"></span><span id="netLabel">Online</span></span>
       <span class="badge" id="queueBadge" title="송출 대기">큐 0</span>
+      <button id="histBtn" class="hist-btn" type="button" aria-label="history">📋 <span id="histBtnLabel">이력</span></button>
       <button id="helpBtn" class="help-btn" type="button" aria-label="help" title="?">?</button>
       <select id="langSel" aria-label="lang">
         <option value="ru">RU</option><option value="en">EN</option><option value="ko">KO</option>
@@ -134,6 +153,7 @@
     </header>
 
     <main id="root"></main>
+    <datalist id="target-company-list"></datalist>
     <div id="tutOverlay" class="tut-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="tutTitle"></div>
   </div>
 
@@ -167,6 +187,10 @@
       consent_q1:'Подписка на дальнейшие обновления',
       consent_q2:'Согласие на обработку данных (обязательно)',
       help_btn:'Помощь',
+      hist_btn:'История', hist_back:'Назад к опросу', hist_title:'Мои консультации',
+      hist_empty:'Пока нет ответов от этого дилера.',
+      hist_loading:'Загрузка…', hist_err:'Не удалось загрузить историю',
+      hist_no_company:'(без компании)',
       tut_skip:'Пропустить', tut_next:'Далее', tut_prev:'Назад', tut_done:'Начать',
       tut_pages:[
         {
@@ -216,6 +240,10 @@
       consent_q1:'Subscribe to future updates',
       consent_q2:'Data processing consent (required)',
       help_btn:'Help',
+      hist_btn:'History', hist_back:'Back to survey', hist_title:'My consultations',
+      hist_empty:'No responses from this dealer yet.',
+      hist_loading:'Loading…', hist_err:'Failed to load history',
+      hist_no_company:'(no company)',
       tut_skip:'Skip', tut_next:'Next', tut_prev:'Back', tut_done:'Start',
       tut_pages:[
         {
@@ -265,6 +293,10 @@
       consent_q1:'향후 업데이트 수신 동의',
       consent_q2:'개인정보 처리 동의 (필수)',
       help_btn:'도움말',
+      hist_btn:'이력', hist_back:'설문으로', hist_title:'내 상담 이력',
+      hist_empty:'아직 응답이 없습니다.',
+      hist_loading:'불러오는 중…', hist_err:'이력을 불러오지 못했습니다',
+      hist_no_company:'(회사 미입력)',
       tut_skip:'건너뛰기', tut_next:'다음', tut_prev:'이전', tut_done:'시작',
       tut_pages:[
         {
@@ -554,6 +586,9 @@
     step:0,                    // 0,1,2  → result 4
     answers:{},                // {q_id: value}
     showResult:false,
+    showHistory:false,         // 헤더 이력 토글 시 true → 설문 대신 history 패널
+    history:null,              // { loading, error, rows }
+    companies:[],              // target_company datalist suggestions (최근 사용 순 distinct)
     result:null,
     queueCount:0,
     online: navigator.onLine,
@@ -757,6 +792,7 @@
     refreshQueueBadge();
     setNet();
 
+    if (state.showHistory) return renderHistory();
     if (state.showResult) return renderResult();
     const step = SURVEY.steps[state.step];
     const pct = ((state.step + 1) / SURVEY.steps.length) * 100;
@@ -811,7 +847,9 @@
       const cur = typeof v === 'string' ? v : '';
       const im = q.inputmode ? ` inputmode="${q.inputmode}"` : '';
       const label = q.label_key ? t(q.label_key) : title;
-      inner = `<input type="text" data-q="${q.id}" data-type="text"${im} value="${escapeAttr(cur)}" autocomplete="off" style="width:100%;height:42px;padding:0 12px;border:1px solid var(--hd-steel-200);border-radius:8px;font:inherit;color:var(--hd-ink);" />`;
+      // _target_company 는 딜러 본인 과거 회사명 datalist 자동완성 (B 작업).
+      const listAttr = q.id === '_target_company' ? ' list="target-company-list"' : '';
+      inner = `<input type="text" data-q="${q.id}" data-type="text"${im}${listAttr} value="${escapeAttr(cur)}" autocomplete="off" style="width:100%;height:42px;padding:0 12px;border:1px solid var(--hd-steel-200);border-radius:8px;font:inherit;color:var(--hd-ink);" />`;
       return `<div class="q"><div class="q-title">${label}${q.required ? '' : ' <span class="q-meta">(optional)</span>'}</div>${inner}</div>`;
     } else if (q.type === 'textarea') {
       const cur = typeof v === 'string' ? v : '';
@@ -920,9 +958,19 @@
     const id = crypto.randomUUID();
     await queueAdd({ idempotency_key: id, payload });
 
+    // 방금 입력한 회사명을 즉시 suggestions 최상단에 반영 (서버 round-trip 없이도 동작)
+    const justCompany = payload.target_company;
+    if (justCompany) {
+      const next = [justCompany, ...state.companies.filter((c) => c !== justCompany)].slice(0, 20);
+      state.companies = next;
+      populateCompanyDatalist();
+    }
+
     state.showResult = true;
     render();
     drainQueue();
+    // 서버 송출이 끝나면 history도 같이 신선해지므로 silent refetch (오프라인이면 noop)
+    if (state.online) fetchHistory({ silent:true }).catch(() => {});
   }
 
   function collectAxis(a){
@@ -975,6 +1023,113 @@
       render();
     };
   }
+
+  // ============================================================================
+  // 내 상담 이력 — Bearer JWT 로 dealer-consultations Edge 호출.
+  // ============================================================================
+  async function fetchHistory(opts){
+    const silent = !!(opts && opts.silent);
+    if (!API_BASE || !state.token) {
+      if (!silent) { state.history = { loading:false, error:'auth', rows:[] }; render(); }
+      return;
+    }
+    if (!silent) {
+      state.history = { loading:true, error:null, rows:[] };
+      render();
+    }
+    try {
+      const res = await fetch(`${API_BASE}/dealer-consultations?limit=50`, {
+        headers: { 'Authorization': `Bearer ${state.token}` },
+      });
+      if (!res.ok) throw new Error(`http_${res.status}`);
+      const body = await res.json();
+      const rows = Array.isArray(body.data) ? body.data : [];
+      state.history = { loading:false, error:null, rows };
+      // suggestions: target_company 최근 순 distinct, 빈/공백 제외, 20개.
+      const seen = new Set();
+      const list = [];
+      for (const r of rows) {
+        const v = (r && typeof r.target_company === 'string') ? r.target_company.trim() : '';
+        if (!v || seen.has(v)) continue;
+        seen.add(v);
+        list.push(v);
+        if (list.length >= 20) break;
+      }
+      state.companies = list;
+      populateCompanyDatalist();
+    } catch (e) {
+      if (!silent) state.history = { loading:false, error: String(e?.message || e), rows:[] };
+    }
+    if (!silent) render();
+  }
+
+  function populateCompanyDatalist(){
+    const dl = document.getElementById('target-company-list');
+    if (!dl) return;
+    dl.innerHTML = state.companies.map((c) => `<option value="${escapeAttr(c)}"></option>`).join('');
+  }
+
+  function openHistory(){
+    state.showHistory = true;
+    document.getElementById('histBtn').classList.add('on');
+    fetchHistory({ silent:false });
+  }
+  function closeHistory(){
+    state.showHistory = false;
+    document.getElementById('histBtn').classList.remove('on');
+    render();
+  }
+
+  function renderHistory(){
+    const h = state.history || { loading:true, error:null, rows:[] };
+    const rows = h.rows || [];
+    const inner = h.loading ? `<div class="hist-empty">${escapeText(t('hist_loading'))}</div>`
+      : h.error ? `<div class="hist-empty" style="color:var(--hd-red)">${escapeText(t('hist_err'))}</div>`
+      : rows.length === 0 ? `<div class="hist-empty">${escapeText(t('hist_empty'))}</div>`
+      : `<div class="hist-list">${rows.map(renderHistRow).join('')}</div>`;
+    root.innerHTML = `
+      <div class="card">
+        <h2 class="step-h">${escapeText(t('hist_title'))}</h2>
+        <p class="step-sub ghost">${escapeText(state.dealerId || '')} · ${escapeText(state.event || '')}</p>
+        ${inner}
+      </div>
+      <div class="nav">
+        <button class="btn primary full" id="histBack">${escapeText(t('hist_back'))}</button>
+      </div>
+    `;
+    document.getElementById('histBack').onclick = closeHistory;
+  }
+
+  function renderHistRow(r){
+    const co = (r.target_company && String(r.target_company).trim()) ? escapeText(r.target_company) : `<span class="ghost">${escapeText(t('hist_no_company'))}</span>`;
+    const when = r.captured_at ? escapeText(String(r.captured_at).slice(0, 16).replace('T', ' ')) : '';
+    const seg = r.segment ? `<span class="seg">${escapeText(r.segment)}</span>` : '';
+    const npsCls = typeof r.nps === 'number' ? (r.nps <= 6 ? 'lo' : r.nps <= 8 ? 'mid' : 'hi') : '';
+    const nps = typeof r.nps === 'number' ? `<span class="nps ${npsCls}">NPS ${r.nps}</span>` : '';
+    const contact = [r.contact_name, r.contact_phone].filter(Boolean).map(escapeText).join(' · ');
+    const notes = r.notes ? `<div class="notes">${escapeText(r.notes)}</div>` : '';
+    return `
+      <div class="hist-row">
+        <div class="top">
+          <span class="co">${co}</span>
+          <span class="when">${when}</span>
+        </div>
+        <div class="meta">${seg}${nps}${contact ? ` · ${contact}` : ''}</div>
+        ${notes}
+      </div>
+    `;
+  }
+
+  document.getElementById('histBtn').onclick = () => {
+    if (state.showHistory) closeHistory();
+    else openHistory();
+  };
+  // 헤더 이력 라벨 i18n 갱신
+  function updateHistBtnLabel(){
+    const el = document.getElementById('histBtnLabel');
+    if (el) el.textContent = t('hist_btn');
+  }
+  langSel.addEventListener('change', updateHistBtnLabel);
 
   // ============================================================================
   // 튜토리얼 — 첫 접속 시 자동 표시, 헤더 ? 버튼으로 재호출. 페이지 4장 ru/en/ko.
@@ -1037,8 +1192,11 @@
   langSel.addEventListener('change', () => { if (tutState.open) renderTutorial(); });
 
   // 시작
+  updateHistBtnLabel();
   render();
   drainQueue();
+  // 백그라운드 prefetch: target_company 자동완성 시드 (실패해도 noop)
+  fetchHistory({ silent:true }).catch(() => {});
   // 첫 접속이면 튜토리얼 자동 노출 — token 진입 직후에도 1회만.
   try {
     if (!localStorage.getItem(TUT_SEEN_KEY)) openTutorial();

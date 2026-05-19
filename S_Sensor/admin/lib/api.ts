@@ -221,6 +221,8 @@ export interface VoiceListFilters {
   nps_min?: number;
   nps_max?: number;
   contact_opted_in?: 'true' | 'false';
+  dealer_id?: string;
+  target_company?: string;
   limit?: number;
   cursor?: string | null;
 }
@@ -252,6 +254,8 @@ export async function listVoiceResponses(filters: VoiceListFilters): Promise<Pag
     nps_min: filters.nps_min?.toString(),
     nps_max: filters.nps_max?.toString(),
     contact_opted_in: filters.contact_opted_in,
+    dealer_id: filters.dealer_id,
+    target_company: filters.target_company,
     limit: filters.limit?.toString(),
     cursor: filters.cursor ?? undefined,
   });

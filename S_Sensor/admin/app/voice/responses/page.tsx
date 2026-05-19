@@ -33,6 +33,23 @@ function View({ email }: { email: string }) {
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [busyCsv, setBusyCsv] = useState(false);
+  // 검색 input — 350ms debounce 후 filters 반영 (Enter 입력으로도 즉시 적용 가능).
+  const [companyInput, setCompanyInput] = useState('');
+  const [dealerInput, setDealerInput] = useState('');
+  useEffect(() => {
+    const id = setTimeout(() => {
+      const next = companyInput.trim() || undefined;
+      setFilters((f) => (f.target_company === next ? f : { ...f, target_company: next }));
+    }, 350);
+    return () => clearTimeout(id);
+  }, [companyInput]);
+  useEffect(() => {
+    const id = setTimeout(() => {
+      const next = dealerInput.trim() || undefined;
+      setFilters((f) => (f.dealer_id === next ? f : { ...f, dealer_id: next }));
+    }, 350);
+    return () => clearTimeout(id);
+  }, [dealerInput]);
 
   const fetchPage = useCallback(async (append: boolean) => {
     setLoading(true);
@@ -111,6 +128,38 @@ function View({ email }: { email: string }) {
           <span style={{ marginLeft: 'auto' }} />
           <button className="hd-btn"          disabled={busyCsv} onClick={() => onCsv(false)}>CSV</button>
           <button className="hd-btn primary"  disabled={busyCsv} onClick={() => onCsv(true)}>CSV (anon)</button>
+        </div>
+
+        {/* Search bar — 회사명 부분 일치 + dealer_id 정확 매칭 (350ms debounce) */}
+        <div className="hd-card" style={{ marginBottom: 12, padding: 10, display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
+          <span className="hd-eyebrow">검색</span>
+          <input
+            value={companyInput}
+            onChange={(e) => setCompanyInput(e.target.value)}
+            placeholder="상담 대상 회사명 (부분 일치)"
+            style={inputStyle(260)}
+            aria-label="target_company search"
+          />
+          <input
+            value={dealerInput}
+            onChange={(e) => setDealerInput(e.target.value)}
+            placeholder="dealer_id"
+            style={inputStyle(160)}
+            aria-label="dealer_id filter"
+          />
+          {(companyInput || dealerInput) && (
+            <button
+              className="hd-btn ghost sm"
+              onClick={() => { setCompanyInput(''); setDealerInput(''); }}
+            >clear</button>
+          )}
+          {(filters.target_company || filters.dealer_id) && (
+            <span className="hd-meta" style={{ marginLeft: 8 }}>
+              {filters.target_company ? `회사: "${filters.target_company}"` : ''}
+              {filters.target_company && filters.dealer_id ? ' · ' : ''}
+              {filters.dealer_id ? `dealer: ${filters.dealer_id}` : ''}
+            </span>
+          )}
         </div>
 
         {err && (

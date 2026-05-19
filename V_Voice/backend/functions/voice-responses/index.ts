@@ -11,6 +11,8 @@
  *   from, to          ISO 8601 (captured_at)
  *   nps_min, nps_max  0~10 정수
  *   contact_opted_in  'true' | 'false'
+ *   dealer_id         단일 값 (정확 매칭)
+ *   target_company    부분 일치 (ilike, %-자동 wrapping)
  *   limit (1~200, 기본 50) · cursor
  */
 
@@ -65,6 +67,16 @@ Deno.serve(async (req: Request) => {
     const optIn = p.get('contact_opted_in');
     if (optIn === 'true')  q = q.eq('contact_opted_in', true);
     if (optIn === 'false') q = q.eq('contact_opted_in', false);
+
+    const dealerId = p.get('dealer_id');
+    if (dealerId) q = q.eq('dealer_id', dealerId);
+
+    const target = p.get('target_company');
+    if (target) {
+      // Postgres ilike — '%' / '_' / '\\' escape (PostgREST escapes commas).
+      const esc = target.replace(/[\\%_]/g, (c) => '\\' + c);
+      q = q.ilike('target_company', `%${esc}%`);
+    }
 
     const cursor = p.get('cursor');
     if (cursor) {

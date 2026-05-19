@@ -36,6 +36,8 @@
 | Dealer v3 단일 HTML (오프라인·IndexedDB·R_10.05·R_10.07 inline + ru/en/ko 4쪽 첫 접속 튜토리얼) | `dealer/index.html` |
 | 응답 수신 Edge Function (Bearer/Anonymous + idempotency + 서버측 segment 재검증) | `backend/functions/responses-receive/index.ts` |
 | Dealer Bearer JWT 검증 + jti revoke 차단 + Anonymous device_id | `backend/shared/bearer.ts` |
+| 딜러 본인 상담 이력 Edge Function (`list_dealer_consultations` RPC 래퍼) | `backend/functions/dealer-consultations/index.ts` |
+| `responses.target_company` 컬럼 + `list_dealer_consultations` RPC + `save_response` 시그니처 확장 | `../C_Common/supabase/migrations/016_dealer_consultation.sql` |
 | Admin Dealer 계정 발급·목록·폐기 Edge Functions | `backend/functions/dealer-tokens-{issue,list,revoke}/index.ts` |
 | Admin Dealer 계정 UI (gridge_admin 전용 · 발급 폼·QR·목록·딜러별 응답 수) | `../S_Sensor/admin/app/voice/dealers/page.tsx` |
 | voice_dealer_tokens 운영 메타 (label·issued_by) | `../C_Common/supabase/migrations/017_dealer_tokens_meta.sql` |
@@ -102,3 +104,6 @@ RLS: service_role 전권 / `is_hd_admin()` read.
 | 2026-05-18 | v0.4 — V_60 Studio: `010_studio.sql`(studio_drafts·deploy_survey RPC) + 2 Edge Functions (studio-build-survey·studio-deploy) + Next.js `/studio` + `shared/{llm,rules}` re-export |
 | 2026-05-19 | v0.5 — V_30.04 Admin Dealer 계정 발급: `017_dealer_tokens_meta.sql`(label·issued_by) + 3 Edge Functions (`dealer-tokens-{issue,list,revoke}`) + Next.js `/voice/dealers` (QR 인라인) + `bearer.ts` jti revoke 차단 강화 |
 | 2026-05-19 | v0.5.1 — Dealer 첫 접속 튜토리얼 4쪽 (ru/en/ko) 추가. 헤더 `?` 버튼으로 재호출. `localStorage.hd_dealer_tutorial_seen_v1`로 1회 자동 노출. |
+| 2026-05-19 | v0.5.2 — 딜러 본인 "내 이력" 화면: `dealer-consultations` Edge Function(016 RPC 래퍼) + dealer/index.html 헤더 이력 토글 + ru/en/ko 라벨. 부스 현장에서 어제·오늘 누구 만났는지 즉시 확인. |
+| 2026-05-19 | v0.5.3 — target_company 자동완성: dealer-consultations prefetch → distinct 회사명 20개를 `<datalist>`로 노출. 신규 입력 회사명도 즉시 최상단 반영. 표기 통일(예: Hyundai/Хёндэ/현대) 효과. |
+| 2026-05-19 | v0.5.4 — /voice/responses 검색·필터 확장: voice-responses Edge에 `target_company` ilike(부분 일치) + `dealer_id` eq 파라미터, Admin UI에 검색 바 (350ms debounce) + 활성 필터 표시. |

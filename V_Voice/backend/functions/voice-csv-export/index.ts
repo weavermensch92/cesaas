@@ -20,12 +20,13 @@ const COLUMNS = [
   'captured_at', 'respondent_type', 'dealer_id', 'device_id', 'event', 'language',
   'segment', 'segment_confidence', 'nps',
   'future_subscription', 'consent_data_collection', 'contact_opted_in',
-  'contact_name', 'contact_phone', 'contact_email',
+  'target_company',
+  'contact_name', 'contact_phone', 'contact_email', 'notes',
   'axis_scale', 'axis_usage', 'axis_fleet_size', 'axis_decision_role',
   'axis_annual_operating_hours', 'axis_annual_deal_rub',
 ];
 
-const PII_COLS = new Set(['contact_name', 'contact_phone', 'contact_email']);
+const PII_COLS = new Set(['contact_name', 'contact_phone', 'contact_email', 'notes']);
 
 Deno.serve(async (req: Request) => {
   const cors = corsPreflight(req); if (cors) return cors;
@@ -43,7 +44,7 @@ Deno.serve(async (req: Request) => {
       .select(
         'captured_at, respondent_type, dealer_id, device_id, event, language, ' +
         'segment, segment_confidence, nps, future_subscription, consent_data_collection, ' +
-        'contact_opted_in, contact_name, contact_phone, contact_email, axis_data'
+        'contact_opted_in, target_company, contact_name, contact_phone, contact_email, notes, axis_data'
       );
 
     const rt = p.get('respondent_type');
@@ -56,6 +57,13 @@ Deno.serve(async (req: Request) => {
     if (from) q = q.gte('captured_at', from);
     const to = p.get('to');
     if (to) q = q.lte('captured_at', to);
+    const dealerId = p.get('dealer_id');
+    if (dealerId) q = q.eq('dealer_id', dealerId);
+    const target = p.get('target_company');
+    if (target) {
+      const esc = target.replace(/[\\%_]/g, (c) => '\\' + c);
+      q = q.ilike('target_company', `%${esc}%`);
+    }
 
     q = q.order('captured_at', { ascending: false }).limit(MAX_ROWS);
 
@@ -101,9 +109,11 @@ async function buildRow(r: Record<string, unknown>, anonymize: boolean): Promise
     future_subscription: r.future_subscription,
     consent_data_collection: r.consent_data_collection,
     contact_opted_in: r.contact_opted_in,
+    target_company: r.target_company,
     contact_name:  r.contact_name,
     contact_phone: r.contact_phone,
     contact_email: r.contact_email,
+    notes:         r.notes,
     axis_scale:                  axis.scale,
     axis_usage:                  axis.usage,
     axis_fleet_size:             axis.fleet_size,
