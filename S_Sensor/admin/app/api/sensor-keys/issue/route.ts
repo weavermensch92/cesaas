@@ -157,7 +157,7 @@ export async function POST(req: NextRequest) {
     const buf = await zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE', compressionOptions: { level: 6 } });
     const fname = `hd-sensor-${dealer_id || 'global'}-${key_id}.zip`;
 
-    return new NextResponse(buf, {
+    return new NextResponse(new Blob([buf as BlobPart], { type: 'application/zip' }), {
       status: 200,
       headers: {
         'content-type': 'application/zip',
