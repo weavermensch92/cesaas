@@ -9,6 +9,7 @@
     "t05": "tsx bin/run-t05.ts",
     "t06": "tsx bin/run-t06.ts",
     "t07": "tsx bin/run-t07.ts",
+    "t07-01": "tsx bin/run-t07-01.ts",
     "all": "tsx bin/run-all.ts",
     "typecheck": "tsc --noEmit"
   },

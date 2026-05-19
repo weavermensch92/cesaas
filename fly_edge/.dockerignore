@@ -1,0 +1,53 @@
+# 빌드 사이즈 최소화 — 부스 critical path만 mirror.
+
+# 디펜던시
+**/node_modules/
+**/.next/
+**/dist/
+**/build/
+
+# 개발 파일
+**/.git/
+**/.github/
+**/.vscode/
+**/.idea/
+**/.DS_Store
+**/Thumbs.db
+
+# 환경
+**/.env
+**/.env.local
+**/.env.*.local
+**/secrets/
+
+# fly_edge가 mirror하지 않는 영역 (Phase 1 — responses-receive만)
+S_Sensor/admin/
+S_Sensor/extension/
+S_Sensor/backend/functions/
+V_Voice/dealer/
+V_Voice/visitor/
+V_Voice/backend/functions/admin-*/
+V_Voice/backend/functions/voice-*/
+V_Voice/backend/functions/studio-*/
+V_Voice/backend/functions/dealer-tokens-*/
+V_Voice/backend/functions/dealer-consultations/
+
+# 미사용 모듈
+U_Unified/
+T_Test/
+_preview/
+PRD/
+docs/
+
+# Supabase CLI 부산물
+**/supabase/.temp/
+**/supabase/.branches/
+**/.supabase/
+
+# r20 출력물
+R_Runtime/r20/out/
+R_Runtime/r20/.env*
+
+# fly_edge 자체의 빌드 부산물
+fly_edge/out/
+fly_edge/.deno/

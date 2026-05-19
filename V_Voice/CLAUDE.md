@@ -34,7 +34,8 @@
 | surveys·survey_questions·responses·response_answers + 시드 31문항 | `../C_Common/supabase/migrations/003_voice.sql` |
 | save_response RPC (responses + answers 트랜잭션) | `../C_Common/supabase/migrations/003_voice.sql` |
 | Dealer v3 단일 HTML (오프라인·IndexedDB·R_10.05·R_10.07 inline + ru/en/ko 4쪽 첫 접속 튜토리얼) | `dealer/index.html` |
-| 응답 수신 Edge Function (Bearer/Anonymous + idempotency + 서버측 segment 재검증) | `backend/functions/responses-receive/index.ts` |
+| 응답 수신 Edge Function — Supabase 진입점 (Deno.serve 1줄) | `backend/functions/responses-receive/index.ts` |
+| 응답 수신 핸들러 — Bearer/Anonymous + idempotency + segment 재검증 + scoreLead. Supabase Edge + Fly.io Edge fallback이 양쪽에서 import | `backend/functions/responses-receive/handler.ts` |
 | Dealer Bearer JWT 검증 + jti revoke 차단 + Anonymous device_id | `backend/shared/bearer.ts` |
 | 딜러 본인 상담 이력 Edge Function (`list_dealer_consultations` RPC 래퍼) | `backend/functions/dealer-consultations/index.ts` |
 | `responses.target_company` 컬럼 + `list_dealer_consultations` RPC + `save_response` 시그니처 확장 | `../C_Common/supabase/migrations/016_dealer_consultation.sql` |

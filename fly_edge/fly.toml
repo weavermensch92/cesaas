@@ -1,0 +1,42 @@
+# fly.toml — hd-poc-edge (Fly.io Edge fallback)
+# T_07.01 호스팅 전환: Supabase Tokyo Edge 미도달 시 부스 critical path 대체.
+# 위치: 리포 루트(hd-hyundai-poc/)에서 `flyctl deploy --config fly_edge/fly.toml` 로 배포.
+#
+# 사전:
+#   flyctl auth login
+#   flyctl apps create hd-poc-edge --org gridge
+#   flyctl secrets set --app hd-poc-edge \
+#     SUPABASE_URL=... \
+#     SUPABASE_SERVICE_ROLE_KEY=... \
+#     VOICE_JWT_SECRET=... \
+#     VOICE_JWT_ISSUER=hd-poc
+
+app = "hd-poc-edge"
+primary_region = "nrt"     # Tokyo — 러시아 도달성 검증된 위치 (C_01 + T_01)
+
+[build]
+  dockerfile = "fly_edge/Dockerfile"
+
+[env]
+  PORT = "8080"
+  LOG_LEVEL = "info"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines  = "stop"
+  auto_start_machines = true
+  min_machines_running = 0    # 평시 0대 → 사용 시에만 깨움 (cost). 부스 운영기간에만 1대 권장
+  processes = ["app"]
+
+  [[http_service.checks]]
+    grace_period  = "10s"
+    interval      = "30s"
+    method        = "GET"
+    timeout       = "5s"
+    path          = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
+  cpu_kind = "shared"

@@ -3,7 +3,7 @@
 > **모듈**: 가설 측정·E2E·우회 시나리오.
 > **상위**: `../CLAUDE.md`
 > **하네스 룰 원본**: `../../../hd-hyundai-poc-harness-v1/hd-hyundai-poc/T_Test/CLAUDE.md`
-> **v0.4 상태**: T_04 + T_05 + T_06 + **T_07.02 외부 컨트롤 사이클** (mechanics 자동화) + T_07.04·.05 (문서·매뉴얼) + T_08 통과 판정 페이지.
+> **v0.5 상태**: T_04 + T_05 + T_06 + **T_07.01 호스팅 전환** (Fly.io fallback runner) + **T_07.02 외부 컨트롤 사이클** + T_07.04·.05 (문서·매뉴얼) + T_08 통과 판정 페이지.
 
 ---
 
@@ -27,6 +27,8 @@
 | T_04 Sensor 시나리오 | `runner/bin/run-t04.ts` |
 | T_05 Voice 시나리오 | `runner/bin/run-t05.ts` |
 | **T_06 통합 시나리오** | `runner/bin/run-t06.ts` |
+| **T_07.01 호스팅 전환** (Fly.io fallback /health + Dealer post 검증) | `runner/bin/run-t07-01.ts` (T_TEST_FALLBACK_BASE 설정 시 활성) |
+| Fly.io Edge fallback 인프라 | `../fly_edge/` (main.ts·Dockerfile·fly.toml) + `../DEPLOY-FALLBACK.md` |
 | **T_07.02 외부 컨트롤 사이클** (publish_rule rotation + retrigger queue) | `runner/bin/run-t07.ts` |
 | T_07.04 5 시나리오 (VPN·독립·청크·Studio·HD) — 문서 | `T_07_docs/T_07.04_documentation_scenarios.md` |
 | T_07.05 부스 회복 매뉴얼 — 30초 cheat-sheet | `T_07_docs/T_07.05_booth_recovery_manual.md` |
@@ -67,6 +69,10 @@ npm run t04 -w @hd/t-test
 npm run t05 -w @hd/t-test
 npm run t06 -w @hd/t-test
 npm run t07 -w @hd/t-test  # 외부 컨트롤 사이클 — publish_rule + retrigger. LLM 비용 X
+
+# T_07.01 호스팅 전환 — fly_edge 배포 후 활성
+$env:T_TEST_FALLBACK_BASE='https://hd-poc-edge.fly.dev'
+npm run t07-01 -w @hd/t-test
 
 # 일괄 (T_04+T_05+T_06)
 npm run all -w @hd/t-test
@@ -116,7 +122,7 @@ SELECT count(*) FILTER (WHERE status='pass') AS v_passed,
 | 우선 | 영역 |
 |---|---|
 | H | T_06 확장 — Visitor + Sensor 통합 (현재는 Dealer만), 다국어 응답, R_10.07 풀 payload 검증 |
-| M | T_07.01 호스팅 전환 — Fly.io Edge fallback 배포 후 dual-send 자동화 (현재 fallback 인프라 미배포) |
+| H | Phase 2 — fly_edge에 captures-chunks·captures-finalize 추가 (Sensor 경로) + Dealer 단말 측 fallback wiring |
 | M | T_07.03 multi-image 다양화 — LLM 비용 의존, --llm 플래그로 |
 | ✓ | ~~T_08 통과 판정~~ — v0.3에서 `/t-test` 페이지 완성 |
 | M | T_02 H1 측정 — 실 부스 트래픽 (출장 중) — runner를 daemon으로 |
@@ -132,3 +138,4 @@ SELECT count(*) FILTER (WHERE status='pass') AS v_passed,
 | 2026-05-18 | v0.2 — `run-t06.ts` 통합 E2E (Sensor capture + Voice response 같은 entity_id → leads UNIQUE, sensor/voice count, score, dealer_outputs, lead_links 양 source 검증) + `lib/voice-helpers.ts` |
 | 2026-05-18 | v0.3 — `admin-test-summary` Edge Function (9 정량 지표 자동 채점·verdict pass/partial/fail·가설별 누적·최근 runs) + Next.js `/t-test` 페이지 (verdict 카드·KPI 그리드·표) |
 | 2026-05-19 | v0.4 — Phase T_07: `run-t07.ts` 외부 컨트롤 사이클 mechanics 자동화 (R_10.06 publish_rule rotation + cluster 준비 + enqueue_normalize_priority retrigger + baseline 복원). T_07.04 5 시나리오 문서 (VPN·독립·청크·Studio·HD) + T_07.05 부스 회복 매뉴얼 (30초 cheat-sheet). T_07.01·.03은 인프라/LLM 의존 — runner 후속 |
+| 2026-05-19 | v0.5 — Phase T_07.01: `fly_edge/` Fly.io Edge fallback 인프라 (main.ts router · Dockerfile · fly.toml · .dockerignore) + `DEPLOY-FALLBACK.md` 수동 배포 절차. `responses-receive` Edge Function을 handler.ts + index.ts로 분리 (Supabase Edge와 Fly.io 양쪽이 동일 핸들러). `run-t07-01.ts` runner — T_TEST_FALLBACK_BASE 설정 시 /health + dealer post 검증, 미설정 시 skip. CLAUDE 명세상 부스 critical path 1개만 mirror (Phase 2에서 sensor 경로 추가). |

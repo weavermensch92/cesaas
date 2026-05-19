@@ -25,4 +25,6 @@ export const CONFIG = {
   normalizeTimeoutMs: Number(opt('T_TEST_NORMALIZE_TIMEOUT_MS', '120000')),
   /** dirty 데이터 정리할지 */
   cleanup:         opt('T_TEST_CLEANUP', 'true') !== 'false',
+  /** T_07.01 Fly.io fallback base URL — 빈 문자열이면 hosting failover scenario skip. */
+  fallbackBase:    opt('T_TEST_FALLBACK_BASE', '').replace(/\/$/, ''),
 };
