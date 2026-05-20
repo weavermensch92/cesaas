@@ -201,7 +201,7 @@ async function insertChunkRow(payload: ChunkPayload): Promise<void> {
     capture_id: payload.capture_id,
     chunk_index: payload.chunk_index,
     total_chunks: payload.total_chunks,
-    bytes,
+    bytes: bytesToPgHex(bytes),
     chunk_hash: payload.chunk_hash,
   });
   if (error && error.code !== '23505') {
@@ -214,4 +214,14 @@ function base64ToBytes(b64: string): Uint8Array {
   const out = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i += 1) out[i] = binary.charCodeAt(i);
   return out;
+}
+
+// supabase-js v2 INSERT 시 Uint8Array가 JSON 객체로 직렬화되는 버그 회피.
+// PostgreSQL bytea hex literal 형식(`\x...`)으로 직접 전달.
+function bytesToPgHex(bytes: Uint8Array): string {
+  let hex = '\\x';
+  for (let i = 0; i < bytes.length; i += 1) {
+    hex += bytes[i].toString(16).padStart(2, '0');
+  }
+  return hex;
 }
