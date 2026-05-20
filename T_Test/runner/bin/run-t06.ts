@@ -57,8 +57,8 @@ async function main(): Promise<void> {
     notes: `same-entity sensor+voice · llm=${llmEnabled}`,
   });
 
-  // 같은 entity_id 공유
-  const entityId = `t6_${randomUUID().slice(0, 8)}`;
+  // 같은 entity_id 공유 — bitrix24 screen_patterns의 (\d+) regex와 호환되도록 숫자만.
+  const entityId = String(900000 + Math.floor(Math.random() * 99999));
   const dealerId = `t_test_dealer_${run.id.slice(0, 6)}`;
 
   // 1) HMAC 키 + 3장 캡쳐 (모두 같은 entity_id)
@@ -156,6 +156,22 @@ async function main(): Promise<void> {
   }
 
   // 5) Lead 응집 확인 — sensor + voice 둘 다 카운트되었는지
+  //    021_disable_trigger_scoring 이후 score/dealer_output은 normalize-worker가 호출.
+  //    LLM-off 모드에서는 worker 안 돌므로 SQL function을 직접 호출해 점수·output 채움.
+  if (!llmEnabled) {
+    const { data: preLead } = await db()
+      .from('leads')
+      .select('id')
+      .eq('entity_id', entityId).eq('crm_id', 'bitrix24')
+      .maybeSingle();
+    if (preLead?.id) {
+      const { error: scoreErr } = await db().rpc('score_lead', { p_lead_id: preLead.id as string });
+      if (scoreErr) console.warn('score_lead failed:', scoreErr.message);
+      const { error: outErr } = await db().rpc('generate_dealer_output', { p_lead_id: preLead.id as string });
+      if (outErr) console.warn('generate_dealer_output failed:', outErr.message);
+    }
+  }
+
   const { data: lead } = await db()
     .from('leads')
     .select('id, entity_id, crm_id, sensor_count, voice_count, score, priority, segment, score_at, score_version')
@@ -269,7 +285,8 @@ async function teardown(keyId: string, fixtures: ReturnType<typeof makeSensorFix
   await revokeKey(keyId);
 }
 
-main().catch((e) => {
+await main().catch((e) => {
+  if (e && (e as { __t_test_silent?: boolean }).__t_test_silent) throw e;
   console.error('FATAL', e);
   process.exit(2);
 });

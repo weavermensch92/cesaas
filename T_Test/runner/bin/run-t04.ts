@@ -87,12 +87,15 @@ async function main(): Promise<void> {
     if (finalize.status === 200) finalizeOk += 1;
     latencies.push(finalize.durationMs);
 
-    await pass(run, {
+    const sendOk = finalize.status === 200 && chunksRes.statuses.every((s) => s === 200);
+    const recorder = sendOk ? pass : fail;
+    await recorder(run, {
       step: 'send', name: `capture ${fx.captureId.slice(0, 8)} delivered`,
       hypothesis: 'H1',
-      actual: { chunk_statuses: chunksRes.statuses, finalize_status: finalize.status, finalize_ms: finalize.durationMs },
+      actual: { chunk_statuses: chunksRes.statuses, finalize_status: finalize.status, finalize_ms: finalize.durationMs, finalize_body: finalize.body },
       metric: { name: 'finalize_ms', value: finalize.durationMs },
       durationMs: finalize.durationMs,
+      ...(sendOk ? {} : { error: `chunks=${chunksRes.statuses.join(',')} finalize=${finalize.status}` }),
     });
   }
 
@@ -201,7 +204,8 @@ async function main(): Promise<void> {
   process.exit(result.status === 'passed' ? 0 : 1);
 }
 
-main().catch((e) => {
+await main().catch((e) => {
+  if (e && (e as { __t_test_silent?: boolean }).__t_test_silent) throw e;
   console.error('FATAL', e);
   process.exit(2);
 });

@@ -90,6 +90,7 @@ async function postDealerResponse(run: Awaited<ReturnType<typeof startRun>>, jwt
     axis_data: DEALER_FIXTURE_MINING,
     captured_at: new Date().toISOString(),
     answers,
+    target_company: 'HD건설기계',
   };
 
   const bodyStr = JSON.stringify(payload);
@@ -290,7 +291,8 @@ async function skip_and_finish(run: Awaited<ReturnType<typeof startRun>>, reason
   process.exit(1);
 }
 
-main().catch((e) => {
+await main().catch((e) => {
+  if (e && (e as { __t_test_silent?: boolean }).__t_test_silent) throw e;
   console.error('FATAL', e);
   process.exit(2);
 });

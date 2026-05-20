@@ -53,6 +53,7 @@ export async function postDealer(args: {
     axis_data: axisWithEntity,
     captured_at: new Date().toISOString(),
     answers: makeDealerAnswers(axis),
+    target_company: 'HD건설기계',
   };
   const res = await http({
     method: 'POST', path: '/responses-receive',

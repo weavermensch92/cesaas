@@ -203,7 +203,8 @@ async function main(): Promise<void> {
   process.exit(result.status === 'passed' ? 0 : 1);
 }
 
-main().catch((e) => {
+await main().catch((e) => {
+  if (e && (e as { __t_test_silent?: boolean }).__t_test_silent) throw e;
   console.error('FATAL', e);
   process.exit(2);
 });

@@ -60,6 +60,34 @@ async function fetchActive(): Promise<ActiveRuleRow | null> {
   return (data ?? null) as ActiveRuleRow | null;
 }
 
+/**
+ * Self-heal — 이전 T_07 run이 cleanup 못 끝내고 죽어 모든 row가 archived가 된 경우,
+ * 가장 최근에 archived된 row를 active로 복원하고 그것을 baseline으로 채택.
+ * (test 자가 복구 — 운영 영역과 분리)
+ */
+async function fetchActiveWithSelfHeal(): Promise<ActiveRuleRow | null> {
+  const active = await fetchActive();
+  if (active) return active;
+  const { data: candidates, error } = await db()
+    .from('rule_versions')
+    .select('id, version, body_yaml, status, created_at, archived_at')
+    .eq('rule_id', TARGET_RULE)
+    .eq('status', 'archived')
+    .not('version', 'like', 't07.%')
+    .order('archived_at', { ascending: false })
+    .limit(1);
+  if (error) throw new Error(`self-heal fetch failed: ${error.message}`);
+  const target = candidates?.[0];
+  if (!target) return null;
+  const { error: updErr } = await db()
+    .from('rule_versions')
+    .update({ status: 'active', archived_at: null })
+    .eq('id', target.id);
+  if (updErr) throw new Error(`self-heal restore failed: ${updErr.message}`);
+  console.warn(`[T_07 self-heal] restored archived row ${target.id} (${target.version}) → active`);
+  return target as ActiveRuleRow;
+}
+
 async function countRuleAudits(): Promise<number> {
   const { count, error } = await db()
     .from('rule_audit')
@@ -75,10 +103,10 @@ async function main(): Promise<void> {
     notes: 'T_07.02 — publish_rule + enqueue_normalize_priority mechanics (LLM 비활성)',
   });
 
-  // ----- 0) Baseline 기록 ------------------------------------------------
+  // ----- 0) Baseline 기록 (self-heal 포함) ------------------------------
   let baseline: ActiveRuleRow | null;
   try {
-    baseline = await fetchActive();
+    baseline = await fetchActiveWithSelfHeal();
   } catch (e) {
     await fail(run, { step: 'baseline', name: 'rule_versions fetch', error: (e as Error).message });
     await finishRun(run); process.exit(1);
@@ -88,7 +116,7 @@ async function main(): Promise<void> {
       step: 'baseline', name: `${TARGET_RULE} active row exists`,
       hypothesis: 'H_하네스2',
       actual: null,
-      error: '018_reseed_r10_06_harness1_schema.sql migration 적용 안 됨',
+      error: 'active row 없음 + archived 후보도 없음 — DB 시드 자체 누락',
     });
     await finishRun(run); process.exit(1);
   }
@@ -102,218 +130,224 @@ async function main(): Promise<void> {
 
   // ----- 1) Cluster 준비 (LLM 비활성 — finalize까지만) -------------------
   const dealerId = `t07_${run.id.slice(0, 6)}`;
-  const entityId = `t7_${randomUUID().slice(0, 8)}`;
+  const entityId = String(800000 + Math.floor(Math.random() * 99999));
   const fixture = makeSensorFixture({ dealerId, entityId });
 
-  let key;
+  let key: Awaited<ReturnType<typeof provisionTestKey>> | undefined;
+  let clusterId: string | undefined;
+
   try {
     key = await provisionTestKey();
     await pass(run, { step: 'provision', name: 'sensor_api_keys INSERT' });
-  } catch (e) {
-    await fail(run, { step: 'provision', name: 'sensor_api_keys INSERT', error: (e as Error).message });
-    await finishRun(run); process.exit(1);
-  }
 
-  let clusterId: string | undefined;
-  try {
-    const ch = await sendAllChunks(key, fixture);
-    const fin = await sendFinalize(key, fixture, ch.totalChunks, ch.fullHashHex);
-    if (fin.status !== 200) {
-      await fail(run, { step: 'cluster_setup', name: 'capture finalize', hypothesis: 'H1', actual: fin });
-    } else {
-      await pass(run, { step: 'cluster_setup', name: 'capture finalize 200', hypothesis: 'H1', durationMs: fin.durationMs });
-    }
-    const { data: c } = await db()
-      .from('entity_clusters')
-      .select('id')
-      .eq('entity_id', entityId).eq('crm_id', 'bitrix24')
-      .maybeSingle();
-    clusterId = c?.id as string | undefined;
-    if (clusterId) {
-      await pass(run, { step: 'cluster_setup', name: 'entity_clusters row exists', hypothesis: 'H3', actual: { cluster_id: clusterId } });
-    } else {
-      await fail(run, { step: 'cluster_setup', name: 'entity_clusters row exists', hypothesis: 'H3', actual: null });
-    }
-  } catch (e) {
-    await fail(run, { step: 'cluster_setup', name: 'cluster preparation', error: (e as Error).message });
-  }
-
-  // ----- 2) publish_rule (rotate version) -------------------------------
-  const newVersion = `t07.${Date.now()}.${randomUUID().slice(0, 4)}`;
-  let newRowId: string | null = null;
-  try {
-    const { data, error } = await db().rpc('publish_rule', {
-      p_rule_id:   TARGET_RULE,
-      p_version:   newVersion,
-      p_body_yaml: baseline.body_yaml,   // 동일 본문 (정정 의도 아니라 메커니즘 검증)
-      p_body_json: null,
-      p_actor:     T07_ACTOR,
-      p_notes:     `T_07.02 mechanics test (run_id=${run.id})`,
-    });
-    if (error) throw new Error(error.message);
-    newRowId = data as string;
-    await pass(run, {
-      step: 'publish_rule', name: 'publish_rule RPC',
-      hypothesis: 'H_외부컨트롤',
-      actual: { new_version: newVersion, new_row_id: newRowId },
-    });
-  } catch (e) {
-    await fail(run, {
-      step: 'publish_rule', name: 'publish_rule RPC',
-      hypothesis: 'H_외부컨트롤', error: (e as Error).message,
-    });
-  }
-
-  // ----- 3) Verify rotation -------------------------------------------
-  let postActive: ActiveRuleRow | null = null;
-  try {
-    postActive = await fetchActive();
-    if (postActive?.version === newVersion && postActive.id !== baseline.id) {
-      await pass(run, {
-        step: 'rotation', name: 'new active row != baseline',
-        hypothesis: 'H_외부컨트롤',
-        expected: newVersion, actual: postActive?.version,
-      });
-    } else {
-      await fail(run, {
-        step: 'rotation', name: 'new active row != baseline',
-        hypothesis: 'H_외부컨트롤',
-        expected: newVersion, actual: postActive?.version ?? null,
-      });
-    }
-  } catch (e) {
-    await fail(run, { step: 'rotation', name: 'fetch new active', error: (e as Error).message });
-  }
-
-  // baseline row archived?
-  try {
-    const { data: prev } = await db()
-      .from('rule_versions')
-      .select('status, archived_at')
-      .eq('id', baseline.id)
-      .maybeSingle();
-    if (prev?.status === 'archived' && prev.archived_at) {
-      await pass(run, {
-        step: 'rotation', name: 'baseline row → archived',
-        hypothesis: 'H_외부컨트롤',
-        actual: { status: prev.status, archived_at: prev.archived_at },
-      });
-    } else {
-      await fail(run, {
-        step: 'rotation', name: 'baseline row → archived',
-        hypothesis: 'H_외부컨트롤',
-        actual: prev,
-      });
-    }
-  } catch (e) {
-    await fail(run, { step: 'rotation', name: 'check baseline archived', error: (e as Error).message });
-  }
-
-  // rule_audit 1행 INSERT?
-  try {
-    const auditCountAfter = await countRuleAudits();
-    if (auditCountAfter === auditCountBefore + 1) {
-      await pass(run, {
-        step: 'rotation', name: 'rule_audit row 1건 추가',
-        hypothesis: 'H_하네스2',
-        actual: { before: auditCountBefore, after: auditCountAfter },
-        metric: { name: 'audit_delta', value: 1 },
-      });
-    } else {
-      await fail(run, {
-        step: 'rotation', name: 'rule_audit row 1건 추가',
-        hypothesis: 'H_하네스2',
-        actual: { before: auditCountBefore, after: auditCountAfter },
-      });
-    }
-  } catch (e) {
-    await fail(run, { step: 'rotation', name: 'rule_audit count', error: (e as Error).message });
-  }
-
-  // ----- 4) Retrigger via enqueue_normalize_priority --------------------
-  if (clusterId) {
+    // ----- 1) Cluster setup ----------------------------------------------
     try {
-      const { data, error } = await db().rpc('enqueue_normalize_priority', {
-        p_cluster_id: clusterId,
-        p_priority:   'high',
-        p_actor:      T07_ACTOR,
-        p_reason:     `T_07.02 retrigger after publish_rule ${newVersion}`,
-      });
-      if (error) throw new Error(error.message);
-      const queueId = data as string;
-
-      const { data: queueRow } = await db()
-        .from('normalize_queue')
-        .select('id, status, priority, attempt_count')
-        .eq('id', queueId)
-        .maybeSingle();
-      if (queueRow && queueRow.priority === 'high') {
-        await pass(run, {
-          step: 'retrigger', name: 'normalize_queue row 추가 (priority=high)',
-          hypothesis: 'H_외부컨트롤',
-          actual: queueRow,
-        });
+      const ch = await sendAllChunks(key, fixture);
+      const fin = await sendFinalize(key, fixture, ch.totalChunks, ch.fullHashHex);
+      if (fin.status !== 200) {
+        await fail(run, { step: 'cluster_setup', name: 'capture finalize', hypothesis: 'H1', actual: fin });
       } else {
-        await fail(run, {
-          step: 'retrigger', name: 'normalize_queue row 추가',
-          hypothesis: 'H_외부컨트롤',
-          actual: queueRow,
-        });
+        await pass(run, { step: 'cluster_setup', name: 'capture finalize 200', hypothesis: 'H1', durationMs: fin.durationMs });
+      }
+      const { data: c } = await db()
+        .from('entity_clusters')
+        .select('id')
+        .eq('entity_id', entityId).eq('crm_id', 'bitrix24')
+        .maybeSingle();
+      clusterId = c?.id as string | undefined;
+      if (clusterId) {
+        await pass(run, { step: 'cluster_setup', name: 'entity_clusters row exists', hypothesis: 'H3', actual: { cluster_id: clusterId } });
+      } else {
+        await fail(run, { step: 'cluster_setup', name: 'entity_clusters row exists', hypothesis: 'H3', actual: null });
       }
     } catch (e) {
+      await fail(run, { step: 'cluster_setup', name: 'cluster preparation', error: (e as Error).message });
+    }
+
+    // ----- 2) publish_rule (rotate version) -----------------------------
+    const newVersion = `t07.${Date.now()}.${randomUUID().slice(0, 4)}`;
+    let newRowId: string | null = null;
+    try {
+      const { data, error } = await db().rpc('publish_rule', {
+        p_rule_id:   TARGET_RULE,
+        p_version:   newVersion,
+        p_body_yaml: baseline.body_yaml,
+        p_body_json: null,
+        p_actor:     T07_ACTOR,
+        p_notes:     `T_07.02 mechanics test (run_id=${run.id})`,
+      });
+      if (error) throw new Error(error.message);
+      newRowId = data as string;
+      await pass(run, {
+        step: 'publish_rule', name: 'publish_rule RPC',
+        hypothesis: 'H_외부컨트롤',
+        actual: { new_version: newVersion, new_row_id: newRowId },
+      });
+    } catch (e) {
       await fail(run, {
-        step: 'retrigger', name: 'enqueue_normalize_priority RPC',
+        step: 'publish_rule', name: 'publish_rule RPC',
         hypothesis: 'H_외부컨트롤', error: (e as Error).message,
       });
     }
-  } else {
-    await skip(run, {
-      step: 'retrigger', name: 'enqueue_normalize_priority (cluster 미생성)',
-      hypothesis: 'H_외부컨트롤',
-    });
-  }
 
-  // ----- 5) Cleanup — baseline 직접 복원 + 테스트 fixture --------------
-  if (CONFIG.cleanup) {
+    // ----- 3) Verify rotation -------------------------------------------
+    let postActive: ActiveRuleRow | null = null;
     try {
-      // 순서 중요: unique index 'active 1개'를 만족하려면 먼저 t07 active를 제거.
-      // (1) 테스트로 만든 't07.*' archived/active row 삭제 — rule_audit은 ON DELETE CASCADE
-      const { error: delErr } = await db()
-        .from('rule_versions')
-        .delete()
-        .eq('rule_id', TARGET_RULE)
-        .like('version', 't07.%');
-      if (delErr) {
-        await fail(run, { step: 'cleanup', name: 'delete t07.* rule_versions', error: delErr.message });
+      postActive = await fetchActive();
+      if (postActive?.version === newVersion && postActive.id !== baseline.id) {
+        await pass(run, {
+          step: 'rotation', name: 'new active row != baseline',
+          hypothesis: 'H_외부컨트롤',
+          expected: newVersion, actual: postActive?.version,
+        });
       } else {
-        await pass(run, { step: 'cleanup', name: 'delete t07.* rule_versions' });
-      }
-
-      // (2) baseline row를 다시 active로 (status·archived_at 복원)
-      const { error: restoreErr } = await db()
-        .from('rule_versions')
-        .update({ status: 'active', archived_at: null })
-        .eq('id', baseline.id);
-      if (restoreErr) {
-        await fail(run, { step: 'cleanup', name: 'restore baseline → active', error: restoreErr.message });
-      } else {
-        await pass(run, { step: 'cleanup', name: 'restore baseline → active' });
+        await fail(run, {
+          step: 'rotation', name: 'new active row != baseline',
+          hypothesis: 'H_외부컨트롤',
+          expected: newVersion, actual: postActive?.version ?? null,
+        });
       }
     } catch (e) {
-      await fail(run, { step: 'cleanup', name: 'cleanup exception', error: (e as Error).message });
+      await fail(run, { step: 'rotation', name: 'fetch new active', error: (e as Error).message });
     }
 
-    // sensor fixture 정리
-    if (clusterId) await cleanupSensorFixture(fixture, clusterId);
-    else await cleanupSensorFixture(fixture);
-    await revokeKey(key.keyId);
+    // baseline row archived?
+    try {
+      const { data: prev } = await db()
+        .from('rule_versions')
+        .select('status, archived_at')
+        .eq('id', baseline.id)
+        .maybeSingle();
+      if (prev?.status === 'archived' && prev.archived_at) {
+        await pass(run, {
+          step: 'rotation', name: 'baseline row → archived',
+          hypothesis: 'H_외부컨트롤',
+          actual: { status: prev.status, archived_at: prev.archived_at },
+        });
+      } else {
+        await fail(run, {
+          step: 'rotation', name: 'baseline row → archived',
+          hypothesis: 'H_외부컨트롤',
+          actual: prev,
+        });
+      }
+    } catch (e) {
+      await fail(run, { step: 'rotation', name: 'check baseline archived', error: (e as Error).message });
+    }
+
+    // rule_audit 1행 INSERT?
+    try {
+      const auditCountAfter = await countRuleAudits();
+      if (auditCountAfter === auditCountBefore + 1) {
+        await pass(run, {
+          step: 'rotation', name: 'rule_audit row 1건 추가',
+          hypothesis: 'H_하네스2',
+          actual: { before: auditCountBefore, after: auditCountAfter },
+          metric: { name: 'audit_delta', value: 1 },
+        });
+      } else {
+        await fail(run, {
+          step: 'rotation', name: 'rule_audit row 1건 추가',
+          hypothesis: 'H_하네스2',
+          actual: { before: auditCountBefore, after: auditCountAfter },
+        });
+      }
+    } catch (e) {
+      await fail(run, { step: 'rotation', name: 'rule_audit count', error: (e as Error).message });
+    }
+
+    // ----- 4) Retrigger via enqueue_normalize_priority ------------------
+    if (clusterId) {
+      try {
+        const { data, error } = await db().rpc('enqueue_normalize_priority', {
+          p_cluster_id: clusterId,
+          p_priority:   'high',
+          p_actor:      T07_ACTOR,
+          p_reason:     `T_07.02 retrigger after publish_rule ${newVersion}`,
+        });
+        if (error) throw new Error(error.message);
+        const queueId = data as string;
+
+        const { data: queueRow } = await db()
+          .from('normalize_queue')
+          .select('id, status, priority, attempts')
+          .eq('id', queueId)
+          .maybeSingle();
+        if (queueRow && queueRow.priority === 'high') {
+          await pass(run, {
+            step: 'retrigger', name: 'normalize_queue row 추가 (priority=high)',
+            hypothesis: 'H_외부컨트롤',
+            actual: queueRow,
+          });
+        } else {
+          await fail(run, {
+            step: 'retrigger', name: 'normalize_queue row 추가',
+            hypothesis: 'H_외부컨트롤',
+            actual: queueRow,
+          });
+        }
+      } catch (e) {
+        await fail(run, {
+          step: 'retrigger', name: 'enqueue_normalize_priority RPC',
+          hypothesis: 'H_외부컨트롤', error: (e as Error).message,
+        });
+      }
+    } else {
+      await skip(run, {
+        step: 'retrigger', name: 'enqueue_normalize_priority (cluster 미생성)',
+        hypothesis: 'H_외부컨트롤',
+      });
+    }
+  } catch (outer) {
+    // step1~4 도중 unexpected throw — fail로 기록만 하고 cleanup은 finally에서 보장.
+    await fail(run, { step: 'unexpected', name: 'main flow exception', error: (outer as Error).message });
+  } finally {
+    // ----- 5) Cleanup — 항상 실행 (성공/실패/throw 무관) -------------------
+    if (CONFIG.cleanup) {
+      // (a) rule_versions cleanup — DB 영역
+      try {
+        const { error: delErr } = await db()
+          .from('rule_versions')
+          .delete()
+          .eq('rule_id', TARGET_RULE)
+          .like('version', 't07.%');
+        if (delErr) {
+          await fail(run, { step: 'cleanup', name: 'delete t07.* rule_versions', error: delErr.message });
+        } else {
+          await pass(run, { step: 'cleanup', name: 'delete t07.* rule_versions' });
+        }
+
+        const { error: restoreErr } = await db()
+          .from('rule_versions')
+          .update({ status: 'active', archived_at: null })
+          .eq('id', baseline.id);
+        if (restoreErr) {
+          await fail(run, { step: 'cleanup', name: 'restore baseline → active', error: restoreErr.message });
+        } else {
+          await pass(run, { step: 'cleanup', name: 'restore baseline → active' });
+        }
+      } catch (e) {
+        // cleanup 실패는 다음 run 의 self-heal이 받아냄. fail 기록만.
+        await fail(run, { step: 'cleanup', name: 'rule_versions cleanup exception', error: (e as Error).message });
+      }
+
+      // (b) sensor fixture cleanup — Storage/HMAC 영역 (best-effort)
+      try {
+        if (clusterId) await cleanupSensorFixture(fixture, clusterId);
+        else await cleanupSensorFixture(fixture);
+        if (key) await revokeKey(key.keyId);
+      } catch (e) {
+        await fail(run, { step: 'cleanup', name: 'sensor fixture cleanup', error: (e as Error).message });
+      }
+    }
   }
 
   const result = await finishRun(run);
   process.exit(result.status === 'passed' ? 0 : 1);
 }
 
-main().catch((e) => {
+await main().catch((e) => {
+  if (e && (e as { __t_test_silent?: boolean }).__t_test_silent) throw e;
   console.error('FATAL', e);
   process.exit(2);
 });
