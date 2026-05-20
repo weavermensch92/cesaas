@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>HD Construction Equipment — Руководство дилера · CTT Moscow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root{
+    --hd-heritage:#00AD1D;--hd-prosperity:#008233;--hd-discovery:#003087;--hd-trust:#002554;
+    --hd-dark-green:#024638;--hd-gray:#63666A;--hd-blue-gray:#DBE2E9;--hd-bright-green:#79D97C;
+    --hd-bg:#f6f8f6;--hd-radius:6px;--hd-radius-lg:10px;
+    --hd-mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+    --hd-font:'Inter',system-ui,'Segoe UI',Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;font-family:var(--hd-font);color:#1a1f2b;background:var(--hd-bg);line-height:1.65;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:64px 32px 96px}
+  .cover{background:linear-gradient(135deg,var(--hd-trust) 0%,var(--hd-discovery) 100%);color:#fff;border-radius:var(--hd-radius-lg);padding:56px;margin-bottom:48px;position:relative;overflow:hidden}
+  .cover::before{content:"";position:absolute;right:-120px;top:-120px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(0,230,0,0.15) 0%,transparent 70%)}
+  .cover .eyebrow{font-size:11px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:var(--hd-bright-green);margin-bottom:14px}
+  .cover h1{margin:0;font-size:40px;font-weight:800;letter-spacing:-0.01em;line-height:1.2}
+  .cover .lede{margin:18px 0 0;font-size:17px;color:#dbe2e9;max-width:760px;line-height:1.7}
+  .cover .meta{display:flex;gap:32px;margin-top:32px;font-size:12px;color:#b1e4e3;font-family:var(--hd-mono);flex-wrap:wrap}
+  .cover .meta b{color:#fff;font-weight:600}
+  section{margin-bottom:56px}
+  .step-tag{display:inline-block;font-family:var(--hd-mono);font-size:11px;font-weight:600;background:var(--hd-trust);color:#fff;padding:4px 10px;border-radius:4px;letter-spacing:0.06em;margin-bottom:14px}
+  h2{margin:0 0 6px;font-size:28px;font-weight:700;color:var(--hd-heritage);letter-spacing:-0.005em;line-height:1.3}
+  h3{margin:28px 0 10px;font-size:18px;font-weight:600;color:var(--hd-discovery)}
+  .subtitle{margin:0 0 24px;font-size:15px;color:var(--hd-gray)}
+  p{margin:0 0 14px;color:#2a2f3a;font-size:15px}
+  ul,ol{padding-left:22px;margin:0 0 16px}
+  li{margin-bottom:6px;font-size:15px;color:#2a2f3a}
+  code{font-family:var(--hd-mono);font-size:13px;background:#eef1ec;padding:2px 6px;border-radius:4px;color:var(--hd-dark-green)}
+  strong,b{font-weight:600;color:#0d1117}
+  figure{margin:18px 0 8px;border:1px solid var(--hd-blue-gray);border-radius:var(--hd-radius-lg);overflow:hidden;background:#fff;box-shadow:0 12px 30px rgba(0,0,0,0.08)}
+  figure img{display:block;width:100%;height:auto;margin:0 auto;max-width:100%}
+  figure.phone img{max-width:380px;display:block;margin:0 auto}
+  figcaption{font-size:12px;color:var(--hd-gray);padding:10px 14px;background:#f9faf8;border-top:1px solid var(--hd-blue-gray)}
+  figcaption b{color:var(--hd-heritage);font-weight:600}
+  .callout{background:#f0f6f1;border-left:3px solid var(--hd-heritage);padding:14px 18px;border-radius:0 var(--hd-radius) var(--hd-radius) 0;margin:16px 0;font-size:14px;color:#1a3320}
+  .callout b{color:var(--hd-heritage)}
+  .callout.warn{background:#fef7ed;border-left-color:#b45309;color:#3a2008}
+  .callout.warn b{color:#b45309}
+  .callout.tip{background:#eaf3f7;border-left-color:var(--hd-discovery);color:#0a1a2b}
+  .callout.tip b{color:var(--hd-discovery)}
+  .toc{background:#fff;border:1px solid var(--hd-blue-gray);border-radius:var(--hd-radius-lg);padding:24px 28px;margin-bottom:48px}
+  .toc h4{margin:0 0 12px;font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--hd-gray);font-weight:600}
+  .toc ol{margin:0;padding-left:22px;font-size:14px}
+  .toc li{margin-bottom:4px}
+  .toc a{color:var(--hd-trust);text-decoration:none}
+  .toc a:hover{text-decoration:underline;color:var(--hd-heritage)}
+  table.kv{width:100%;border-collapse:collapse;margin:14px 0;font-size:14px}
+  table.kv th,table.kv td{padding:8px 12px;border-bottom:1px solid var(--hd-blue-gray);text-align:left;vertical-align:top}
+  table.kv th{font-weight:600;color:var(--hd-discovery);width:240px;background:#f9faf8}
+  ol.steps{counter-reset:s;list-style:none;padding-left:0;margin:18px 0}
+  ol.steps>li{counter-increment:s;padding:14px 16px 14px 56px;background:#fff;border:1px solid var(--hd-blue-gray);border-radius:var(--hd-radius);margin-bottom:10px;position:relative}
+  ol.steps>li::before{content:counter(s);position:absolute;left:14px;top:14px;width:30px;height:30px;border-radius:50%;background:var(--hd-heritage);color:#fff;display:grid;place-items:center;font-weight:700;font-size:14px;font-family:var(--hd-mono)}
+  ol.steps>li b{display:block;font-size:15px;color:var(--hd-discovery);margin-bottom:4px}
+  footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--hd-blue-gray);font-size:12px;color:var(--hd-gray);font-family:var(--hd-mono);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="cover">
+  <div class="eyebrow">HD CONSTRUCTION EQUIPMENT · РУКОВОДСТВО ДИЛЕРА · CTT MOSCOW</div>
+  <h1>Ваш планшет и QR посетителя — за 5 минут</h1>
+  <p class="lede">
+    Это краткое практическое руководство для дилеров HD Construction Equipment на выставке CTT Moscow (павильон 4, место 4-2) с 26 по 29 мая 2026 года. Описаны <strong>две поверхности</strong>, с которыми вы будете работать ежедневно: <strong>планшет интервью</strong> и <strong>QR-код посетителя</strong>, а также <strong>значок расширения</strong> на ПК администратора стенда. Скриншоты сделаны с реальной рабочей сборки.
+  </p>
+  <div class="meta">
+    <span><b>СТЕНД</b>&nbsp;&nbsp;CTT Moscow · павильон 4 · место 4-2</span>
+    <span><b>ДАТЫ</b>&nbsp;&nbsp;26–29 мая 2026</span>
+    <span><b>ПОДДЕРЖКА</b>&nbsp;&nbsp;Контакты на обороте планшета</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <h4>Содержание</h4>
+  <ol>
+    <li><a href="#overview">Ваша роль за 30 секунд</a></li>
+    <li><a href="#dealer">Часть 1 — Планшет дилера</a></li>
+    <li><a href="#visitor">Часть 2 — QR-код посетителя</a></li>
+    <li><a href="#extension">Часть 3 — Значок расширения на ПК администратора</a></li>
+    <li><a href="#troubleshoot">Если что-то пошло не так</a></li>
+    <li><a href="#contacts">Контакты поддержки</a></li>
+  </ol>
+</nav>
+
+<!-- ====================== -->
+<section id="overview">
+  <span class="step-tag">КОНТЕКСТ</span>
+  <h2>Ваша роль за 30 секунд</h2>
+  <p class="subtitle">На стенде вы участвуете в сборе данных тремя разными способами. Два из них — активные (вы что-то делаете), один — полностью автоматический.</p>
+
+  <ol class="steps">
+    <li><b>С клиентом-дилером (B2B) — на планшете</b>
+      Открываете планшет, проходите интервью из 31 вопроса вместе с клиентом. В конце клиент даёт согласие, и ответ моментально уходит в Корею. <em>Активное действие.</em></li>
+    <li><b>С посетителем стенда — через QR-код</b>
+      Посетитель сам сканирует QR на табличке, проходит 18 вопросов на своём телефоне за 2 минуты и получает PDF-каталог под свой сегмент. Вы только показываете, где QR. <em>Пассивное действие.</em></li>
+    <li><b>На ПК администратора — автоматически</b>
+      Расширение Chrome автоматически делает снимки экрана Bitrix24, когда вы работаете с клиентом в обычном режиме. <em>Полностью автоматическое.</em> Вмешательство требуется только в одном случае — см. <a href="#extension">Часть 3</a>.</li>
+  </ol>
+
+  <div class="callout tip">
+    <b>Чего НЕ требуется.</b> Не нужно вручную пересылать карточки клиентов. Не нужно открывать никакие админ-консоли. Не нужно переводить ответы или конвертировать единицы — система делает это автоматически в Корее.
+  </div>
+</section>
+
+<!-- ====================== -->
+<section id="dealer">
+  <span class="step-tag">ЧАСТЬ 1 · ПЛАНШЕТ</span>
+  <h2>Voice Dealer — интервью с клиентом-дилером</h2>
+  <p class="subtitle">Откройте страницу опроса в браузере планшета (короткая ссылка приклеена к обороту планшета). Страница работает в офлайн-режиме, поэтому интервью идёт даже при нестабильной сети — данные доедут позже автоматически.</p>
+
+  <figure>
+    <img src="{{IMG:voice-dealer_ru}}" alt="Voice Dealer — реальный интерфейс на русском"/>
+    <figcaption>Voice Dealer · шаг 1/4 — Информация о клиенте · русский язык</figcaption>
+  </figure>
+
+  <h3>Что куда нажимать</h3>
+  <table class="kv">
+    <tr><th>Шапка сверху</th><td><b>HD건설기계 · Опрос дилера</b> · индикатор <b>Online / Offline</b> · бэйдж <b>«В очереди N»</b> (сколько ответов ждёт отправки) · кнопка <b>«История»</b> (ваши прошлые интервью) · знак <b>?</b> (онбординг) · переключатель языка справа (RU / EN / KO).</td></tr>
+    <tr><th>Прогресс-бар</th><td>4 шага: 1/4 → 2/4 → 3/4 → 4/4.</td></tr>
+    <tr><th>Шаг 1/4 — Информация о клиенте</th><td><b>Компания клиента *</b> (обязательно) · Контактное лицо (опц.) · Телефон (опц.) · Заметки по встрече (опц.). Кнопка <b>«Далее»</b> остаётся серой, пока компания не введена.</td></tr>
+    <tr><th>Шаги 2/4 и 3/4 — Опрос</th><td>Шесть ключевых вопросов: размер компании · основное применение · годовое количество часов работы · чувствительность к цене на дизель · влияние эко-нормативов · ваша роль. Плюс семь маркетинговых вопросов (чекбоксы).</td></tr>
+    <tr><th>Шаг 4/4 — Завершение</th><td>NPS 0–10 («Готовы рекомендовать HD?») + <b>«Согласие на коммуникации»</b> (обязательно) + отправка. <u>Без галочки согласия ответ не уйдёт в Корею</u> — это требование законодательства о персональных данных.</td></tr>
+  </table>
+
+  <h3>Порядок работы</h3>
+  <ol class="steps">
+    <li><b>Откройте планшет</b> — последний экран автоматически восстановится, если интервью было прервано.</li>
+    <li><b>Введите название компании клиента</b> — это разблокирует кнопку «Далее».</li>
+    <li><b>Пройдите 6 вопросов вместе с клиентом</b> — 3–5 минут. Идите сверху вниз, не пропуская.</li>
+    <li><b>Заполните NPS и 7 маркетинговых вопросов</b> — можно отмечать в процессе или после.</li>
+    <li><b>Получите устное согласие клиента и поставьте галочку «Согласие на коммуникации»</b>.</li>
+    <li><b>Нажмите «Отправить»</b> — индикатор «В очереди» подскочит на +1, затем вернётся к 0, когда ответ дойдёт до Кореи.</li>
+  </ol>
+
+  <div class="callout tip">
+    <b>Ваш персональный код.</b> При первом запуске планшета вам предложат вставить персональный код дилера (длинная строка), который вы получили перед выездом на выставку. Код сохраняется в памяти браузера, и больше его вводить не нужно.
+  </div>
+
+  <div class="callout">
+    <b>История.</b> Кнопка «История» вверху справа открывает список ваших прошлых интервью — можно просмотреть, что было отправлено и в каком статусе.
+  </div>
+</section>
+
+<!-- ====================== -->
+<section id="visitor">
+  <span class="step-tag">ЧАСТЬ 2 · QR-КОД</span>
+  <h2>Voice Visitor — опрос посетителя за 2 минуты</h2>
+  <p class="subtitle">Посетитель сканирует QR-код на стенде и сам проходит 18 вопросов (12 обязательных + 6 опциональных) на своём телефоне. В конце получает PDF-каталог под свой сегмент. Опрос работает и без интернета — ответы отправятся, как только сеть появится.</p>
+
+  <figure class="phone">
+    <img src="{{IMG:voice-visitor_ru}}" alt="Voice Visitor — реальный интерфейс на русском"/>
+    <figcaption>Voice Visitor · шаг 1/4 — О компании · русский язык</figcaption>
+  </figure>
+
+  <h3>Что увидит посетитель</h3>
+  <table class="kv">
+    <tr><th>Шапка</th><td><b>HD건설기계 · Опрос посетителя</b> · точка статуса (зелёный = онлайн) · языковой переключатель (RU / EN / KO).</td></tr>
+    <tr><th>Шаг 1/4 — О компании</th><td>4 вопроса на одном экране: <b>Размер компании</b> (до 50 / 51—200 / 201—1000 / 1000+) · <b>Основное применение</b> (Горнодобыча · Крупное строит. · С/х · Лесное хоз-во · Общ. строит. · Аренда · Другое) · <b>Парк техники</b> (0 / 1—3 / 4—10 / 11+) · <b>Ваша роль в решении</b> (Владелец · Закупщик · Влияющий · Оператор).</td></tr>
+    <tr><th>Шаг 2/4 — Использование</th><td>Условия эксплуатации (мороз / пыль / болото / горы) · среднее время работы в сутки · сезонность.</td></tr>
+    <tr><th>Шаг 3/4 — Опыт с HD</th><td>Знает ли о HD · работал ли с техникой HD · удовлетворённость · модели, которыми интересуется (опционально).</td></tr>
+    <tr><th>Шаг 4/4 — NPS + результат</th><td>NPS 0–10 · карточка результата: <b>Ваш сегмент</b> (например: Стройка) · 3 рекомендованные модели · <b>QR-код каталога</b> · опциональное поле «Оставить контакт».</td></tr>
+  </table>
+
+  <h3>Что делать дилеру</h3>
+  <ol class="steps">
+    <li><b>Покажите табличку с QR</b> на стойке посетителю. Если её нет — позвоните в поддержку, чтобы доставили запасную плёнку.</li>
+    <li><b>Скажите одну фразу:</b> <em>«Это 2 минуты, и вы получаете PDF-каталог под свою отрасль»</em>. Дальше всё объясняет сам опрос.</li>
+    <li><b>Не вмешивайтесь в процесс</b>. Опрос полностью самостоятельный.</li>
+    <li><b>Если посетитель оставил контакт</b> — менеджер HD выйдет на связь в течение суток (это уже не ваша забота).</li>
+  </ol>
+
+  <div class="callout tip">
+    <b>Офлайн-режим.</b> Если у посетителя нет интернета, опрос всё равно проходит — ответы сохраняются в браузере и уйдут, как только телефон поймает сеть. Об этом сообщать посетителю не нужно.
+  </div>
+
+  <div class="callout">
+    <b>Правило 2 минут.</b> В отличие от 31-вопросного интервью дилера, опрос посетителя проектировался под завершение за 120 секунд, чтобы не задерживать поток у стенда. 6 из 18 вопросов помечены как «опциональные».
+  </div>
+</section>
+
+<!-- ====================== -->
+<section id="extension">
+  <span class="step-tag">ЧАСТЬ 3 · РАСШИРЕНИЕ CHROME</span>
+  <h2>Расширение Chrome — автоматические снимки CRM</h2>
+  <p class="subtitle">На ПК администратора стенда установлено расширение Chrome, которое автоматически делает снимки экрана Bitrix24, когда вы открываете карточку клиента. Снимки уходят в Корею, и там в систему автоматически попадают 13 стандартных полей: компания · контакт · телефон · сумма · модель · регион и т.д.</p>
+
+  <p>В обычном режиме вам с расширением ничего делать не нужно. Но если что-то пошло не так — вот как выглядит его всплывающее окно (значок ✓ в правом верхнем углу Chrome):</p>
+
+  <figure class="phone">
+    <img src="{{IMG:extension-popup_ru}}" alt="Расширение Chrome — всплывающее окно"/>
+    <figcaption>Расширение Chrome · всплывающее окно</figcaption>
+  </figure>
+
+  <h3>Что показывает попап</h3>
+  <table class="kv">
+    <tr><th>Dealer</th><td>Ваш идентификатор дилера (например <code>dealer_001</code>) — определяется автоматически.</td></tr>
+    <tr><th>Очередь (pending)</th><td>Сколько снимков ждут отправки. В норме 0–3. Если число растёт — проблема с сетью.</td></tr>
+    <tr><th>Сбои</th><td>Сколько отправок завершились ошибкой. В норме 0.</td></tr>
+    <tr><th>Готово за 24 часа</th><td>Сколько снимков отправлено за последние 24 часа. Это просто счётчик активности.</td></tr>
+    <tr><th>Кнопка «Drain»</th><td>Принудительная отправка очереди. Нажимайте, только если поддержка попросит.</td></tr>
+    <tr><th>Кнопка «Logs»</th><td>Журнал последних 50 событий — нужен только поддержке.</td></tr>
+    <tr><th>Кнопка «Clear»</th><td>Сбросить очередь. <b>Не нажимайте без указания поддержки</b> — это сотрёт все ожидающие отправки снимки.</td></tr>
+  </table>
+
+  <p>Подписи на кнопках (Drain · Logs · Clear) и в журнале пока на английском. Это известно, и не должно вас смущать — функциональность не зависит от языка.</p>
+
+  <div class="callout warn">
+    <b>Когда нужно ваше внимание.</b> Если «Очередь» больше 20 — это сигнал, что сеть стенда нестабильна. Сообщите в поддержку, не нажимайте «Drain» сами.
+  </div>
+</section>
+
+<!-- ====================== -->
+<section id="troubleshoot">
+  <span class="step-tag">ПОДДЕРЖКА</span>
+  <h2>Если что-то пошло не так</h2>
+  <p class="subtitle">Типичные ситуации и что с ними делать. Главное: <b>не останавливаемся</b>. Все ваши данные сохраняются локально и не теряются.</p>
+
+  <table class="kv">
+    <tr><th>Планшет показывает «Offline» больше минуты</th><td>Это нормально для стенда с переменной сетью. Продолжайте работать — ответы сохраняются в браузере и отправятся автоматически, как только сеть вернётся. Перезапускать планшет не нужно.</td></tr>
+    <tr><th>«В очереди» растёт и не падает</th><td>Сеть всё ещё нестабильна. Если число превысит <b>10</b> — позвоните в поддержку. Данные при этом не теряются.</td></tr>
+    <tr><th>Кнопка «Далее» серая, хотя поля заполнены</th><td>Проверьте, что <b>обязательное поле</b> (помечено звёздочкой *) действительно заполнено и не содержит только пробелов. Если поле заполнено правильно — обновите страницу (F5), последнее интервью продолжится с того же места.</td></tr>
+    <tr><th>Клиент не даёт согласие на коммуникации</th><td>Это нормально и встречается часто. Сохраните ответ как черновик — он останется локально на планшете, в Корею не уйдёт. Если клиент передумает позже, согласие можно проставить через раздел «История».</td></tr>
+    <tr><th>Посетитель не может отсканировать QR</th><td>Сначала проверьте, что плёнка с QR не загнулась. Если переснимка не помогает — попросите посетителя ввести короткий адрес вручную (он напечатан под QR).</td></tr>
+    <tr><th>Появилось сообщение «требуется обновление»</th><td>Это значит, что вышла новая версия опроса. Просто нажмите «Обновить» — занимает 5 секунд, текущее интервью не теряется.</td></tr>
+    <tr><th>Планшет завис, не реагирует на касания</th><td>Закройте браузер полностью, откройте заново — последнее интервью восстановится. Если не помогло — пересядьте на запасной планшет (хранится у руководителя стенда).</td></tr>
+  </table>
+
+  <div class="callout warn">
+    <b>Если ничего не работает.</b> Продолжайте собирать данные на бумаге или в виде заметок, сообщите в поддержку, и мы внесём всё ретроспективно. <b>Никогда не теряйте контакт клиента из-за технической проблемы.</b>
+  </div>
+</section>
+
+<!-- ====================== -->
+<section id="contacts">
+  <span class="step-tag">КОНТАКТЫ</span>
+  <h2>Поддержка во время выставки 26–29 мая</h2>
+  <p class="subtitle">У вас есть две линии связи: техническая (если планшет, QR или расширение ведёт себя не так) и со стороны HD (если возникли вопросы по клиентам или согласованиям).</p>
+
+  <table class="kv">
+    <tr><th>Техническая поддержка</th><td>WhatsApp / Telegram — номер написан на обороте планшета. Среднее время ответа: <b>≤ 10 минут</b> в часы работы выставки. По всем техническим вопросам — сюда.</td></tr>
+    <tr><th>HD Construction Equipment · маркетинг</th><td>Ли Канхун (이강훈, руководитель проекта). Email + KakaoTalk — указаны на обороте планшета. По вопросам клиентов и согласований — сюда.</td></tr>
+    <tr><th>Запасной планшет</th><td>Хранится у руководителя стенда. Если основной планшет неисправен — пересядьте на запасной (он уже настроен под вашу учётную запись, код дилера сохранён).</td></tr>
+    <tr><th>Запасная плёнка с QR</th><td>В верхнем ящике стойки. Если основная плёнка повреждена — наклейте новую.</td></tr>
+  </table>
+</section>
+
+<footer>
+  HD Construction Equipment · Руководство дилера · CTT Moscow · 26–29 мая 2026
+</footer>
+
+</div>
+</body>
+</html>

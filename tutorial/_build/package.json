@@ -1,0 +1,13 @@
+{
+  "name": "hd-poc-tutorial-build",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "capture": "node capture.js",
+    "build": "node build-tutorial.js"
+  },
+  "dependencies": {
+    "puppeteer": "^23.0.0"
+  }
+}
