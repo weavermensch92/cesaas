@@ -20,6 +20,8 @@ const nextConfig = {
       { source: '/visitor/',     destination: '/visitor/index.html' },
       { source: '/_design/voice-wireframes',  destination: '/_design/voice-wireframes/index.html' },
       { source: '/_design/voice-wireframes/', destination: '/_design/voice-wireframes/index.html' },
+      { source: '/_design/popup-screenshot',  destination: '/_design/popup-screenshot/index.html' },
+      { source: '/_design/popup-screenshot/', destination: '/_design/popup-screenshot/index.html' },
     ];
   },
 };
