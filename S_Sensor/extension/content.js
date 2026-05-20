@@ -4,7 +4,7 @@
 // CRM 매트릭스는 crm_definitions.json (data-driven — § 4.3 하드코드 지양).
 
 import { collectMeta } from './lib/capture.js';
-import { CONFIG } from './config.js';
+import { getConfig } from './lib/config.js';
 
 const DEBOUNCE_MS = 1000;
 
@@ -63,7 +63,12 @@ function triggerCapture() {
 
   if (captureTimer) clearTimeout(captureTimer);
   captureTimer = setTimeout(async () => {
-    const meta = collectMeta({ crmId: CURRENT.crmId, dealerId: CONFIG.DEALER_ID });
+    const cfg = await getConfig();
+    if (!cfg.DEALER_ID) {
+      console.warn('[Gridge] capture skipped — extension not configured');
+      return;
+    }
+    const meta = collectMeta({ crmId: CURRENT.crmId, dealerId: cfg.DEALER_ID });
     try {
       await chrome.runtime.sendMessage({ type: 'capture_request', meta });
     } catch (e) {

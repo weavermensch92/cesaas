@@ -2,64 +2,105 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <title>Gridge Sensor</title>
+  <title>HD건설기계 Sensor</title>
   <style>
     :root {
       --hd-trust: #002554;
+      --hd-discovery: #003087;
       --hd-heritage: #00AD1D;
       --hd-prosperity: #008233;
       --hd-gray: #63666A;
       --hd-bg: #f6f8f6;
       --hd-paper: #ffffff;
+      --hd-steel-100: #e9edf0;
       --hd-steel-200: #d6dadf;
       --hd-amber: #b45309;
       --hd-red: #b91c1c;
     }
-    body {
-      width: 320px;
-      margin: 0;
-      padding: 12px 14px;
+    * { box-sizing: border-box; }
+    body { width: 360px; margin: 0; padding: 0;
       font: 13px 'Noto Sans KR', 'Malgun Gothic', Arial, sans-serif;
-      color: var(--hd-gray);
-      background: var(--hd-bg);
-    }
-    h1 {
-      margin: 0 0 8px 0;
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--hd-heritage);
-      letter-spacing: -0.01em;
-    }
-    .row { display: flex; justify-content: space-between; padding: 4px 0; }
+      color: var(--hd-gray); background: var(--hd-bg); }
+    header { padding: 12px 14px 8px; background: var(--hd-paper); border-bottom: 1px solid var(--hd-steel-200); }
+    header h1 { margin: 0; font-size: 14px; font-weight: 700; color: var(--hd-heritage); letter-spacing: -0.01em; }
+    header .sub { font-size: 11px; color: var(--hd-gray); margin-top: 2px; }
+    .body { padding: 12px 14px; }
+    section { margin-bottom: 12px; }
+    .row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 12.5px; }
     .row b { color: var(--hd-trust); font-weight: 600; }
-    .actions { display: flex; gap: 6px; margin-top: 10px; }
-    button {
-      flex: 1; height: 28px; border-radius: 6px; border: 1px solid var(--hd-steel-200);
-      background: #fff; color: var(--hd-trust); font: inherit; cursor: pointer;
-    }
-    button.primary { background: var(--hd-prosperity); color: #fff; border-color: var(--hd-prosperity); }
-    .logs { margin-top: 10px; max-height: 140px; overflow: auto;
-            font-size: 11px; background: var(--hd-paper); border: 1px solid var(--hd-steel-200);
-            border-radius: 6px; padding: 6px; }
+    textarea { width: 100%; min-height: 64px; padding: 8px 10px;
+      border: 1px solid var(--hd-steel-200); border-radius: 6px;
+      font: 11px ui-monospace, SFMono-Regular, Menlo, monospace;
+      color: var(--hd-trust); background: var(--hd-paper); resize: vertical; }
+    textarea:focus { outline: none; border-color: var(--hd-heritage); }
+    button { flex: 1; height: 30px; padding: 0 10px;
+      border-radius: 6px; border: 1px solid var(--hd-steel-200);
+      background: var(--hd-paper); color: var(--hd-trust);
+      font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+    button:hover { background: var(--hd-steel-100); }
+    button.primary { background: var(--hd-heritage); color: #fff; border-color: var(--hd-heritage); }
+    button.primary:hover { background: var(--hd-prosperity); border-color: var(--hd-prosperity); }
+    button.ghost { background: transparent; border: none; color: var(--hd-gray); font-weight: 400; }
+    .actions { display: flex; gap: 6px; margin-top: 8px; }
+    .alert { padding: 10px 12px; border-radius: 6px; font-size: 12px; line-height: 1.5; }
+    .alert.warn { background: #fffbeb; border-left: 3px solid var(--hd-amber); color: var(--hd-amber); }
+    .alert.ok   { background: #e8f7eb; border-left: 3px solid var(--hd-prosperity); color: var(--hd-prosperity); }
+    .alert.err  { background: #fef2f2; border-left: 3px solid var(--hd-red); color: var(--hd-red); }
+    .logs { max-height: 120px; overflow: auto; font-size: 10.5px; line-height: 1.4;
+      background: var(--hd-paper); border: 1px solid var(--hd-steel-200); border-radius: 6px; padding: 6px 8px; }
     .logs .lv-error { color: var(--hd-red); }
     .logs .lv-warn  { color: var(--hd-amber); }
+    .section-head { font-size: 10.5px; font-weight: 600; color: var(--hd-gray);
+      letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 6px; }
+    .meta-line { font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--hd-gray); }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <h1>HD건설기계 · Sensor</h1>
-  <div class="row"><span>Dealer</span><b id="dealer">…</b></div>
-  <div class="row"><span>큐 (pending)</span><b id="pending">…</b></div>
-  <div class="row"><span>실패</span><b id="failed">…</b></div>
-  <div class="row"><span>완료 (24h)</span><b id="done">…</b></div>
+  <header>
+    <h1>HD건설기계 · Sensor</h1>
+    <div class="sub">CRM 화면 자동 캡쳐 (Bitrix24)</div>
+  </header>
+  <div class="body">
+    <section id="setupSection" class="hidden">
+      <div class="alert warn" style="margin-bottom:10px;">
+        <b>등록 코드 입력 필요</b><br/>
+        어드민이 발급한 등록 코드를 붙여넣고 [저장] 을 누르세요.
+      </div>
+      <div class="section-head">등록 코드</div>
+      <textarea id="codeInput" placeholder="어드민에서 받은 등록 코드를 붙여넣으세요"></textarea>
+      <div class="actions">
+        <button id="saveCode" class="primary">저장 + 활성화</button>
+      </div>
+      <div id="setupErr" class="alert err hidden" style="margin-top:8px;"></div>
+    </section>
 
-  <div class="actions">
-    <button id="drain" class="primary">Drain</button>
-    <button id="export">Logs</button>
-    <button id="clear">Clear</button>
+    <section id="statusSection" class="hidden">
+      <div class="section-head">현재 상태</div>
+      <div class="row"><span>Dealer ID</span><b id="cfgDealer">…</b></div>
+      <div class="row"><span>API Key</span><b id="cfgKey">…</b></div>
+      <div class="row"><span>API Base</span><span class="meta-line" id="cfgBase">…</span></div>
+
+      <div class="section-head" style="margin-top:12px;">큐</div>
+      <div class="row"><span>대기 (pending)</span><b id="qPending">…</b></div>
+      <div class="row"><span>송신 중</span><b id="qSending">…</b></div>
+      <div class="row"><span>실패</span><b id="qFailed">…</b></div>
+      <div class="row"><span>완료</span><b id="qDone">…</b></div>
+
+      <div class="actions" style="margin-top:10px;">
+        <button id="drain" class="primary">Drain 지금</button>
+        <button id="exportLogs">로그 다운로드</button>
+      </div>
+
+      <div class="section-head" style="margin-top:12px;">최근 로그</div>
+      <div class="logs" id="logs"></div>
+
+      <div class="actions" style="margin-top:8px;">
+        <button id="clearLogs" class="ghost">로그 비우기</button>
+        <button id="resetConfig" class="ghost" style="color:var(--hd-red);">자격증명 초기화</button>
+      </div>
+    </section>
   </div>
-
-  <div class="logs" id="logs"></div>
-
   <script type="module" src="popup.js"></script>
 </body>
 </html>

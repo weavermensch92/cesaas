@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>HD건설기계 Sensor — Web Store screenshot</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --hd-trust: #002554;
+    --hd-heritage: #00AD1D;
+    --hd-prosperity: #008233;
+    --hd-discovery: #003087;
+    --hd-gray: #63666A;
+    --hd-bg: #f6f8f6;
+    --hd-paper: #fff;
+    --hd-steel-100: #e9edf0;
+    --hd-steel-200: #d6dadf;
+    --hd-amber: #b45309;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1280px; height: 800px;
+    font-family: 'Noto Sans KR', sans-serif;
+    background:
+      radial-gradient(ellipse at top right, rgba(0,173,29,0.06) 0%, transparent 60%),
+      linear-gradient(135deg, #f6f8f6 0%, #ffffff 50%, #e8f7eb 100%);
+    overflow: hidden;
+    position: relative;
+  }
+  body::before {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,37,84,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,37,84,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+  .stage {
+    position: relative; z-index: 1;
+    width: 100%; height: 100%;
+    display: grid;
+    grid-template-columns: 1fr 480px;
+    gap: 60px;
+    padding: 70px 70px 70px 90px;
+  }
+
+  /* LEFT — Hero copy */
+  .copy { display: flex; flex-direction: column; justify-content: center; }
+  .brand {
+    display: inline-flex; align-items: center; gap: 12px;
+    margin-bottom: 28px;
+  }
+  .brand-mark {
+    width: 46px; height: 46px;
+    background: var(--hd-heritage); color: #fff;
+    border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 22px;
+    box-shadow: 0 6px 20px rgba(0,173,29,0.3);
+  }
+  .brand-name {
+    font-size: 17px; font-weight: 700;
+    color: var(--hd-trust);
+    letter-spacing: 0.04em;
+  }
+  .brand-name span { color: var(--hd-heritage); }
+  h1 {
+    font-size: 56px; font-weight: 800;
+    letter-spacing: -0.02em; line-height: 1.1;
+    color: var(--hd-trust);
+    margin-bottom: 18px;
+  }
+  h1 b { color: var(--hd-heritage); font-weight: 800; }
+  .lead {
+    font-size: 20px; font-weight: 500; line-height: 1.5;
+    color: var(--hd-gray);
+    margin-bottom: 36px;
+    max-width: 520px;
+  }
+  .features { list-style: none; display: flex; flex-direction: column; gap: 14px; }
+  .features li {
+    display: flex; align-items: center; gap: 12px;
+    font-size: 16px; font-weight: 500;
+    color: var(--hd-trust);
+  }
+  .check {
+    width: 26px; height: 26px;
+    background: var(--hd-heritage); color: #fff;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+    flex-shrink: 0;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px;
+    background: #fff; border: 1px solid var(--hd-heritage);
+    color: var(--hd-prosperity);
+    border-radius: 999px;
+    font-size: 13px; font-weight: 600;
+    align-self: flex-start;
+    margin-top: 40px;
+  }
+  .badge b { color: var(--hd-heritage); }
+
+  /* RIGHT — Popup mockup with browser frame */
+  .right {
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    position: relative;
+  }
+  .browser-window {
+    width: 480px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 30px 80px rgba(0,37,84,0.18), 0 8px 24px rgba(0,37,84,0.08);
+    overflow: hidden;
+  }
+  .browser-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 14px;
+    background: linear-gradient(to bottom, #f1f3f4, #e8eaed);
+    border-bottom: 1px solid var(--hd-steel-200);
+  }
+  .browser-bar .dot {
+    width: 12px; height: 12px; border-radius: 50%;
+  }
+  .browser-bar .dot.r { background: #ff5f57; }
+  .browser-bar .dot.y { background: #febc2e; }
+  .browser-bar .dot.g { background: #28c840; }
+  .browser-bar .url {
+    flex: 1; margin-left: 8px;
+    background: #fff; border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 11px; color: var(--hd-gray);
+    font-family: ui-monospace, monospace;
+  }
+  .browser-bar .ext-icon {
+    width: 22px; height: 22px;
+    background: var(--hd-heritage); color: #fff;
+    border-radius: 4px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 800;
+  }
+
+  /* The actual popup (mirrors extension's popup.html) */
+  .popup {
+    width: 100%;
+    padding: 0;
+    background: var(--hd-bg);
+    color: var(--hd-gray);
+    font-size: 13.5px;
+  }
+  .popup header {
+    padding: 14px 16px 10px;
+    background: var(--hd-paper);
+    border-bottom: 1px solid var(--hd-steel-200);
+  }
+  .popup header h2 {
+    font-size: 16px; font-weight: 700;
+    color: var(--hd-heritage);
+    letter-spacing: -0.01em;
+  }
+  .popup header .sub { font-size: 12px; color: var(--hd-gray); margin-top: 3px; }
+  .popup .body { padding: 14px 16px; }
+  .popup .row {
+    display: flex; justify-content: space-between;
+    padding: 4px 0; font-size: 13.5px;
+  }
+  .popup .row b { color: var(--hd-trust); font-weight: 600; font-family: ui-monospace, monospace; }
+  .popup .section-head {
+    font-size: 11px; font-weight: 700; color: var(--hd-gray);
+    letter-spacing: 0.06em; text-transform: uppercase;
+    margin: 14px 0 8px;
+  }
+  .popup .actions { display: flex; gap: 8px; margin-top: 14px; }
+  .popup button {
+    flex: 1; height: 34px; padding: 0 12px;
+    border-radius: 6px; border: 1px solid var(--hd-steel-200);
+    background: var(--hd-paper); color: var(--hd-trust);
+    font: 600 13px 'Noto Sans KR', sans-serif;
+  }
+  .popup button.primary {
+    background: var(--hd-heritage); color: #fff; border-color: var(--hd-heritage);
+  }
+  .popup .pill-ok {
+    display: inline-block; padding: 3px 10px;
+    background: #e8f7eb; color: var(--hd-prosperity);
+    border-radius: 999px; font-size: 11px; font-weight: 700;
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+
+    <!-- LEFT -->
+    <div class="copy">
+      <div class="brand">
+        <span class="brand-mark">H</span>
+        <span class="brand-name"><span>HD건설기계</span> · Sensor</span>
+      </div>
+      <h1>CRM 영업 데이터,<br/><b>한 번에 자동화</b></h1>
+      <p class="lead">
+        Bitrix24 CRM 화면을 자동 캡쳐해 13가지 영업 필드로 정규화.
+        딜러는 평소처럼 일하고, 본사는 데이터를 실시간으로 받습니다.
+      </p>
+      <ul class="features">
+        <li><span class="check">✓</span> Bitrix24 도메인에서만 작동 — 일반 웹사이트 캡쳐 안 함</li>
+        <li><span class="check">✓</span> HMAC-SHA256 서명 + HTTPS · 한국 서버 직송</li>
+        <li><span class="check">✓</span> 오프라인 큐 + 자동 재전송 · 30일 자동 삭제</li>
+      </ul>
+      <span class="badge">
+        <b>HD건설기계 영업 데이터 PoC</b> · 등록 코드 필요
+      </span>
+    </div>
+
+    <!-- RIGHT — Browser with extension popup -->
+    <div class="right">
+      <div class="browser-window">
+        <div class="browser-bar">
+          <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+          <span class="url">bitrix.gkcompany.pro/crm/deal/details/1234/</span>
+          <span class="ext-icon">H</span>
+        </div>
+        <div class="popup">
+          <header>
+            <h2>HD건설기계 · Sensor</h2>
+            <div class="sub">CRM 화면 자동 캡쳐 (Bitrix24)</div>
+          </header>
+          <div class="body">
+            <div class="section-head">현재 상태 <span class="pill-ok" style="margin-left:6px;">활성</span></div>
+            <div class="row"><span>Dealer ID</span><b>d_a4f2c1e8</b></div>
+            <div class="row"><span>API Key</span><b>ext_8c3f1d</b></div>
+            <div class="section-head">큐</div>
+            <div class="row"><span>대기 (pending)</span><b>0</b></div>
+            <div class="row"><span>송신 중</span><b>1</b></div>
+            <div class="row"><span>완료</span><b>47</b></div>
+            <div class="actions">
+              <button class="primary">Drain 지금</button>
+              <button>로그 다운로드</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

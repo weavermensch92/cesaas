@@ -1,7 +1,7 @@
 // lib/sender.js — 청크 송출 + 재시도 (S_10.04).
 // 8회 지수 백오프 — 1·2·4·8·16·30·60·120s.
 
-import { CONFIG } from '../config.js';
+import { getConfig } from './config.js';
 import { buildHmacHeaders, sha256Hex } from './hmac.js';
 import { dataUrlToBytes, chunkBytes } from './chunk.js';
 import { appendLog, classifyHttp, ErrorCategory } from './error.js';
@@ -48,10 +48,9 @@ export async function sendCapture(record) {
 }
 
 async function sendOneChunk({ captureId, chunkIndex, totalChunks, bytes, meta }) {
-  // Supabase Edge Functions URL: {API_BASE}/{function_name}
-  // 함수명 = 'captures-chunks'. HMAC payload의 path도 동일.
+  const cfg = await getConfig();
   const path = '/captures-chunks';
-  const url = `${CONFIG.API_BASE}${path}`;
+  const url = `${cfg.API_BASE}${path}`;
   const idempotencyKey = `${captureId}-chunk-${chunkIndex}`;
 
   // multipart 대신 단순 JSON 페이로드 — bytes는 base64로 동봉.
@@ -72,8 +71,8 @@ async function sendOneChunk({ captureId, chunkIndex, totalChunks, bytes, meta })
         method: 'POST',
         path,
         body: bodyStr,
-        secret: CONFIG.HMAC_SECRET,
-        keyId: CONFIG.API_KEY_ID,
+        secret: cfg.HMAC_SECRET,
+        keyId: cfg.API_KEY_ID,
       });
       const res = await fetch(url, {
         method: 'POST',
@@ -122,8 +121,9 @@ async function sendOneChunk({ captureId, chunkIndex, totalChunks, bytes, meta })
 }
 
 async function postFinalize({ captureId, totalChunks, finalizeHash }) {
+  const cfg = await getConfig();
   const path = '/captures-finalize';
-  const url = `${CONFIG.API_BASE}${path}`;
+  const url = `${cfg.API_BASE}${path}`;
   const bodyObj = {
     capture_id: captureId,
     total_chunks: totalChunks,
@@ -136,8 +136,8 @@ async function postFinalize({ captureId, totalChunks, finalizeHash }) {
         method: 'POST',
         path,
         body: bodyStr,
-        secret: CONFIG.HMAC_SECRET,
-        keyId: CONFIG.API_KEY_ID,
+        secret: cfg.HMAC_SECRET,
+        keyId: cfg.API_KEY_ID,
       });
       const res = await fetch(url, {
         method: 'POST',

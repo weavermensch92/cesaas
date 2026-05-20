@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Gridge Sensor",
-  "version": "0.1.0",
-  "description": "CRM 화면 자동 캡쳐 (HD건설기계 PoC)",
+  "name": "HD건설기계 Sensor",
+  "version": "0.2.0",
+  "description": "CRM(Bitrix24) 화면을 자동 캡쳐해 HD건설기계 영업 데이터 플랫폼으로 전송합니다.",
 
   "permissions": [
     "activeTab",

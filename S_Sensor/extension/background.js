@@ -1,7 +1,8 @@
 // background.js — service worker.
 // captureVisibleTab(WebP) → queue enqueue → drain loop.
+// Web Store 빌드: 자격증명은 chrome.storage 에서 (lib/config.js).
 
-import { CONFIG } from './config.js';
+import { isConfigured } from './lib/config.js';
 import { enqueue, popPending, updateStatus, trim } from './lib/queue.js';
 import { sendCapture } from './lib/sender.js';
 import { estimateKb, pickFallbackQuality } from './lib/capture.js';
@@ -27,6 +28,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 });
 
 async function handleCaptureRequest(meta, sender) {
+  if (!(await isConfigured())) {
+    await appendLog({ level: 'warn', msg: 'capture skipped — extension not configured (Popup에서 등록 코드 입력 필요)' });
+    return { ok: false, error: 'not_configured' };
+  }
   const windowId = sender?.tab?.windowId;
   if (windowId == null) return { ok: false, error: 'no_window' };
 
@@ -72,6 +77,7 @@ function captureWebP(windowId, quality) {
 }
 
 async function drainQueue() {
+  if (!(await isConfigured())) return;
   // 단일 워커 가정. 동시 호출은 큐 lock 없이 IDB 순차로 처리.
   while (true) {
     const items = await popPending(1);
