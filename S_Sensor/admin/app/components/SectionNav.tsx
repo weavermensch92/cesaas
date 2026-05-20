@@ -20,6 +20,7 @@ const ITEMS: Item[] = [
   { href: '/t-test',            label: 'T_08 · 통과 판정',     match: (p) => p.startsWith('/t-test') },
   { href: '/dealers',           label: '딜러 등록',           match: (p) => p === '/dealers' || p.startsWith('/dealers/'), adminOnly: true },
   { href: '/sensor/keys',       label: 'Sensor · 발급',       match: (p) => p.startsWith('/sensor/keys'), adminOnly: true },
+  { href: '/sensor/crm',        label: 'Sensor · CRM',        match: (p) => p.startsWith('/sensor/crm'),  adminOnly: true },
   { href: '/llm',               label: 'LLM · 운영',          match: (p) => p.startsWith('/llm'),     adminOnly: true },
   { href: '/members',           label: '회원 관리',           match: (p) => p.startsWith('/members'), adminOnly: true },
   { href: '/account',           label: '내 계정',             match: (p) => p.startsWith('/account') },

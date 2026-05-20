@@ -15,15 +15,86 @@ import { getServiceRoleClient } from '@/lib/supabase-server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// manifest.json·crm_definitions.json은 DB에서 동적 생성 — 템플릿 파일은 무시.
 const EXT_FILES_INCLUDE = [
-  'manifest.json',
   'background.js',
   'content.js',
   'popup.html',
   'popup.js',
-  'crm_definitions.json',
 ];
 const EXT_DIRS_INCLUDE = ['lib', 'icons'];
+
+interface CrmDefRow {
+  id: string;
+  name: string;
+  host_pattern: string;
+  match_patterns: string[] | null;
+  capture_paths: string[] | null;
+  screen_patterns: unknown;
+  status: string;
+}
+
+async function loadActiveCrmDefs(sb: ReturnType<typeof getServiceRoleClient>): Promise<CrmDefRow[]> {
+  const { data, error } = await sb
+    .from('crm_definitions')
+    .select('id, name, host_pattern, match_patterns, capture_paths, screen_patterns, status')
+    .in('status', ['active', 'beta'])
+    .order('id', { ascending: true });
+  if (error) throw new ApiErr(500, 'internal_error', 'crm_definitions load failed: ' + error.message);
+  if (!data || data.length === 0) {
+    throw new ApiErr(500, 'no_crm_defs', 'no active CRM definitions — register at least one via /sensor/crm');
+  }
+  return data as CrmDefRow[];
+}
+
+function buildManifest(crms: CrmDefRow[]): string {
+  const matchSet = new Set<string>();
+  for (const c of crms) {
+    for (const m of (c.match_patterns || [])) matchSet.add(m);
+  }
+  const matches = [...matchSet];
+  if (matches.length === 0) {
+    throw new ApiErr(500, 'no_match_patterns', 'active CRMs have no match_patterns — manifest cannot be built');
+  }
+
+  const manifest = {
+    manifest_version: 3,
+    name: 'HD건설기계 Sensor',
+    version: '0.2.0',
+    description: 'CRM 화면을 자동 캡쳐해 HD건설기계 영업 데이터 플랫폼으로 전송합니다.',
+    permissions: ['activeTab', 'storage', 'scripting', 'alarms'],
+    host_permissions: matches,
+    background: { service_worker: 'background.js', type: 'module' as const },
+    content_scripts: [
+      {
+        matches,
+        js: ['content.js'],
+        run_at: 'document_idle' as const,
+      },
+    ],
+    action: {
+      default_popup: 'popup.html',
+      default_icon: { '16': 'icons/16.png', '48': 'icons/48.png', '128': 'icons/128.png' },
+    },
+    icons: { '16': 'icons/16.png', '48': 'icons/48.png', '128': 'icons/128.png' },
+    web_accessible_resources: [{ resources: ['crm_definitions.json'], matches: ['<all_urls>'] }],
+  };
+  return JSON.stringify(manifest, null, 2);
+}
+
+function buildCrmDefinitionsJson(crms: CrmDefRow[]): string {
+  const out: Record<string, unknown> = {};
+  for (const c of crms) {
+    out[c.id] = {
+      id: c.id,
+      name: c.name,
+      host_pattern: c.host_pattern,
+      capture_paths: c.capture_paths && c.capture_paths.length ? c.capture_paths : ['/'],
+      screen_patterns: c.screen_patterns ?? [],
+    };
+  }
+  return JSON.stringify(out, null, 2);
+}
 
 // 후보 경로 (cwd 위치 다양성 대비)
 function locateTemplate(): string {
@@ -110,6 +181,11 @@ export async function POST(req: NextRequest) {
     });
     if (insErr) throw new ApiErr(500, 'internal_error', 'INSERT failed: ' + insErr.message);
 
+    // DB에서 active+beta CRM 정의 로드 → manifest·crm_definitions.json 동적 생성
+    const crms = await loadActiveCrmDefs(sb);
+    const manifestJson = buildManifest(crms);
+    const crmDefinitionsJson = buildCrmDefinitionsJson(crms);
+
     // ZIP 빌드
     const root = locateTemplate();
     const zip = new JSZip();
@@ -128,6 +204,10 @@ export async function POST(req: NextRequest) {
         if (fs.statSync(fp).isFile()) sub.file(f, fs.readFileSync(fp));
       }
     }
+    // 동적 파일 — manifest·crm_definitions.json (템플릿 정적 파일을 덮어쓰는 효과)
+    extDir.file('manifest.json', manifestJson);
+    extDir.file('crm_definitions.json', crmDefinitionsJson);
+
     // config.js — dynamic
     const API_BASE = (process.env['NEXT_PUBLIC_API_BASE']
       || ((process.env['NEXT_PUBLIC_SUPABASE_URL'] || '') + '/functions/v1')).replace(/\/$/, '');
