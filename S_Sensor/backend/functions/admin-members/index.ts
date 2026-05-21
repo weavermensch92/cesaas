@@ -39,7 +39,9 @@ Deno.serve(async (req: Request) => {
       if (!isRole(role)) throw new ApiError('validation_failed', 'role required (super_admin|admin|regular)');
 
       const redirectBase = envOptional('PUBLIC_SITE_URL', 'https://hd-poc-admin.fly.dev');
-      const redirectTo = `${redirectBase}/set-password`;
+      // /set-password 경로 제외 — Supabase 허용 리다이렉트 URL 목록에 정확히 등록된 base URL 사용.
+      // 첫 로그인 시 AuthGate 가 password_set=false 를 감지해 /set-password 로 자동 이동.
+      const redirectTo = redirectBase;
 
       // Supabase Auth Admin API — invite + magic link
       const { data: invited, error: invErr } = await db().auth.admin.inviteUserByEmail(email, {
@@ -47,7 +49,9 @@ Deno.serve(async (req: Request) => {
       });
       if (invErr || !invited?.user) {
         // 이미 존재하는 사용자면 user_profiles 만 처리
-        if ((invErr?.message ?? '').includes('already')) {
+        const errMsg = (invErr?.message ?? '').toLowerCase();
+        const errCode = (invErr as { code?: string })?.code ?? '';
+        if (errMsg.includes('already') || errCode === 'email_exists' || errCode === 'user_already_exists') {
           // 기존 user 조회
           const { data: list } = await db().auth.admin.listUsers({ page: 1, perPage: 200 });
           const existing = list?.users?.find((u) => (u.email ?? '').toLowerCase() === email);
