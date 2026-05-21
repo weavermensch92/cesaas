@@ -13,3 +13,4 @@ export * from './auth.js';
 export * from './logger.js';
 export * from './rules.js';
 export * from './llm.js';
+export * from './decision_weight.js';

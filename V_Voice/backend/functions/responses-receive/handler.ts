@@ -10,6 +10,13 @@ import { db } from 'shared/db.ts';
 import { requestLogger } from 'shared/logger.ts';
 import { classifyServerSide, type AxisData } from 'shared/segments.ts';
 import { scoreLead } from 'shared/lead_scoring.ts';
+import { loadRule } from 'shared/rules.ts';
+import {
+  computeDw,
+  type DWExtraction,
+  type DWInput,
+  type WeightMatrix,
+} from '@hd/core/decision_weight';
 
 export const ROUTE = '/responses-receive';
 
@@ -41,6 +48,8 @@ export interface ResponsePayload {
   // Dealer v2 (025) — 6 가치축 점수 + 가설 segment
   preference_axes?: Record<string, number> | null;
   dealer_hypothesis_segment?: string | null;
+  // R_10.10 (031) — 간접 추론 모드. preference_axes 미동봉 시 서버가 산출.
+  dw_raw_answers?: DWInput | null;
   // V-026 — visitor bot 방지 (옵션). HCAPTCHA_SECRET env 설정 시 backend가 검증.
   hcaptcha_token?: string | null;
 }
@@ -125,6 +134,28 @@ export async function handle(req: Request): Promise<Response> {
       }
     }
 
+    // 4.5) R_10.10 DW 간접 추론 — preference_axes 미동봉 + dw_raw_answers 있을 때만 산출
+    let preferenceAxes: Record<string, number> | null = payload.preference_axes ?? null;
+    let dwExtraction: DWExtraction | null = null;
+    if (!preferenceAxes && payload.dw_raw_answers) {
+      try {
+        const r1010 = await loadRule<{ weight_matrix?: WeightMatrix }>('R_10.10_DecisionWeight');
+        const matrix = r1010.body?.weight_matrix;
+        if (!matrix) {
+          log.warn('R_10.10 loaded but weight_matrix missing — skip DW inference');
+        } else {
+          const result = computeDw(payload.dw_raw_answers, matrix, { ruleVersion: r1010.version });
+          preferenceAxes = result.preference_axes;
+          dwExtraction = result.dw_extraction;
+        }
+      } catch (e) {
+        // 룰 로드 실패해도 응답 저장은 계속 — preference_axes/dw_extraction 둘 다 NULL.
+        log.warn('R_10.10 load failed — DW inference skipped', {
+          reason: e instanceof Error ? e.message : String(e),
+        });
+      }
+    }
+
     // 5) Visitor 24h quota
     if (identity.role === 'visitor') {
       const { data: remaining, error: quotaErr } = await db().rpc('visitor_quota_remaining', {
@@ -175,8 +206,10 @@ export async function handle(req: Request): Promise<Response> {
                             : (payload.contact_opted_in ? (payload.notes ?? null) : null),
       p_contact_opted_in: payload.contact_opted_in ?? false,
       p_target_company:   payload.target_company ?? null,
-      p_preference_axes:  payload.preference_axes ?? null,
+      p_preference_axes:  preferenceAxes,
       p_dealer_hypothesis_segment: payload.dealer_hypothesis_segment ?? null,
+      p_dw_raw_answers:   payload.dw_raw_answers ?? null,
+      p_dw_extraction:    dwExtraction,
     });
     if (error) {
       if (error.code === '23503') {
@@ -314,6 +347,44 @@ function parseAndValidate(text: string, identity: { role: string }): ResponsePay
       ? (o.preference_axes as Record<string, number>)
       : null,
     dealer_hypothesis_segment: trimStr(o.dealer_hypothesis_segment, 50),
+    dw_raw_answers: parseDwRawAnswers(o.dw_raw_answers),
     hcaptcha_token: typeof o.hcaptcha_token === 'string' ? o.hcaptcha_token.slice(0, 4000) : null,
+  };
+}
+
+// R_10.10 input_schema 기반 화이트리스트 파싱. 잘못된 보기는 무시(silent drop) — 룰 모드는 응답이 적으면
+// missing_prior 0.5로 자연스럽게 처리되므로 throw 안 함.
+function parseDwRawAnswers(raw: unknown): DWInput | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const o = raw as Record<string, unknown>;
+
+  const single = (v: unknown, allowed: readonly string[]): string | null => {
+    if (typeof v !== 'string') return null;
+    return allowed.includes(v) ? v : null;
+  };
+  const multi = (v: unknown, allowed: readonly string[], maxLen: number): string[] | null => {
+    if (!Array.isArray(v)) return null;
+    const filtered = v.filter((x): x is string => typeof x === 'string' && allowed.includes(x));
+    if (filtered.length === 0) return null;
+    return filtered.slice(0, maxLen);
+  };
+
+  const q3 = single(o.q3_prime, ['A', 'B', 'C', 'D', 'E']);
+  const q4 = multi(o.q4_prime, ['A', 'B', 'C', 'D'], 2);
+  const q5 = single(o.q5_prime, ['A', 'B', 'C', 'D', 'E', 'F']);
+  const q6 = single(o.q6_prime, ['A', 'B', 'C', 'D']);
+  const q7 = multi(o.q7_prime, ['A', 'B', 'C', 'D'], 2);
+  const q8raw = typeof o.q8_prime === 'string' ? o.q8_prime.trim() : '';
+  const q8 = q8raw === '' ? null : q8raw.slice(0, 500);
+
+  if (q3 == null && q4 == null && q5 == null && q6 == null && q7 == null && q8 == null) return null;
+
+  return {
+    q3_prime: q3 as DWInput['q3_prime'],
+    q4_prime: q4 as DWInput['q4_prime'],
+    q5_prime: q5 as DWInput['q5_prime'],
+    q6_prime: q6 as DWInput['q6_prime'],
+    q7_prime: q7 as DWInput['q7_prime'],
+    q8_prime: q8,
   };
 }

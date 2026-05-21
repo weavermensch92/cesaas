@@ -32,6 +32,13 @@ import type {
   PlaybookEntry,
   Segment,
 } from 'harness2/types.ts';
+import {
+  DW_AXES,
+  type AxisWeights,
+  type DWAxis,
+  dotAxes,
+  normalizePreferenceAxes,
+} from '@hd/core/decision_weight';
 
 export interface ScoreLeadResult {
   ok: boolean;
@@ -77,7 +84,7 @@ export async function scoreLead(leadId: string): Promise<ScoreLeadResult> {
 
   const { data: latestResponse } = await db()
     .from('responses')
-    .select('nps, future_subscription, axis_data')
+    .select('nps, future_subscription, axis_data, preference_axes')
     .eq('lead_id', leadId)
     .order('captured_at', { ascending: false })
     .limit(1)
@@ -106,13 +113,29 @@ export async function scoreLead(leadId: string): Promise<ScoreLeadResult> {
     } : {}),
   };
 
-  // ---- 4. *Core 적용 ----------------------------------------------------
+  // ---- 4. *Core 적용 + R_10.01.005 dw_alignment_bonus ------------------
+  // R_10.01.005는 evaluator로 처리 불가(멀티라인 action·dot()/clip() 함수).
+  // applyLeadScoringCore가 R_10.01.005 condition을 false로 우회한 뒤 별도 산출 → score 가산.
+  // preference_axes(1~5) → (v-1)/4 정규화 → hd_strength_matrix[segment] 내적(0~6) → round*2.5 clip [0,15].
   let score: number;
   let grade: 'A' | 'B' | 'C' | 'D';
   let priority: string;
+  let dwAlignment: number | null = null;
+  let dwBonus = 0;
   try {
     const scoringResult = applyLeadScoringCore(scoringYaml.body, ctx);
     score = scoringResult.score;
+
+    const dw = computeDwAlignmentBonus(scoringYaml.body, latestResponse?.preference_axes, lead.segment);
+    if (dw) {
+      dwAlignment = dw.alignment;
+      dwBonus = dw.bonus;
+      score = Math.max(
+        scoringYaml.body.output.clamp_min,
+        Math.min(scoringYaml.body.output.clamp_max, score + dwBonus),
+      );
+    }
+
     grade = applyLeadQualityCore(qualityYaml.body, score);
     priority = classifyLeadPriorityCore(classYaml.body, score);
   } catch (e) {
@@ -125,15 +148,17 @@ export async function scoreLead(leadId: string): Promise<ScoreLeadResult> {
     `r10.01@${scoringYaml.version}|r10.02@${qualityYaml.version}|r10.05@${classYaml.version}`;
 
   // ---- 5. UPDATE leads --------------------------------------------------
+  const leadUpdate: Record<string, unknown> = {
+    score,
+    grade,
+    priority,
+    score_at: new Date().toISOString(),
+    score_version: scoreVersion,
+  };
+  if (dwAlignment != null) leadUpdate.dw_alignment = dwAlignment;
   const { error: updErr } = await db()
     .from('leads')
-    .update({
-      score,
-      grade,
-      priority,
-      score_at: new Date().toISOString(),
-      score_version: scoreVersion,
-    })
+    .update(leadUpdate)
     .eq('id', leadId);
   if (updErr) {
     log('error', 'scoreLead: leads UPDATE failed', { lead_id: leadId, db: updErr.message });
@@ -211,6 +236,39 @@ export async function scoreLead(leadId: string): Promise<ScoreLeadResult> {
     }
   }
 
-  log('info', 'scoreLead done', { lead_id: leadId, score, grade, priority });
+  log('info', 'scoreLead done', {
+    lead_id: leadId, score, grade, priority,
+    ...(dwAlignment != null ? { dw_alignment: dwAlignment, dw_bonus: dwBonus } : {}),
+  });
   return { ok: true, lead_id: leadId, score, grade, priority, score_version: scoreVersion };
+}
+
+// R_10.01.005 dw_alignment_bonus — preference_axes(1~5) × hd_strength_matrix[segment] 내적.
+// hd_strength_matrix 또는 segment·preference_axes 미존재 시 null 반환 (score 영향 0).
+function computeDwAlignmentBonus(
+  scoringRule: LeadScoringYaml,
+  preferenceAxes: unknown,
+  segment: Segment | null | undefined,
+): { alignment: number; bonus: number } | null {
+  if (!segment || !preferenceAxes || typeof preferenceAxes !== 'object') return null;
+
+  const matrix = (scoringRule as unknown as {
+    hd_strength_matrix?: Record<string, Partial<Record<DWAxis, number>>>;
+  }).hd_strength_matrix;
+  if (!matrix) return null;
+
+  const hdStrength = matrix[segment];
+  if (!hdStrength) return null;
+
+  const axesByName: Partial<Record<DWAxis, number>> = {};
+  for (const axis of DW_AXES) {
+    const v = (preferenceAxes as Record<string, unknown>)[axis];
+    if (typeof v === 'number' && Number.isFinite(v)) axesByName[axis] = v;
+  }
+  if (Object.keys(axesByName).length === 0) return null;
+
+  const normalized: AxisWeights = normalizePreferenceAxes(axesByName);
+  const alignment = dotAxes(normalized, hdStrength);  // 0~6
+  const bonus = Math.max(0, Math.min(15, Math.round(alignment * 2.5)));
+  return { alignment, bonus };
 }
