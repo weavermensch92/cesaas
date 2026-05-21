@@ -1,31 +1,36 @@
 # R_10.01 — LeadScoring
-# Voice 응답 + Sensor 활동 + CRM 데이터를 종합한 0~100 점수.
+# Voice 응답 + Sensor 활동 + CRM 데이터 + DW 정렬을 종합한 0~100 점수.
 # 코드 외부 룰. R_20.01 RuleEditor → R_20.02 Validation → R_20.03 Deployment 사이클로 정정.
 # 로드: harness2/lib loadRules('R_10.01_LeadScoring').
 #
-# 시드 4 규칙 (v1). 정밀도는 외부 컨트롤 사이클로 끌어올림 (H_외부컨트롤).
+# 시드 5 규칙 (v1.1). 정밀도는 외부 컨트롤 사이클로 끌어올림 (H_외부컨트롤).
 #
 # 주의: 004_unified.sql의 score_lead() plpgsql은 v0.1의 weights 스냅샷 — Phase D에서
-# 이 YAML 기반 Edge Function 호출로 교체 예정. 그 전까지 양쪽이 약간 다른 점수를 낼 수 있음.
+# 이 YAML 기반 Edge Function 호출로 교체. 그 전까지 양쪽이 약간 다른 점수를 낼 수 있음.
 
 rule_id: R_10.01_LeadScoring
-version: 1
-description: '리드 점수 산출 (0~100). Voice 응답·Sensor 활동·CRM 데이터 종합.'
+version: 1.1
+description: '리드 점수 산출 (0~100). Voice 응답·Sensor 활동·CRM·DW 정렬 종합.'
 harness: 2
 v1_v2: v1
 status: active
-last_modified: '2026-05-19T00:00:00Z'
+last_modified: '2026-05-22T00:00:00Z'
 modified_by: 'weaver@gridge.co.kr'
 
 input_schema:
   response:
     nps: int                    # 0~10
     future_subscription: bool   # 향후 수신 동의
+    preference_axes: object | null
+    # 6축 DW 점수 (1~5 직접 입력 또는 R_10.10 추론 후 정규화 1~5)
+    # 키: price · fuel · durability · service · reference · versatility
   lead:
     segment: string             # 'mining' / 'key_account' / 'general' / 'other'
     sensor_activity_count: int  # 7 화면 누적 캡쳐 수
     deal_amount_rub: int        # 거래액 (RUB)
     region: string              # 'ru' / 'kr'
+  reference:
+    hd_strength: object         # segment별 6축 0~1 강점 (R_10.01.005 입력)
 
 rules:
   - id: R_10.01.001_nps_high
@@ -52,8 +57,32 @@ rules:
     action: 'score += 30'
     severity: SHOULD
 
+  # 2026-05-22 신설
+  - id: R_10.01.005_dw_alignment_bonus
+    description: '응답 DW 6축(preference_axes, 1~5)과 segment별 HD 강점 매트릭스 내적 → 최대 +15'
+    condition: 'response.preference_axes != null AND lead.segment != null AND hd_strength[lead.segment] != null'
+    action: |
+      # preference_axes 1~5 → 0~1 정규화 후 hd_strength[segment] (0~1)와 내적
+      normalized = { k: (v - 1) / 4 for k, v in response.preference_axes.items() }
+      alignment = dot(normalized, hd_strength[lead.segment])    # 0~6
+      score += clip(round(alignment * 2.5), 0, 15)
+    severity: SHOULD
+
+# HD 강점 매트릭스는 별도 파일/룰에서 관리 (V_50.10 / R_10.10 hd_strength_matrix 절).
+# 시드 값 — 출장 후 HD 인사이트로 정정 대기.
+hd_strength_matrix:
+  mining:               { price: 0.4, fuel: 0.9, durability: 0.9, service: 0.6, reference: 0.7, versatility: 0.3 }
+  key_account:          { price: 0.5, fuel: 0.7, durability: 0.8, service: 0.9, reference: 0.9, versatility: 0.5 }
+  construction_heavy:   { price: 0.6, fuel: 0.7, durability: 0.8, service: 0.6, reference: 0.7, versatility: 0.6 }
+  agriculture:          { price: 0.8, fuel: 0.5, durability: 0.6, service: 0.5, reference: 0.3, versatility: 0.8 }
+  forestry:             { price: 0.5, fuel: 0.6, durability: 0.8, service: 0.5, reference: 0.4, versatility: 0.7 }
+  general_construction: { price: 0.8, fuel: 0.5, durability: 0.6, service: 0.6, reference: 0.4, versatility: 0.7 }
+  rental:               { price: 0.7, fuel: 0.6, durability: 0.7, service: 0.7, reference: 0.3, versatility: 0.8 }
+  other:                { price: 0.5, fuel: 0.5, durability: 0.5, service: 0.5, reference: 0.5, versatility: 0.5 }
+
 output:
   type: int
   clamp_min: 0
   clamp_max: 100
   default: 0
+  # 최대 합 = 30 + 40 + 20 + 30 + 15 = 135 → clamp 100. R_10.02 임계(80/50/25) 변동 없음.
