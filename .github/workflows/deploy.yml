@@ -34,19 +34,11 @@ jobs:
       # PoC v1 — typecheck 실패해도 deploy 차단하지 않음 (workspace간 cross-ref 미완성 영역 존재).
       # Production 가까울 때 `|| true` 제거.
 
-  guard-secrets:
-    runs-on: ubuntu-latest
-    outputs:
-      has_prod_secrets: ${{ steps.s.outputs.has_prod }}
-      has_fly_token:    ${{ steps.s.outputs.has_fly }}
-    steps:
-      - id: s
-        env:
-          REF_PROD: ${{ secrets.SUPABASE_REF_PROD }}
-          FLY_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: |
-          [ -n "$REF_PROD"  ] && echo "has_prod=true" >> $GITHUB_OUTPUT || echo "has_prod=false" >> $GITHUB_OUTPUT
-          [ -n "$FLY_TOKEN" ] && echo "has_fly=true"  >> $GITHUB_OUTPUT || echo "has_fly=false"  >> $GITHUB_OUTPUT
+  # NOTE 2026-05-22: guard-secrets job 제거.
+  # 이유: guard-secrets에 `environment: production` 미선언이라 environment-scoped secrets
+  # (SUPABASE_REF_PROD 등)을 항상 빈 값으로 봐서 `deploy-prod`가 영구 스킵됐음.
+  # `deploy-admin-fly`의 fail-loudly 패턴(31ea5b6) 일관성으로, deploy-prod도 무조건 시도하고
+  # 시작 시 explicit verify로 즉시 실패하게 변경.
 
   deploy-staging:
     if: github.ref == 'refs/heads/staging'
@@ -74,8 +66,8 @@ jobs:
           cd ../../T_Test/backend   && supabase functions deploy --project-ref "$REF" --no-verify-jwt admin-test-summary
 
   deploy-prod:
-    if: github.ref == 'refs/heads/main' && needs.guard-secrets.outputs.has_prod_secrets == 'true'
-    needs: [typecheck, guard-secrets]
+    if: github.ref == 'refs/heads/main'
+    needs: [typecheck]
     runs-on: ubuntu-latest
     environment: production
     env:
@@ -84,6 +76,17 @@ jobs:
       DB_PWD: ${{ secrets.SUPABASE_DB_PASSWORD_PROD }}
     steps:
       - uses: actions/checkout@v4
+      - name: Verify Supabase secrets
+        run: |
+          missing=()
+          [ -z "$SUPABASE_ACCESS_TOKEN" ] && missing+=("SUPABASE_ACCESS_TOKEN")
+          [ -z "$REF" ]                  && missing+=("SUPABASE_REF_PROD")
+          [ -z "$DB_PWD" ]               && missing+=("SUPABASE_DB_PASSWORD_PROD")
+          if [ ${#missing[@]} -ne 0 ]; then
+            echo "::error::Missing production environment secrets: ${missing[*]}. Set them in Settings → Environments → production."
+            exit 1
+          fi
+          echo "All required prod secrets present (REF length: ${#REF})."
       - uses: supabase/setup-cli@v1
         with: { version: latest }
       - name: DB migrations
