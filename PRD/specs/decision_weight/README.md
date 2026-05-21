@@ -44,3 +44,7 @@
 - **간접 추론 (R_10.10)**: Q3'~Q7' 5문항 + Q8' 자유응답 → 6축 추론 → 1~5 변환 후 저장
 
 둘 다 `responses.preference_axes` 컬럼에 저장됩니다. 구분은 `dw_extraction.method`로 (없으면 직접 입력).
+
+## 후속 정리 PRD
+
+본 인프라 배포(2026-05-21) 후 남은 4 미완 영역 — `computeDw()` 산출 함수·간접질문 UI·Visitor PWA DW 적용·Admin 시각화 — 은 **[../follow_up_cleanup/README.md](../follow_up_cleanup/README.md)** 에 사양 정리.
