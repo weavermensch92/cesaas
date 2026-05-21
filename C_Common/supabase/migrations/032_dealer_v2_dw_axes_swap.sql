@@ -24,9 +24,9 @@ BEGIN;
 -- ============================================================================
 -- 1. 기존 CA 6 질문 — axis 컬럼 NULL로
 -- ============================================================================
+-- survey_questions에는 updated_at 컬럼이 없음 — axis만 NULL로 (003_voice.sql 스키마 확인 결과).
 UPDATE survey_questions
-   SET axis = NULL,
-       updated_at = now()
+   SET axis = NULL
  WHERE survey_id = 'survey_v1_dealer'
    AND id IN (
      'q_v1d_scale',
