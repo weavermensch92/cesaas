@@ -183,12 +183,12 @@ input,textarea,select{font:inherit;color:inherit;}
 
 <header class="topbar">
   <span class="brand"><span class="brand-mark">H</span><span class="brand-name"><b>HD</b>건설기계 · Dealer v2</span></span>
-  <span class="crumb" id="surveyCrumb">설문 로딩…</span>
+  <span class="crumb" id="surveyCrumb">Загрузка опроса…</span>
   <span class="spacer"></span>
   <span class="pill" id="tokenStatus">no token</span>
   <span class="pill" id="netPill"><span class="net-dot" id="netDot"></span><span id="netLabel">Online</span></span>
-  <span class="pill" id="queuePill">큐 0</span>
-  <a id="verSwitch" href="/dealer/" title="Dealer v1 (현행) 보기"
+  <span class="pill" id="queuePill">Очередь 0</span>
+  <a id="verSwitch" href="/dealer/" title="Открыть Dealer v1 (текущая)"
      class="pill"
      style="text-decoration:none;color:inherit;font-weight:600;letter-spacing:0.04em;">
     &larr; v1
@@ -208,7 +208,7 @@ input,textarea,select{font:inherit;color:inherit;}
     </div>
 
     <div class="section-block">
-      <div class="panel-head" id="lbl_target_head">상담 대상</div>
+      <div class="panel-head" id="lbl_target_head">Информация о клиенте</div>
       <div class="target">
         <label id="lbl_company">Company *</label><input id="inp_company" type="text" autocomplete="off"/>
         <label id="lbl_contact">Contact</label><input id="inp_contact" type="text" autocomplete="off"/>
@@ -218,7 +218,7 @@ input,textarea,select{font:inherit;color:inherit;}
     </div>
 
     <div class="section-block">
-      <div class="panel-head"><b>8</b> Segments · <span id="lbl_hypothesis">가설</span></div>
+      <div class="panel-head"><b>8</b> Segments · <span id="lbl_hypothesis">гипотеза</span></div>
       <div class="seg-list" id="segList"></div>
       <div class="hint" id="lbl_hypothesis_help"></div>
     </div>
@@ -229,19 +229,19 @@ input,textarea,select{font:inherit;color:inherit;}
   <!-- CENTER — Summary · Radar · 회사 프로필 2x3 -->
   <section class="panel">
     <div class="section-block">
-      <div class="panel-head" id="lbl_summary_head">평균 · 최강 · 최약</div>
+      <div class="panel-head" id="lbl_summary_head">Среднее · Сильная · Слабая</div>
       <div class="summary" id="summary"></div>
     </div>
 
     <div class="section-block">
-      <div class="panel-head" id="lbl_radar_head">포지셔닝 맵 · 답변 기반 자동 도출</div>
+      <div class="panel-head" id="lbl_radar_head">Карта позиционирования · автовывод по ответам</div>
       <div class="radar-wrap" id="radarWrap">
-        <span class="radar-empty">설문 응답이 시작되면 표시됩니다</span>
+        <span class="radar-empty">Появится после ответов</span>
       </div>
     </div>
 
     <div class="section-block">
-      <div class="panel-head" id="lbl_profile_head">회사 프로필 (6 axes · 2×3)</div>
+      <div class="panel-head" id="lbl_profile_head">Профиль компании (6 осей)</div>
       <div class="profile-grid" id="profileGrid"></div>
     </div>
   </section>
@@ -249,7 +249,7 @@ input,textarea,select{font:inherit;color:inherit;}
   <!-- RIGHT — 마케팅 + NPS + 동의 · 페이지네이션 · 슬라이드 -->
   <aside class="panel right-fixed">
     <div class="page-nav">
-      <span class="panel-head" style="margin:0;flex-shrink:0;"><span id="lbl_interview">고객 인터뷰</span></span>
+      <span class="panel-head" style="margin:0;flex-shrink:0;"><span id="lbl_interview">Интервью клиента</span></span>
       <div class="page-nav-dots" id="pageDots"></div>
       <span class="page-counter" id="pageCounter">0/0</span>
     </div>
@@ -257,10 +257,10 @@ input,textarea,select{font:inherit;color:inherit;}
       <div class="pager-track" id="pagerTrack"></div>
     </div>
     <div class="page-controls">
-      <button class="btn ghost" id="btnPrev" disabled>← 이전</button>
-      <button class="btn" id="btnNext">다음 →</button>
-      <button class="btn primary" id="btnSubmit" disabled style="display:none;">저장 + CRM Sync</button>
-      <button class="btn ghost" id="btnReset" style="display:none;">새 상담</button>
+      <button class="btn ghost" id="btnPrev" disabled>← Назад</button>
+      <button class="btn" id="btnNext">Далее →</button>
+      <button class="btn primary" id="btnSubmit" disabled style="display:none;">Сохранить + CRM Sync</button>
+      <button class="btn ghost" id="btnReset" style="display:none;">Новое интервью</button>
     </div>
     <div id="toastSlot"></div>
   </aside>
@@ -292,7 +292,13 @@ const I18N = {
        submit:'Сохранить + CRM Sync', reset:'Новое интервью',
        ok_sent:'Сохранено + отправлено', ok_offline:'Сохранено локально (offline)',
        loading:'Загрузка опроса…', radar_empty:'Появится после ответов', survey_id:'Опрос',
-       avg:'Среднее', strong:'Сильнейшая ось', weak:'Слабейшая' },
+       avg:'Среднее', strong:'Сильнейшая ось', weak:'Слабейшая',
+       prev:'← Назад', next:'Далее →',
+       no_token:'Требуется вход',
+       no_token_hint:'Выпустите токен в админ-консоли (раздел дилеров) и перейдите по URL с параметром <code>?token=...</code>',
+       radar_axes_short:'Нужно ≥ 3 осей (сейчас {n})',
+       load_error_prefix:'Ошибка загрузки опроса',
+       api_base_missing:'API_BASE не настроен' },
   en:{ dealer_profile:'Dealer Profile',
        hypothesis:'hypothesis', hypothesis_help:'Dealer toggles hypothesized segment. Server re-classifies independently — hypothesis accuracy measured.',
        summary_head:'Avg · Strong · Weak', profile_head:'Company profile (6 axes)',
@@ -302,7 +308,13 @@ const I18N = {
        submit:'Save + CRM Sync', reset:'New interview',
        ok_sent:'Saved + sent', ok_offline:'Saved locally (offline)',
        loading:'Loading survey…', radar_empty:'Shows up after answers', survey_id:'Survey',
-       avg:'Average', strong:'Strongest axis', weak:'Weakest' },
+       avg:'Average', strong:'Strongest axis', weak:'Weakest',
+       prev:'← Prev', next:'Next →',
+       no_token:'Login required',
+       no_token_hint:'Issue a token in the admin console (dealers section), then open the URL with <code>?token=...</code>',
+       radar_axes_short:'Need ≥ 3 axes (now {n})',
+       load_error_prefix:'Failed to load survey',
+       api_base_missing:'API_BASE is not configured' },
   ko:{ dealer_profile:'딜러 프로필',
        hypothesis:'가설', hypothesis_help:'딜러가 인터뷰 중 가정하는 segment 라벨. 서버는 별도로 자동 재분류 — 가설 vs 자동 정확도가 측정됨.',
        summary_head:'평균 · 최강 · 최약', profile_head:'회사 프로필 (6 axes · 2×3)',
@@ -312,7 +324,13 @@ const I18N = {
        submit:'저장 + CRM Sync', reset:'새 상담',
        ok_sent:'저장 + 송출 완료', ok_offline:'오프라인 저장됨',
        loading:'설문 로딩 중…', radar_empty:'답변 시작되면 표시', survey_id:'설문',
-       avg:'평균', strong:'최강 축', weak:'최약 축' },
+       avg:'평균', strong:'최강 축', weak:'최약 축',
+       prev:'← 이전', next:'다음 →',
+       no_token:'로그인 필요',
+       no_token_hint:'어드민 콘솔(딜러 발급 메뉴)에서 토큰을 발급받은 후 URL에 <code>?token=...</code>로 진입하세요',
+       radar_axes_short:'레이더에 필요한 축 ≥ 3 (현재 {n})',
+       load_error_prefix:'설문 로드 실패',
+       api_base_missing:'API_BASE 미설정' },
 };
 
 /* ============================================================================ */
@@ -362,7 +380,7 @@ async function refreshQueue(){state.queueCount=await queueCountFn(); const el=do
 /* API */
 const API_BASE = (window.HD_API_BASE || '').replace(/\/$/,'');
 async function postOne(rec){
-  if (!API_BASE) throw new Error('API_BASE 미설정');
+  if (!API_BASE) throw new Error(t('api_base_missing'));
   const res = await fetch(`${API_BASE}/responses-receive`, {
     method:'POST',
     headers:{
@@ -386,7 +404,7 @@ async function drainQueue(){
 }
 
 async function loadSurvey(){
-  if (!API_BASE) { state.loadError = 'API_BASE 미설정'; renderQA(); return; }
+  if (!API_BASE) { state.loadError = t('api_base_missing'); renderQA(); return; }
   try {
     const r = await fetch(`${API_BASE}/surveys-get?audience=dealer`);
     if (!r.ok) throw new Error(`${r.status}: ${await r.text()}`);
@@ -458,7 +476,7 @@ function renderRadar(){
   const wrap = document.getElementById('radarWrap');
   const N = state.axes.length;
   if (N < 3) {
-    wrap.innerHTML = `<span class="radar-empty">${state.axes.length ? `radar 필요 axes ≥ 3 (현재 ${N})` : t('radar_empty')}</span>`;
+    wrap.innerHTML = `<span class="radar-empty">${state.axes.length ? t('radar_axes_short').replace('{n}', N) : t('radar_empty')}</span>`;
     document.getElementById('summary').innerHTML = '';
     return;
   }
@@ -537,7 +555,7 @@ function renderQA(){
   if (track) track.innerHTML = '';
 
   if (state.loadError) {
-    track.innerHTML = `<div class="pager-page"><div class="toast err">설문 로드 실패: ${state.loadError}</div></div>`;
+    track.innerHTML = `<div class="pager-page"><div class="toast err">${t('load_error_prefix')}: ${state.loadError}</div></div>`;
     renderPageNav(1);
     return;
   }
@@ -619,8 +637,8 @@ function renderDealerCard(){
   if (!state.dealerId) {
     card.className = 'dealer-card empty';
     card.innerHTML = `<div class="dc-row"><span>No token</span></div>
-      <div class="dc-id">로그인 필요</div>
-      <div class="dc-meta">/voice/dealers 어드민에서 토큰 발급 후 URL <code>?token=...</code> 으로 진입</div>`;
+      <div class="dc-id">${t('no_token')}</div>
+      <div class="dc-meta">${t('no_token_hint')}</div>`;
     return;
   }
   // JWT exp 추출 (옵션)
@@ -850,6 +868,10 @@ function applyI18N(){
   set('lbl_target_head','target_head'); set('lbl_company','company'); set('lbl_contact','contact');
   set('lbl_phone','phone'); set('lbl_notes','notes'); set('lbl_radar_head','radar_head');
   set('lbl_interview','interview');
+  set('btnPrev','prev'); set('btnNext','next');
+  set('btnSubmit','submit'); set('btnReset','reset');
+  const crumb = document.getElementById('surveyCrumb');
+  if (crumb) crumb.textContent = state.survey ? `${t('survey_id')}: ${state.survey.id}` : t('loading');
   document.getElementById('netLabel').textContent = state.online ? t('net_on') : t('net_off');
   document.getElementById('tokenStatus').textContent = state.dealerId ? `dealer:${state.dealerId.slice(0,12)}` : 'no token';
   refreshQueue();
