@@ -1,0 +1,154 @@
+# R_10.10 — DecisionWeight (간접 질문 → DW 6축 추론)
+# 응답자의 마케팅 11질문 중 간접 6개(Q3'~Q8')에서 DW 6축 가중치 추론.
+# 산출 결과는 responses.preference_axes(1~5 척도)에 저장 — 딜러 v2 직접 입력 경로와 공존.
+# v1 모드:
+#   - 룰 모드 (Q3'~Q7' 5문항) → 클라이언트/서버 즉시 산출 (오프라인 가능)
+#   - LLM 보조 (Q8' 자유응답) → 서버 비동기 추출
+# 코드 외부 룰. R_20.01 RuleEditor로 정정. 로드: harness2/lib loadRules('R_10.10_DecisionWeight').
+#
+# 참고:
+#   - preference_axes 컬럼: 025_dealer_v2_preference_axes.sql (1~5 정수)
+#   - dw_raw_answers·dw_extraction 컬럼: 031_dw_indirect_inference.sql (감사·재계산용)
+#   - 6 axis ID 표준 (prd-v1 기존 스키마와 일치): price · fuel · durability · service · reference · versatility
+
+rule_id: R_10.10_DecisionWeight
+version: 1
+description: '간접 5질문 + 자유응답 1 → DW 6축(price·fuel·durability·service·reference·versatility) 추론'
+harness: 2
+v1_v2: v1
+status: active
+last_modified: '2026-05-22T00:00:00Z'
+modified_by: 'weaver@gridge.co.kr'
+
+input_schema:
+  q3_prime: enum [A, B, C, D, E]           # 가장 큰 운영 이슈 (단일)
+  q4_prime: array<enum [A, B, C, D]> max=2 # 신규 도입 시 우선 검증 (다중)
+  q5_prime: enum [A, B, C, D, E, F]        # 경쟁사 대비 약점 (단일)
+  q6_prime: enum [A, B, C, D]              # 12개월 영업 기회 (단일)
+  q7_prime: array<enum [A, B, C, D]> max=2 # 본사 지원 (다중)
+  q8_prime: string max=500 optional         # 자유응답
+
+# ----------------------------------------------------------------------------
+# 보기별 DW 6축 가중치 매트릭스 (행 합 = 1.0)
+# ----------------------------------------------------------------------------
+weight_matrix:
+  q3_prime:
+    A: { price: 0.6, fuel: 0.4, durability: 0.0, service: 0.0, reference: 0.0, versatility: 0.0 }  # 연료비
+    B: { price: 0.0, fuel: 0.7, durability: 0.3, service: 0.0, reference: 0.0, versatility: 0.0 }  # 다운타임
+    C: { price: 0.0, fuel: 0.3, durability: 0.0, service: 0.7, reference: 0.0, versatility: 0.0 }  # 부품 조달
+    D: { price: 0.4, fuel: 0.0, durability: 0.4, service: 0.0, reference: 0.2, versatility: 0.0 }  # 잔존가치
+    E: { price: 0.0, fuel: 0.0, durability: 0.0, service: 0.0, reference: 0.0, versatility: 1.0 }  # 다용도 부족
+  q4_prime:
+    A: { price: 0.5, fuel: 0.5, durability: 0.0, service: 0.0, reference: 0.0, versatility: 0.0 }  # TCO
+    B: { price: 0.0, fuel: 0.0, durability: 0.2, service: 0.0, reference: 0.8, versatility: 0.0 }  # 레퍼런스
+    C: { price: 0.0, fuel: 0.0, durability: 0.0, service: 0.5, reference: 0.0, versatility: 0.5 }  # 현장 데모
+    D: { price: 0.0, fuel: 0.0, durability: 0.3, service: 0.7, reference: 0.0, versatility: 0.0 }  # 무상보증
+  q5_prime:
+    A: { price: 1.0, fuel: 0.0, durability: 0.0, service: 0.0, reference: 0.0, versatility: 0.0 }  # 초기가
+    B: { price: 0.0, fuel: 1.0, durability: 0.0, service: 0.0, reference: 0.0, versatility: 0.0 }  # 연비
+    C: { price: 0.0, fuel: 0.0, durability: 1.0, service: 0.0, reference: 0.0, versatility: 0.0 }  # 고장
+    D: { price: 0.0, fuel: 0.0, durability: 0.0, service: 1.0, reference: 0.0, versatility: 0.0 }  # 서비스망
+    E: { price: 0.0, fuel: 0.0, durability: 0.0, service: 0.0, reference: 1.0, versatility: 0.0 }  # 인지도
+    F: { price: 0.0, fuel: 0.0, durability: 0.0, service: 0.0, reference: 0.0, versatility: 1.0 }  # 옵션
+  q6_prime:
+    A: { price: 0.0, fuel: 0.0, durability: 0.5, service: 0.0, reference: 0.5, versatility: 0.0 }  # 인프라
+    B: { price: 0.0, fuel: 0.7, durability: 0.3, service: 0.0, reference: 0.0, versatility: 0.0 }  # 광산
+    C: { price: 0.0, fuel: 0.0, durability: 0.0, service: 0.4, reference: 0.0, versatility: 0.6 }  # 렌탈
+    D: { price: 0.0, fuel: 0.0, durability: 0.0, service: 0.0, reference: 0.0, versatility: 1.0 }  # 농기계
+  q7_prime:
+    A: { price: 1.0, fuel: 0.0, durability: 0.0, service: 0.0, reference: 0.0, versatility: 0.0 }  # 가격 프로모션
+    B: { price: 0.0, fuel: 0.0, durability: 0.0, service: 1.0, reference: 0.0, versatility: 0.0 }  # 24h 서비스
+    C: { price: 0.0, fuel: 0.0, durability: 0.0, service: 0.0, reference: 1.0, versatility: 0.0 }  # 영업 자료
+    D: { price: 0.0, fuel: 0.0, durability: 0.5, service: 0.0, reference: 0.0, versatility: 0.5 }  # 데모기
+
+# ----------------------------------------------------------------------------
+# 산출 규칙
+# ----------------------------------------------------------------------------
+rules:
+  - id: R_10.10.001_rule_mode
+    description: '5 간접질문 가중치 평균 산출 (0~1 정규화)'
+    condition: 'any_of(q3_prime, q4_prime, q5_prime, q6_prime, q7_prime) != null'
+    action: |
+      # 각 축에 대해 응답된 질문의 보기 가중치를 평균
+      for axis in [price, fuel, durability, service, reference, versatility]:
+        weighted = sum_over_responded_questions(weight_matrix[q][choice][axis])
+        count = num_responded_questions
+        dw_normalized[axis] = clamp(weighted / max(count, 1), 0, 1)
+    severity: MUST
+
+  - id: R_10.10.002_missing_prior
+    description: '응답한 질문 0개인 축은 prior 0.5'
+    condition: 'count(responded_questions) == 0'
+    action: 'dw_normalized[axis] = 0.5'
+    severity: MUST
+
+  - id: R_10.10.003_llm_assist
+    description: "Q8' 자유응답 LLM 추출 후 가중 평균 (룰 0.7 + LLM 0.3)"
+    condition: 'length(q8_prime) > 5 AND llm_result.confidence >= 0.6'
+    action: |
+      for axis in DW_AXES:
+        dw_normalized[axis] = 0.7 * dw_normalized[axis] + 0.3 * llm_result.dw_partial[axis]
+      dw_extraction.method = 'rule+llm'
+    severity: SHOULD
+
+  - id: R_10.10.004_llm_low_confidence
+    description: 'LLM confidence < 0.6 시 무시'
+    condition: 'length(q8_prime) > 5 AND llm_result.confidence < 0.6'
+    action: "dw_extraction.method = 'rule_only_low_llm_confidence'"
+    severity: MAY
+
+  - id: R_10.10.005_to_preference_axes
+    description: '0~1 정규화 결과를 preference_axes 1~5 정수로 변환 (1 + round(4 * v))'
+    condition: 'dw_normalized != null'
+    action: |
+      for axis in DW_AXES:
+        preference_axes[axis] = clamp(1 + round(4 * dw_normalized[axis]), 1, 5)
+    severity: MUST
+
+# ----------------------------------------------------------------------------
+# LLM 보조 설정 (Q8' 자유응답)
+# ----------------------------------------------------------------------------
+llm_assist:
+  enabled: true
+  prompt_template: 'dw_extraction_q8'      # R_10.06 PromptTemplates 후속 추가
+  confidence_threshold: 0.6
+  rule_weight: 0.7
+  llm_weight: 0.3
+  trigger: 'length(q8_prime) > 5'
+  async: true                              # 서버 비동기 큐 — 부스 즉시성 영향 없음
+
+# ----------------------------------------------------------------------------
+# 출력 형식
+# ----------------------------------------------------------------------------
+output:
+  type: object
+  schema:
+    dw_normalized:                          # 0~1 (내부 산출)
+      price: float [0, 1]
+      fuel: float [0, 1]
+      durability: float [0, 1]
+      service: float [0, 1]
+      reference: float [0, 1]
+      versatility: float [0, 1]
+    preference_axes:                        # 1~5 정수 (DB responses.preference_axes 형식)
+      price: int [1, 5]
+      fuel: int [1, 5]
+      durability: int [1, 5]
+      service: int [1, 5]
+      reference: int [1, 5]
+      versatility: int [1, 5]
+    dw_extraction:
+      method: enum [rule, rule+llm, rule_only_low_llm_confidence]
+      rule_version: string
+      llm_run_id: string | null
+      llm_confidence: float | null
+
+# ----------------------------------------------------------------------------
+# 외부 컨트롤 (위버 정정 가능 영역)
+# ----------------------------------------------------------------------------
+external_control:
+  - weight_matrix.*
+  - llm_assist.confidence_threshold
+  - llm_assist.rule_weight
+  - llm_assist.llm_weight
+  - rules.R_10.10.002_missing_prior.action  # prior 값
