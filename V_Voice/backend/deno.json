@@ -10,7 +10,8 @@
     "yaml": "npm:yaml@^2.4.5",
     "jose": "npm:jose@^5.6.3",
     "shared/": "./shared/",
-    "harness2/": "../../R_Runtime/lib/"
+    "harness2/": "../../R_Runtime/lib/",
+    "@hd/core/decision_weight": "../../C_Common/packages/core/src/decision_weight.ts"
   },
   "fmt": { "lineWidth": 100, "indentWidth": 2, "singleQuote": true },
   "lint": { "rules": { "tags": ["recommended"] } }
