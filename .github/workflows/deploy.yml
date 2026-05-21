@@ -100,7 +100,7 @@ jobs:
 
   deploy-admin-fly:
     if: github.ref == 'refs/heads/main' && needs.guard-secrets.outputs.has_fly_token == 'true'
-    needs: [deploy-prod, guard-secrets]
+    needs: [typecheck, guard-secrets]
     runs-on: ubuntu-latest
     environment: production
     steps:
