@@ -99,12 +99,21 @@ jobs:
           cd ../../T_Test/backend   && supabase functions deploy --project-ref "$REF" --no-verify-jwt admin-test-summary
 
   deploy-admin-fly:
-    if: github.ref == 'refs/heads/main' && needs.guard-secrets.outputs.has_fly_token == 'true'
-    needs: [typecheck, guard-secrets]
+    if: github.ref == 'refs/heads/main'
+    needs: [typecheck]
     runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@v4
+      - name: Verify FLY_API_TOKEN
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          if [ -z "$FLY_API_TOKEN" ]; then
+            echo "::error::FLY_API_TOKEN is not set. Add it to repository or production environment secrets."
+            exit 1
+          fi
+          echo "FLY_API_TOKEN present (length: ${#FLY_API_TOKEN})"
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - name: Deploy to Fly.io
         run: |
