@@ -50,10 +50,12 @@ function serve() {
  *  langSwitch: if set, the page has a <select id="langSel"> we drive to that value. */
 const SHOTS = [
   // Real V_Voice surfaces — bilingual via langSel
-  { id: 'voice-dealer_ru',    url: '/V_Voice/dealer/index.html',  w: 1180, h: 880, langSwitch: 'ru' },
-  { id: 'voice-dealer_ko',    url: '/V_Voice/dealer/index.html',  w: 1180, h: 880, langSwitch: 'ko' },
-  { id: 'voice-visitor_ru',   url: '/V_Voice/visitor/index.html', w: 430,  h: 900, langSwitch: 'ru', isMobile: true },
-  { id: 'voice-visitor_ko',   url: '/V_Voice/visitor/index.html', w: 430,  h: 900, langSwitch: 'ko', isMobile: true },
+  { id: 'voice-dealer_ru',     url: '/V_Voice/dealer/index.html',     w: 1180, h: 880, langSwitch: 'ru' },
+  { id: 'voice-dealer_ko',     url: '/V_Voice/dealer/index.html',     w: 1180, h: 880, langSwitch: 'ko' },
+  { id: 'voice-dealer-v2_ru',  url: '/V_Voice/dealer/v2/index.html',  w: 1440, h: 900, langSwitch: 'ru' },
+  { id: 'voice-dealer-v2_ko',  url: '/V_Voice/dealer/v2/index.html',  w: 1440, h: 900, langSwitch: 'ko' },
+  { id: 'voice-visitor_ru',    url: '/V_Voice/visitor/index.html',    w: 430,  h: 900, langSwitch: 'ru', isMobile: true },
+  { id: 'voice-visitor_ko',    url: '/V_Voice/visitor/index.html',    w: 430,  h: 900, langSwitch: 'ko', isMobile: true },
 
   // _preview/ static mocks (Korean by default — these are HQ surfaces)
   { id: 'sensor-admin_ko',    url: '/_preview/admin-mock.html#captures',     w: 1440, h: 900 },
