@@ -10,3 +10,5 @@ const r = await fetch(`https://api.supabase.com/v1/projects/${process.env.SUPABA
   ` }),
 });
 console.log(await r.text());
+
+export {};

@@ -150,14 +150,22 @@ export async function pollClusterNormalized(fx: SensorFixture, timeoutMs = CONFI
     .eq('entity_id', fx.entityId)
     .eq('crm_id', fx.crmId)
     .maybeSingle();
-  return {
+  const result: {
+    found: boolean;
+    status?: string;
+    clusterId?: string;
+    imageCount?: number;
+    normalizedFieldsId?: string | null;
+    waitedMs: number;
+  } = {
     found: !!data,
-    status: data?.status as string | undefined,
-    clusterId: data?.id as string | undefined,
-    imageCount: data?.image_count as number | undefined,
     normalizedFieldsId: (data?.normalized_fields_id as string | null | undefined) ?? null,
     waitedMs: Date.now() - start,
   };
+  if (data?.status !== undefined) result.status = data.status as string;
+  if (data?.id !== undefined) result.clusterId = data.id as string;
+  if (data?.image_count !== undefined) result.imageCount = data.image_count as number;
+  return result;
 }
 
 export async function cleanupSensorFixture(fx: SensorFixture, clusterId?: string): Promise<void> {

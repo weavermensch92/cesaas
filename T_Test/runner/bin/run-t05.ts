@@ -74,8 +74,7 @@ async function main(): Promise<void> {
   process.exit(result.status === 'passed' ? 0 : 1);
 }
 
-async function postDealerResponse(run: Awaited<ReturnType<typeof startRun>>, jwt: string, axis: ReturnType<typeof DEALER_FIXTURE_MINING extends infer T ? () => T : never>['valueOf'] extends never ? never : never, expectedSeg: string): Promise<PostResult | null> {
-  // 타입 회피 — axis는 그냥 객체
+async function postDealerResponse(run: Awaited<ReturnType<typeof startRun>>, jwt: string, _axis: typeof DEALER_FIXTURE_MINING, expectedSeg: string): Promise<PostResult | null> {
   const answers = makeDealerAnswers(DEALER_FIXTURE_MINING);
   const payload = {
     survey_id: 'survey_v1_dealer',

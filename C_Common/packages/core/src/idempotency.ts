@@ -73,7 +73,7 @@ export async function recordIdempotency(
  */
 export async function hashRequestBody(bytes: Uint8Array | string): Promise<string> {
   const buf = typeof bytes === 'string' ? new TextEncoder().encode(bytes) : bytes;
-  const digest = await crypto.subtle.digest('SHA-256', buf);
+  const digest = await crypto.subtle.digest('SHA-256', buf as BufferSource);
   return Array.from(new Uint8Array(digest))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');

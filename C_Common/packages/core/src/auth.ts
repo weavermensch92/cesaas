@@ -39,9 +39,11 @@ export async function verifyBearer(
   const token = auth.slice(7);
   const enc = new TextEncoder().encode(cfg.secret);
   try {
-    const { payload } = await jwtVerify(token, enc, {
-      issuer: cfg.issuer,
-    });
+    const { payload } = await jwtVerify(
+      token,
+      enc,
+      cfg.issuer ? { issuer: cfg.issuer } : {},
+    );
     if (payload.role !== 'dealer') {
       throw new ApiError('forbidden', 'role is not dealer', { role: payload.role });
     }

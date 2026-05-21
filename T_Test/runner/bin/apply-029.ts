@@ -37,3 +37,5 @@ async function main() {
   console.log(text);
 }
 main().catch((e) => { console.error('FATAL', e); process.exit(2); });
+
+export {};

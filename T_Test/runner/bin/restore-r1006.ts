@@ -18,3 +18,5 @@ const r = await fetch(`https://api.supabase.com/v1/projects/${REF}/database/quer
 });
 console.log('HTTP', r.status);
 console.log(await r.text());
+
+export {};
