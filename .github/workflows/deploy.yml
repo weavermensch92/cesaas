@@ -7,6 +7,11 @@
 #   SUPABASE_REF_STAGING        — staging 프로젝트 ref
 #   SUPABASE_DB_PASSWORD_PROD   — DB 비밀번호 (db push 시 필요)
 #   SUPABASE_DB_PASSWORD_STAGING
+#   FLY_API_TOKEN               — Fly.io 배포 토큰
+#   NEXT_PUBLIC_SUPABASE_URL    — Supabase 프로젝트 URL (Next.js 빌드 시 필요)
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY — Supabase anon key (Next.js 빌드 시 필요)
+#   NEXT_PUBLIC_API_BASE        — Edge Function base URL (Next.js 빌드 시 필요)
+#   NEXT_PUBLIC_SITE_URL        — Admin UI URL (Next.js 빌드 시 필요)
 
 name: Deploy
 
@@ -101,6 +106,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl deploy --remote-only
+      - name: Deploy to Fly.io
+        run: |
+          flyctl deploy --remote-only \
+            --build-arg "NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL" \
+            --build-arg "NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+            --build-arg "NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE" \
+            --build-arg "NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_API_BASE: ${{ secrets.NEXT_PUBLIC_API_BASE }}
+          NEXT_PUBLIC_SITE_URL: ${{ secrets.NEXT_PUBLIC_SITE_URL }}
