@@ -4,9 +4,11 @@
  *   GET    → 목록
  *   POST   { email, role }              → inviteUserByEmail + register_invited_user
  *   PATCH  { user_id, role }            → set_user_role
+ *   DELETE ?user_id=xxx                 → soft_delete_member + auth ban
  *
  * Magic link 는 Supabase Auth 가 invite 메일로 자동 발송.
  * 사용자는 링크 클릭 → 자동 로그인 → /set-password 강제 (password_set=false).
+ * 소프트 삭제: user_id 보존, email 익명화, auth ban (로그인 불가).
  */
 import { requireAdmin } from 'shared/admin_auth.ts';
 import { ApiError, jsonResponse, toJsonResponse, corsPreflight } from 'shared/errors.ts';
@@ -39,7 +41,9 @@ Deno.serve(async (req: Request) => {
       if (!isRole(role)) throw new ApiError('validation_failed', 'role required (super_admin|admin|regular)');
 
       const redirectBase = envOptional('PUBLIC_SITE_URL', 'https://hd-poc-admin.fly.dev');
-      const redirectTo = `${redirectBase}/set-password`;
+      // /set-password 경로 제외 — Supabase 허용 리다이렉트 URL 목록에 정확히 등록된 base URL 사용.
+      // 첫 로그인 시 AuthGate 가 password_set=false 를 감지해 /set-password 로 자동 이동.
+      const redirectTo = redirectBase;
 
       // Supabase Auth Admin API — invite + magic link
       const { data: invited, error: invErr } = await db().auth.admin.inviteUserByEmail(email, {
@@ -47,7 +51,9 @@ Deno.serve(async (req: Request) => {
       });
       if (invErr || !invited?.user) {
         // 이미 존재하는 사용자면 user_profiles 만 처리
-        if ((invErr?.message ?? '').includes('already')) {
+        const errMsg = (invErr?.message ?? '').toLowerCase();
+        const errCode = (invErr as { code?: string })?.code ?? '';
+        if (errMsg.includes('already') || errCode === 'email_exists' || errCode === 'user_already_exists') {
           // 기존 user 조회
           const { data: list } = await db().auth.admin.listUsers({ page: 1, perPage: 200 });
           const existing = list?.users?.find((u) => (u.email ?? '').toLowerCase() === email);
@@ -92,7 +98,29 @@ Deno.serve(async (req: Request) => {
       return jsonResponse(200, { profile: data }, log.requestId);
     }
 
-    throw new ApiError('bad_request', 'GET / POST / PATCH only');
+    if (req.method === 'DELETE') {
+      const userId = new URL(req.url).searchParams.get('user_id') ?? '';
+      if (!userId) throw new ApiError('validation_failed', 'user_id required');
+      if (userId === admin.sub) throw new ApiError('conflict', 'cannot delete yourself');
+
+      // auth.users ban (장기 비활성화). auth user가 없는 경우 무시.
+      const { error: banErr } = await db().auth.admin.updateUserById(userId, { ban_duration: '876000h' });
+      if (banErr) log.warn('auth ban skipped', { target_id: userId, reason: banErr.message });
+
+      // user_profiles 익명화 + soft delete
+      const { data, error } = await db().rpc('soft_delete_member', {
+        p_user_id: userId, p_actor: admin.sub,
+      });
+      if (error) {
+        if (error.code === '23514') throw new ApiError('conflict', error.message);
+        if (error.code === 'P0002') throw new ApiError('not_found', error.message);
+        throw new ApiError('internal_error', 'delete failed', { db: error.message });
+      }
+      log.info('member soft-deleted', { actor: admin.email, target_id: userId });
+      return jsonResponse(200, { profile: data }, log.requestId);
+    }
+
+    throw new ApiError('bad_request', 'GET / POST / PATCH / DELETE only');
   } catch (err) {
     log.error('admin-members failed', err);
     return toJsonResponse(err, log.requestId);

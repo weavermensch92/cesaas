@@ -6,7 +6,7 @@ import { TopBar } from '../components/TopBar';
 import { SectionNav } from '../components/SectionNav';
 import { getSupabase } from '@/lib/supabase';
 import {
-  listMembers, inviteMember, updateMemberRole,
+  listMembers, inviteMember, updateMemberRole, deleteMember,
   type MemberRow, type UserRole, type MeProfile,
 } from '@/lib/api';
 
@@ -63,6 +63,11 @@ function View({ email, me }: { email: string; me: MeProfile }) {
     );
   }
 
+  const [showDeleted, setShowDeleted] = useState(false);
+  const active = rows.filter((r) => !r.deleted_at);
+  const deleted = rows.filter((r) => !!r.deleted_at);
+  const visible = showDeleted ? rows : active;
+
   return (
     <>
       <TopBar lang={LANG} email={email} onSignOut={signOut} />
@@ -81,6 +86,12 @@ function View({ email, me }: { email: string; me: MeProfile }) {
             <h2 className="hd-h2" style={{ margin: 0 }}>회원 목록</h2>
             <span style={{ flex: 1 }} />
             {loading && <span className="hd-meta">로딩…</span>}
+            {deleted.length > 0 && (
+              <label className="hd-meta" style={{ display: 'flex', alignItems: 'center', gap: 4, marginLeft: 12, cursor: 'pointer' }}>
+                <input type="checkbox" checked={showDeleted} onChange={(e) => setShowDeleted(e.target.checked)} />
+                삭제된 회원 표시 ({deleted.length})
+              </label>
+            )}
             <button className="hd-btn sm" onClick={refresh} style={{ marginLeft: 8 }}>새로고침</button>
           </div>
           <table className="hd-table" style={{ width: '100%' }}>
@@ -91,14 +102,14 @@ function View({ email, me }: { email: string; me: MeProfile }) {
                 <th style={{ width: 110 }}>비밀번호</th>
                 <th style={{ width: 160 }}>마지막 로그인</th>
                 <th style={{ width: 160 }}>초대자</th>
-                <th style={{ width: 220 }}>역할 변경</th>
+                <th style={{ width: 260 }}>관리</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => (
+              {visible.map((r) => (
                 <MemberRowEl key={r.user_id} row={r} myId={me.sub} onChanged={refresh} />
               ))}
-              {!loading && rows.length === 0 && (
+              {!loading && visible.length === 0 && (
                 <tr><td colSpan={6} className="hd-meta" style={{ textAlign: 'center', padding: 18 }}>없음</td></tr>
               )}
             </tbody>
@@ -166,6 +177,7 @@ function MemberRowEl({ row, myId, onChanged }: { row: MemberRow; myId: string; o
   const [err, setErr] = useState<string | null>(null);
 
   const isSelf = row.user_id === myId;
+  const isDeleted = !!row.deleted_at;
 
   async function save() {
     if (role === row.role) return;
@@ -179,30 +191,61 @@ function MemberRowEl({ row, myId, onChanged }: { row: MemberRow; myId: string; o
     } finally { setBusy(false); }
   }
 
+  async function handleDelete() {
+    if (!window.confirm(`${row.email} 회원을 삭제하시겠습니까?\nID는 보존되고 이메일·데이터는 익명화됩니다.`)) return;
+    setBusy(true); setErr(null);
+    try {
+      await deleteMember(row.user_id);
+      onChanged();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally { setBusy(false); }
+  }
+
+  const rowStyle: React.CSSProperties = isDeleted
+    ? { opacity: 0.45, backgroundColor: 'var(--hd-surface)' }
+    : {};
+
   return (
-    <tr>
-      <td>{row.email}{isSelf && <span className="hd-meta"> · 본인</span>}</td>
+    <tr style={rowStyle}>
+      <td>
+        {row.email}
+        {isSelf && <span className="hd-meta"> · 본인</span>}
+        {isDeleted && <span className="hd-badge ghost" style={{ marginLeft: 6, fontSize: 10 }}>삭제됨</span>}
+      </td>
       <td><span className={`hd-badge ${row.role === 'super_admin' ? 'green' : row.role === 'admin' ? 'blue' : 'ghost'}`}>{roleLabel[row.role]}</span></td>
       <td><span className={`hd-badge ${row.password_set ? 'green' : 'ghost'}`}>{row.password_set ? '설정됨' : '미설정'}</span></td>
       <td className="hd-num">{row.last_login_at ? new Date(row.last_login_at).toLocaleString('ko-KR') : '–'}</td>
       <td className="hd-meta">{row.invited_by_email ?? '–'}</td>
       <td>
-        <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <select
-            value={role} onChange={(e) => setRole(e.target.value as UserRole)}
-            disabled={busy || isSelf}
-            style={{ ...inputStyle, height: 28, flex: 1 }}
-          >
-            <option value="regular">일반</option>
-            <option value="admin">Admin</option>
-            <option value="super_admin">Super Admin</option>
-          </select>
-          <button
-            className="hd-btn sm"
-            onClick={save}
-            disabled={busy || isSelf || role === row.role}
-          >저장</button>
-        </span>
+        {isDeleted ? (
+          <span className="hd-meta" style={{ fontSize: 11 }}>
+            {new Date(row.deleted_at!).toLocaleString('ko-KR')} 삭제
+          </span>
+        ) : (
+          <span style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <select
+              value={role} onChange={(e) => setRole(e.target.value as UserRole)}
+              disabled={busy || isSelf}
+              style={{ ...inputStyle, height: 28, flex: 1 }}
+            >
+              <option value="regular">일반</option>
+              <option value="admin">Admin</option>
+              <option value="super_admin">Super Admin</option>
+            </select>
+            <button
+              className="hd-btn sm"
+              onClick={save}
+              disabled={busy || isSelf || role === row.role}
+            >저장</button>
+            <button
+              className="hd-btn sm"
+              onClick={handleDelete}
+              disabled={busy || isSelf}
+              style={{ color: 'var(--hd-red)', borderColor: 'var(--hd-red)' }}
+            >삭제</button>
+          </span>
+        )}
         {err && <div className="hd-meta" style={{ color: 'var(--hd-red)', fontSize: 11 }}>{err}</div>}
       </td>
     </tr>

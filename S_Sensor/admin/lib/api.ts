@@ -16,7 +16,7 @@ async function authHeaders(): Promise<Record<string, string>> {
 }
 
 async function request<T>(
-  method: 'GET' | 'POST' | 'PATCH',
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
   path: string,
   query?: Record<string, string | undefined | null>,
   body?: unknown,
@@ -677,6 +677,7 @@ export interface MemberRow {
   created_at: string;
   last_login_at: string | null;
   invited_by_email: string | null;
+  deleted_at: string | null;
 }
 
 export async function getMe(): Promise<MeProfile> {
@@ -697,4 +698,8 @@ export async function inviteMember(email: string, role: UserRole): Promise<{ sta
 
 export async function updateMemberRole(userId: string, role: UserRole): Promise<{ profile: MemberRow }> {
   return request('PATCH', '/admin-members', undefined, { user_id: userId, role });
+}
+
+export async function deleteMember(userId: string): Promise<{ profile: MemberRow }> {
+  return request('DELETE', '/admin-members', { user_id: userId });
 }

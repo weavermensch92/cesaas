@@ -39,7 +39,7 @@ export class ApiError extends Error {
 // Sensor HMAC 헤더·idempotency 헤더 화이트리스트 포함.
 const CORS_HEADERS: Record<string, string> = {
   'access-control-allow-origin': '*',
-  'access-control-allow-methods': 'GET, POST, PATCH, OPTIONS',
+  'access-control-allow-methods': 'GET, POST, PATCH, DELETE, OPTIONS',
   'access-control-allow-headers':
     'authorization, content-type, x-request-id, idempotency-key, ' +
     'x-sensor-key-id, x-sensor-signature, x-sensor-timestamp, x-sensor-nonce, x-client-info, apikey',
