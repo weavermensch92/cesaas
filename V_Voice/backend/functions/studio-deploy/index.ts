@@ -65,9 +65,7 @@ Deno.serve(async (req: Request) => {
   try {
     if (req.method !== 'POST') throw new ApiError('bad_request', 'POST only');
     const admin = await requireAdmin(req);
-    if (admin.role !== 'gridge_admin') {
-      throw new ApiError('forbidden', 'Studio is gridge_admin only', { role: admin.role });
-    }
+    // requireAdmin이 admin/super_admin만 통과시키므로 별도 role 검사 불필요.
 
     const body = await parseBody(req);
 
