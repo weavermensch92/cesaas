@@ -794,7 +794,7 @@ export async function deleteMember(userId: string): Promise<{ profile: MemberRow
 export interface GridgeRuleSummary {
   rule_id: string;
   version: string;
-  last_modified: string;
+  created_at: string;
   last_actor: string | null;
   body_bytes: number;
 }
@@ -803,7 +803,7 @@ export interface GridgeRuleDetail {
   rule_id: string;
   version: string;
   body_yaml: string;
-  last_modified: string;
+  created_at: string;
   last_actor: string | null;
   notes: string | null;
   row_id: string;

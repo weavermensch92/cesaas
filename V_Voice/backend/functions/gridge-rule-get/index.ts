@@ -13,7 +13,7 @@
  *   {
  *     "rules": [
  *       { "rule_id": "R_10.06_PromptTemplates", "version": "2026-05-23.003",
- *         "last_modified": "...", "last_actor": "...", "body_bytes": 9080 },
+ *         "created_at": "...", "last_actor": "...", "body_bytes": 9080 },
  *       ...
  *     ]
  *   }
@@ -23,7 +23,7 @@
  *     "rule_id": "R_10.06_PromptTemplates",
  *     "version": "2026-05-23.003",
  *     "body_yaml": "rule_id: R_10.06_PromptTemplates\n...",
- *     "last_modified": "2026-05-23T...",
+ *     "created_at": "2026-05-23T...",
  *     "last_actor": "weaver@gridge.co.kr",
  *     "notes": "...",
  *     "row_id": "uuid"
@@ -42,8 +42,8 @@ interface RuleRow {
   rule_id: string;
   version: string;
   body_yaml: string;
-  last_modified: string;
-  modified_by: string | null;
+  created_at: string;
+  edited_by: string | null;
   notes: string | null;
 }
 
@@ -68,17 +68,17 @@ Deno.serve(async (req: Request) => {
 async function getList(log: ReturnType<typeof requestLogger>): Promise<Response> {
   const { data, error } = await db()
     .from('rule_versions')
-    .select('rule_id, version, body_yaml, last_modified, modified_by')
+    .select('rule_id, version, body_yaml, created_at, edited_by')
     .eq('status', 'active')
     .order('rule_id', { ascending: true })
-    .returns<Pick<RuleRow, 'rule_id' | 'version' | 'body_yaml' | 'last_modified' | 'modified_by'>[]>();
+    .returns<Pick<RuleRow, 'rule_id' | 'version' | 'body_yaml' | 'created_at' | 'edited_by'>[]>();
   if (error) throw new ApiError('internal_error', 'rule list failed', { db: error.message });
 
   const rules = (data ?? []).map((r) => ({
     rule_id: r.rule_id,
     version: r.version,
-    last_modified: r.last_modified,
-    last_actor: r.modified_by ?? null,
+    created_at: r.created_at,
+    last_actor: r.edited_by ?? null,
     body_bytes: new TextEncoder().encode(r.body_yaml ?? '').length,
   }));
 
@@ -92,7 +92,7 @@ async function getOne(ruleId: string, log: ReturnType<typeof requestLogger>): Pr
   }
   const { data, error } = await db()
     .from('rule_versions')
-    .select('id, rule_id, version, body_yaml, last_modified, modified_by, notes')
+    .select('id, rule_id, version, body_yaml, created_at, edited_by, notes')
     .eq('rule_id', ruleId)
     .eq('status', 'active')
     .maybeSingle<RuleRow>();
@@ -104,8 +104,8 @@ async function getOne(ruleId: string, log: ReturnType<typeof requestLogger>): Pr
     rule_id: data.rule_id,
     version: data.version,
     body_yaml: data.body_yaml,
-    last_modified: data.last_modified,
-    last_actor: data.modified_by,
+    created_at: data.created_at,
+    last_actor: data.edited_by,
     notes: data.notes,
     row_id: data.id,
   }, log.requestId);
