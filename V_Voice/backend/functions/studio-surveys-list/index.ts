@@ -51,10 +51,7 @@ Deno.serve(async (req: Request) => {
   const log = requestLogger(req, { route: ROUTE });
   try {
     if (req.method !== 'GET') throw new ApiError('bad_request', 'GET only');
-    const admin = await requireAdmin(req);
-    if (admin.role !== 'gridge_admin') {
-      throw new ApiError('forbidden', 'Studio is gridge_admin only', { role: admin.role });
-    }
+    await requireAdmin(req); // admin/super_admin 게이트 (반환 객체 미사용)
 
     const url = new URL(req.url);
     const target = url.searchParams.get('target_audience');
