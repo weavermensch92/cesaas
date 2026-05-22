@@ -394,8 +394,10 @@ export async function revokeDealerToken(jti: string): Promise<{
 }
 
 // ============================================================================
-// V_60 Studio
+// V_60 Studio v2 — 다중 채널·기존 수정·lint warnings·AI/edited 배지
 // ============================================================================
+
+export type StudioTarget = 'dealer' | 'visitor';
 
 export interface StudioQuestion {
   id?: string;
@@ -408,6 +410,10 @@ export interface StudioQuestion {
   required?: boolean;
   weight?: number;
   sort_order?: number;
+  /** 신규(035) — LLM이 생성·갱신한 질문. 사용자 편집 시 false 로 토글. */
+  ai_generated?: boolean;
+  /** 신규(035) — row-level edited timestamp (사용자가 어떤 필드든 손대면 갱신, regenerate 시 null). */
+  edited_at?: string | null;
 }
 
 export interface StudioSurveySpec {
@@ -420,30 +426,109 @@ export interface StudioSurveySpec {
   questions: StudioQuestion[];
 }
 
-export interface StudioBuildResult {
-  draft_id: string;
-  spec: StudioSurveySpec;
-  model: string;
-  rule_version: string;
-  prompt_version: string | null;
-  usage: { input_tokens: number; output_tokens: number };
+export interface StudioLintWarning {
+  code: 'time_overrun' | 'missing_required' | 'language_gap' | 'merge_candidate' | 'option_imbalance';
+  severity: 'warn' | 'error';
+  question_ids: string[];
+  message_ko: string;
+  suggestion_patch?: Partial<StudioSurveySpec> | { questions?: Array<Partial<StudioQuestion>> };
+}
+
+export interface StudioDraftEntry {
+  target_audience: StudioTarget;
+  draft_id?: string;
+  spec?: StudioSurveySpec;
+  warnings?: StudioLintWarning[];
+  model?: string;
+  rule_version?: string;
+  prompt_version?: string | null;
+  usage?: { input_tokens: number; output_tokens: number };
+  error?: { code: string; message: string };
+}
+
+export interface StudioBuildResultV2 {
+  brief_group_id: string;
+  drafts: StudioDraftEntry[];
 }
 
 export async function studioBuildSurvey(args: {
   input_text: string;
-  target_audience: 'dealer' | 'visitor';
+  target_audiences: StudioTarget[];
   language?: 'ko' | 'en' | 'ru';
-}): Promise<StudioBuildResult> {
+  base_spec?: StudioSurveySpec;
+  edit_notes?: string;
+  parent_survey_id?: string;
+}): Promise<StudioBuildResultV2> {
   return request('POST', '/studio-build-survey', undefined, args);
 }
 
+export interface StudioDeploymentResult {
+  target_audience: StudioTarget;
+  survey_id: string;
+  version_label?: string;
+  deployed_at: string;
+}
+
+export interface StudioDeployError {
+  target_audience: StudioTarget;
+  code: string;
+  message: string;
+}
+
+export interface StudioDeployResponse {
+  brief_group_id?: string;
+  deployments: StudioDeploymentResult[];
+  errors?: StudioDeployError[];
+}
+
 export async function studioDeploy(args: {
-  spec: StudioSurveySpec;
-  target: 'dealer' | 'visitor';
-  draft_id?: string;
+  deployments: Array<{
+    target_audience: StudioTarget;
+    spec: StudioSurveySpec;
+    draft_id?: string;
+    version_label?: string;
+  }>;
+  brief_group_id?: string;
   archive_previous?: boolean;
-}): Promise<{ survey_id: string; target: 'dealer' | 'visitor'; deployed_at: string }> {
+}): Promise<StudioDeployResponse> {
   return request('POST', '/studio-deploy', undefined, args);
+}
+
+// ─── 기존 설문 로드/목록 (Studio v2 신규) ─────────────────────────────────
+
+export interface StudioSurveyListItem {
+  id: string;
+  title: string;
+  target_audience: StudioTarget;
+  version_label?: string;
+  status: 'active' | 'draft' | 'archived';
+  language_default: string;
+  estimated_minutes?: number;
+  question_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function studioSurveysList(opts: {
+  target_audience?: StudioTarget;
+  include_archived?: boolean;
+} = {}): Promise<{ surveys: StudioSurveyListItem[] }> {
+  return request('GET', '/studio-surveys-list', {
+    target_audience: opts.target_audience,
+    include_archived: opts.include_archived ? 'true' : undefined,
+  });
+}
+
+export interface StudioLoadSurveyResult {
+  draft_id: string;
+  brief_group_id: string;
+  target_audience: StudioTarget;
+  spec: StudioSurveySpec;
+  parent_survey: { id: string; title: string; version_label?: string; created_at: string };
+}
+
+export async function studioLoadSurvey(surveyId: string): Promise<StudioLoadSurveyResult> {
+  return request('GET', '/studio-load-survey', { survey_id: surveyId });
 }
 
 // ============================================================================

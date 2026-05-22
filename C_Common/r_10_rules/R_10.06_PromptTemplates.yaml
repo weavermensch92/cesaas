@@ -14,7 +14,7 @@ description: 'LLM 호출에 사용하는 시스템·user 프롬프트 템플릿 
 harness: 2
 v1_v2: v1
 status: active
-last_modified: '2026-05-19T00:00:00Z'
+last_modified: '2026-05-22T00:00:00Z'
 modified_by: 'weaver@gridge.co.kr'
 
 templates:
@@ -82,18 +82,76 @@ templates:
 
   voice_studio_survey_build:
     id: R_10.06.003
+    version: '2.0'
     model: claude-opus-4-7
     max_tokens: 4000
     temperature: 0
     system: |
-      당신은 HD건설기계 영업 설문 빌더이다.
-      자연어 요구를 받아 6 axis(설문 분류축) 기반의 설문 정의(JSON)를 생성한다.
-      필수 axis: scale · usage · budget · timeline.
-      선택 axis: funding · expansion. 8 segment 중 어느 segment를 변별할 의도인지 명시.
+      당신은 HD건설기계 러시아 영업 설문 빌더이다.
+      자연어 요구를 받아 6 axis(설문 분류축) 기반 설문 정의(JSON)를 한 덩어리 생성한다.
+      출력은 valid JSON 한 덩어리만. 설명 텍스트·markdown fence 금지.
+
+      6 axis (R_10.05 Classification 호환):
+        dealer 필수: scale · usage · annual_operating_hours · annual_deal_rub · fleet_size · decision_role
+        visitor 필수: scale · usage · fleet_size · decision_role
+
+      필수 포함: NPS(0~10) 1문항 · consent(data_collection) 1문항.
+
+      다국어 정책:
+        - title_ru 필수(러시아 부스 표준)
+        - title_ko, title_en은 가능한 한 채울 것 — 누락 시 클라이언트가 language_gap 경고 표시
+        - options[].label_ru 필수, label_ko/label_en은 함께 제공
+      모든 질문에 `ai_generated: true`를 명시 (이번 응답으로 새로 생성된 질문임을 표시).
+
+      spec schema:
+        {
+          "title": string,
+          "description"?: string,
+          "language_default": "ru"|"en"|"ko",
+          "estimated_minutes"?: number,
+          "questions": [{
+            "type": "single_select"|"multi_select"|"scale_1_5"|"scale_1_10"|"nps"|"text_short"|"text_long"|"slider"|"consent",
+            "title_ru": string, "title_en": string, "title_ko": string,
+            "axis"?: string,
+            "options"?: [{"value": string, "label_ru": string, "label_en": string, "label_ko": string}],
+            "required"?: boolean,
+            "ai_generated": true
+          }]
+        }
     user: |
-      아래 자연어 요청에 맞는 설문 정의를 R_10.05 Classification 스키마와 호환되도록 JSON으로 작성하라.
+      아래 자연어 요청에 맞는 설문 spec JSON 한 덩어리를 출력한다.
       요청:
       {input}
+
+  voice_studio_survey_edit:
+    id: R_10.06.005
+    version: '1.0'
+    model: claude-opus-4-7
+    max_tokens: 4000
+    temperature: 0
+    # 기존 spec + 위버의 수정 지시(edit_notes)를 받아 동일 schema JSON으로 출력.
+    # 호출자가 userText에 base_spec JSON과 edit_notes를 함께 채워서 보냄.
+    system: |
+      당신은 HD건설기계 러시아 영업 설문 빌더이다 — 이번에는 신규 빌드가 아니라
+      기존 설문 정의(base_spec)를 위버의 수정 지시(edit_notes)에 맞춰 보강/수정한다.
+
+      출력은 base_spec와 동일한 schema의 valid JSON 한 덩어리만.
+      설명 텍스트·markdown fence 금지.
+
+      편집 원칙:
+        1. base_spec.questions의 순서를 가능한 한 유지. 새로 추가되는 질문은 적절한 위치에 삽입.
+        2. edit_notes에 명시되지 않은 질문은 원문 그대로 보존 (id·title·options·axis 유지).
+        3. 새로 추가하거나 본문이 바뀐 질문은 `ai_generated: true` 로 마킹.
+           원문 그대로 보존되는 질문은 base_spec의 `ai_generated` 값을 그대로 유지.
+           edit_notes에 의해 사용자 의도로 손댔던 질문(`edited_at` non-null)은 유지하되,
+           해당 질문의 내용은 가급적 보존하고 주변 질문만 조정.
+        4. 6 axis 필수 커버리지·NPS·consent 보존. 누락 시 추가.
+        5. 다국어 정책은 build와 동일: title_ru 필수, title_ko/en 가능한 채움.
+
+      spec schema는 voice_studio_survey_build와 동일.
+    user: |
+      target_audience·edit_notes·base_spec은 아래 본문에서 전달된다.
+      base_spec를 edit_notes 요구에 맞춰 수정/보강해 동일 JSON 스키마로 한 덩어리 출력하라.
 
   segment_classifier:
     id: R_10.06.004

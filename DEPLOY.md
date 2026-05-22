@@ -152,11 +152,15 @@ supabase functions deploy --project-ref $REF --no-verify-jwt `
   captures-chunks captures-finalize normalize-worker `
   admin-captures admin-clusters admin-field-edit admin-normalize-trigger
 
-# V_Voice (6)
+# V_Voice (8) — Studio v2(035 마이그레이션) 이후 +studio-load-survey·studio-surveys-list
 cd ..\..\V_Voice\backend
-supabase functions deploy --project-ref $REF --no-verify-jwt `
+supabase functions deploy --project-ref $REF --no-verify-jwt --import-map .\deno.json `
   responses-receive voice-responses voice-aggregates voice-csv-export `
-  studio-build-survey studio-deploy
+  studio-build-survey studio-deploy studio-load-survey studio-surveys-list
+
+# ⚠ V_Voice는 deno.json이 V_Voice/backend/ 에 있고 supabase/ 한 단계 아래에 있어
+#   CLI가 자동 탐색을 못 함. `--import-map .\deno.json` 명시 필수
+#   (빠뜨리면 shared/*.ts 임포트가 "Relative import path not prefixed" 로 실패).
 
 # U_Unified (2)
 cd ..\..\U_Unified\backend
