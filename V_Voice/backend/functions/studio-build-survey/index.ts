@@ -78,7 +78,7 @@ interface DraftEntry {
   rule_version?: string;
   prompt_version?: string | null;
   usage?: Record<string, unknown>;
-  error?: { code: string; message: string };
+  error?: { code: string; message: string; details?: Record<string, unknown> };
 }
 
 Deno.serve(async (req: Request) => {
@@ -196,8 +196,16 @@ async function buildOne(
   } catch (err) {
     const code = err instanceof ApiError ? err.code : 'internal_error';
     const message = err instanceof Error ? err.message : 'unknown';
-    log.error('buildOne failed', { target, code, message });
-    return { target_audience: target, error: { code, message } };
+    const details = err instanceof ApiError ? err.details : undefined;
+    log.error('buildOne failed', { target, code, message, details });
+    return {
+      target_audience: target,
+      error: {
+        code,
+        message,
+        ...(details ? { details } : {}),
+      },
+    };
   }
 }
 

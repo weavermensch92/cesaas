@@ -22,6 +22,7 @@ const ITEMS: Item[] = [
   { href: '/sensor/keys',       label: 'Sensor · 발급',       match: (p) => p.startsWith('/sensor/keys'), adminOnly: true },
   { href: '/sensor/crm',        label: 'Sensor · CRM',        match: (p) => p.startsWith('/sensor/crm'),  adminOnly: true },
   { href: '/llm',               label: 'LLM · 운영',          match: (p) => p.startsWith('/llm'),     adminOnly: true },
+  { href: '/gridge',            label: '위버 · 룰 편집',       match: (p) => p.startsWith('/gridge'),  adminOnly: true },
   { href: '/members',           label: '회원 관리',           match: (p) => p.startsWith('/members'), adminOnly: true },
   { href: '/account',           label: '내 계정',             match: (p) => p.startsWith('/account') },
 ];

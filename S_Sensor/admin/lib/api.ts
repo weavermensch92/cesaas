@@ -788,3 +788,48 @@ export async function updateMemberRole(userId: string, role: UserRole): Promise<
 export async function deleteMember(userId: string): Promise<{ profile: MemberRow }> {
   return request('DELETE', '/admin-members', { user_id: userId });
 }
+
+// -------- Gridge (R_10 룰 위버 편집기) --------
+
+export interface GridgeRuleSummary {
+  rule_id: string;
+  version: string;
+  last_modified: string;
+  last_actor: string | null;
+  body_bytes: number;
+}
+
+export interface GridgeRuleDetail {
+  rule_id: string;
+  version: string;
+  body_yaml: string;
+  last_modified: string;
+  last_actor: string | null;
+  notes: string | null;
+  row_id: string;
+}
+
+export interface GridgeRulePublishResult {
+  rule_id: string;
+  version: string;
+  previous_version: string | null;
+  new_row_id: string;
+  body_bytes: number;
+}
+
+export async function listGridgeRules(): Promise<{ rules: GridgeRuleSummary[] }> {
+  return request('GET', '/gridge-rule-get');
+}
+
+export async function getGridgeRule(ruleId: string): Promise<GridgeRuleDetail> {
+  return request('GET', '/gridge-rule-get', { rule_id: ruleId });
+}
+
+export async function publishGridgeRule(args: {
+  rule_id: string;
+  body_yaml: string;
+  version?: string;
+  notes?: string;
+}): Promise<GridgeRulePublishResult> {
+  return request('POST', '/gridge-rule-publish', undefined, args);
+}
