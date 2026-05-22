@@ -82,9 +82,9 @@ templates:
 
   voice_studio_survey_build:
     id: R_10.06.003
-    version: '2.0'
+    version: '2.1'
     model: claude-opus-4-7
-    max_tokens: 4000
+    max_tokens: 2500     # Edge Function 50s 한도 우회 — 출력 토큰 상한 축소
     temperature: 0
     system: |
       당신은 HD건설기계 러시아 영업 설문 빌더이다.
@@ -125,9 +125,9 @@ templates:
 
   voice_studio_survey_edit:
     id: R_10.06.005
-    version: '1.0'
+    version: '1.1'
     model: claude-opus-4-7
-    max_tokens: 4000
+    max_tokens: 2500     # Edge Function 50s 한도 우회
     temperature: 0
     # 기존 spec + 위버의 수정 지시(edit_notes)를 받아 동일 schema JSON으로 출력.
     # 호출자가 userText에 base_spec JSON과 edit_notes를 함께 채워서 보냄.
