@@ -215,7 +215,7 @@ function GridgeView({ email, me }: { email: string; me: MeProfile }) {
                   <h3 className="hd-h3" style={{ margin: 0 }}>{detail.rule_id}</h3>
                   <span className="hd-badge green">active v{detail.version}</span>
                   <span className="hd-meta">
-                    마지막 발행 · {new Date(detail.last_modified).toLocaleString('ko-KR')}
+                    마지막 발행 · {new Date(detail.created_at).toLocaleString('ko-KR')}
                     {detail.last_actor ? ` · ${detail.last_actor}` : ''}
                   </span>
                 </div>
