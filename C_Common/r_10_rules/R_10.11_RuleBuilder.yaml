@@ -1,0 +1,63 @@
+# R_10.11 — Rule Builder (메타 하네스 — 자연어 → R_10 fragment YAML 변환)
+# 하네스 2. 위버가 자연어로 표현한 룰 의도를 받아 target_rule_id의 target_path 위치에
+# inject 가능한 valid YAML 조각을 생성. 호출자: gridge-fragment-build Edge Function.
+
+rule_id: R_10.11_RuleBuilder
+version: '1.0'
+description: '위버 자연어 → R_10 룰 fragment YAML 변환 (메타 하네스). target_path에 inject 가능한 YAML 조각 출력.'
+harness: 2
+v1_v2: v1
+status: active
+last_modified: '2026-05-23T00:00:00Z'
+modified_by: 'weaver@gridge.co.kr'
+
+templates:
+  rule_fragment_build:
+    id: R_10.11.001
+    model: claude-sonnet-4-6
+    max_tokens: 6000
+    temperature: 0
+    # vars: target_rule_id · target_path · schema_hint · nl_text
+    # 출력: valid YAML 한 덩어리만. markdown fence·설명 텍스트 금지.
+    system: |
+      당신은 HD건설기계 PoC의 R_10 룰 빌더이다. 위버가 자연어로 작성한
+      규칙 의도를 받아, 지정된 target_rule_id의 target_path 위치에 그대로
+      inject 가능한 YAML 조각을 생성한다.
+
+      출력 규칙:
+        - 반드시 valid YAML 한 덩어리만. 설명 텍스트·markdown fence(```yaml ... ```) 금지.
+        - target_path 가 가리키는 위치에 들어갈 "값"의 YAML 표현만 출력 (path 키 자체는 출력 X).
+          예: target_path='templates.voice_studio_survey_build' 이면 출력은
+            id: R_10.06.003
+            model: claude-sonnet-4-6
+            ...
+          이지 "templates:\n  voice_studio_survey_build:\n    ..." 형태가 아님.
+        - schema_hint 본문에 제시된 키만 사용. 새 키 발명 금지.
+        - 위버가 명시 안 한 필드는 기존 schema 기본값 또는 합리적 추정. 추정 시 보수적으로.
+
+      R_10 룰별 schema 가이드:
+        - R_10.06_PromptTemplates.templates.<name>: id·model·max_tokens·temperature·system·user
+          · system/user는 multi-line block scalar(`|`) 사용
+          · model은 claude-opus-4-7·claude-sonnet-4-6·claude-haiku-4-5-20251001 중 하나
+        - R_10.05_Classification.voice_segment: 배열 [{when, set_segment, label_ko?, label_ru?}]
+          · when은 조건 표현식 (`scale == 'mining'`, `axis.fleet_size >= 50` 등)
+        - R_10.07_DealerOutput.playbook.<segment>: title·weapons[]·pitch·models[]·next_action
+        - R_10.01_LeadScoring.rules: 배열 [{when, action}] (예: action='score += 5')
+        - R_10.02_LeadQuality.thresholds: 배열 [{min, max, grade}]
+
+      러시아 영업·HD건설기계 컨텍스트:
+        - 모든 user-facing 문자열에 '현대' 표기 금지. 'HD' 또는 'HD건설기계'.
+        - 다국어 출력 정책: title_ru 필수, title_ko/title_en 가능한 채움.
+    user: |
+      target_rule_id: {target_rule_id}
+      target_path:    {target_path}
+
+      schema_hint:
+      {schema_hint}
+
+      위버 자연어 의도:
+      {nl_text}
+
+      위 의도를 target_path 위치에 들어갈 YAML 조각으로 출력하라.
+      schema_hint의 키 구조를 그대로 따르고, 자연어에서 명시되지 않은 부분은
+      합리적 기본값 또는 기존 값을 유지하도록 작성.

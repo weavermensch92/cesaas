@@ -833,3 +833,64 @@ export async function publishGridgeRule(args: {
 }): Promise<GridgeRulePublishResult> {
   return request('POST', '/gridge-rule-publish', undefined, args);
 }
+
+// -------- Gridge Builder (자연어 → AI → R_10 fragment) --------
+
+export interface GridgeFragmentBuildResult {
+  fragment_id: string;
+  generated_yaml: string;
+  model: string;
+  rule_version: string;
+  usage: {
+    input_tokens?: number;
+    output_tokens?: number;
+    cache_read_tokens?: number;
+  };
+}
+
+export interface GridgeComposePreviewResult {
+  rule_id: string;
+  parent_version: string;
+  parent_yaml: string;
+  composed_yaml: string;
+  fragments_used: Array<{ id: string; fragment_path: string; status: string }>;
+  draft_included: boolean;
+}
+
+export interface GridgeComposePublishResult {
+  rule_id: string;
+  rule_version_id: string;
+  version: string;
+  previous_version: string | null;
+  fragments_activated: string[];
+  fragments_archived: string[];
+  composed_bytes: number;
+}
+
+export async function buildGridgeFragment(args: {
+  target_rule_id: string;
+  target_path: string;
+  nl_text: string;
+  fragment_id?: string;
+}): Promise<GridgeFragmentBuildResult> {
+  return request('POST', '/gridge-fragment-build', undefined, args);
+}
+
+export async function previewGridgeCompose(args: {
+  rule_id: string;
+  draft_fragment_id?: string;
+}): Promise<GridgeComposePreviewResult> {
+  return request('GET', '/gridge-rule-compose-preview', {
+    rule_id: args.rule_id,
+    ...(args.draft_fragment_id ? { draft_fragment_id: args.draft_fragment_id } : {}),
+  });
+}
+
+export async function publishGridgeCompose(args: {
+  rule_id: string;
+  draft_fragment_ids: string[];
+  version: string;
+  notes?: string;
+}): Promise<GridgeComposePublishResult> {
+  return request('POST', '/gridge-rule-compose-publish', undefined, args);
+}
