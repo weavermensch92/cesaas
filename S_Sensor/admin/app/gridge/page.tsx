@@ -139,6 +139,10 @@ function GridgeView({ email, me }: { email: string; me: MeProfile }) {
             <span className="hd-meta">
               R_10 룰의 active body_yaml을 보고 · 수정 · 발행. 발행 시 이전 active 는 archived, 60초 안에 모든 Edge Function이 신규 룰 사용.
             </span>
+            <span style={{ flex: 1 }} />
+            <a href="/gridge/builder" className="hd-btn primary" style={{ fontSize: 12 }}>
+              자연어로 fragment 빌드 →
+            </a>
           </div>
         </div>
 
