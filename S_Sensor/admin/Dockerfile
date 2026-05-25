@@ -50,12 +50,9 @@ ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 
-# Dealer / Visitor 의 window.HD_API_BASE 자동 주입 (v1·v2·v1rev·visitor 전부)
-RUN sed -i "s|</head>|<script>window.HD_API_BASE='${NEXT_PUBLIC_API_BASE}';</script></head>|" \
-      S_Sensor/admin/public/dealer/index.html \
-      S_Sensor/admin/public/dealer/v2/index.html \
-      S_Sensor/admin/public/dealer/v1rev/index.html \
-      S_Sensor/admin/public/visitor/index.html
+# Dealer / Visitor의 window.HD_API_BASE — runtime entrypoint(docker-entrypoint.sh)에서 inject.
+# 빌드 시 build-arg 명시 안 해도 Fly secrets에 NEXT_PUBLIC_API_BASE 있으면 컨테이너 시작 시 자동 inject.
+# (이전: build-time sed inject. build-arg 누락 시 빈 값으로 baked-in 되어 작동 안 함.)
 
 RUN npm run build -w @hd/sensor-admin
 
@@ -75,5 +72,9 @@ COPY --from=builder /repo/S_Sensor/admin/.next/standalone ./
 COPY --from=builder /repo/S_Sensor/admin/.next/static ./S_Sensor/admin/.next/static
 COPY --from=builder /repo/S_Sensor/admin/public          ./S_Sensor/admin/public
 
+# Runtime entrypoint — 컨테이너 시작 시 NEXT_PUBLIC_API_BASE 환경변수로 HTML sed inject.
+COPY S_Sensor/admin/docker-entrypoint.sh /app/docker-entrypoint.sh
+RUN chmod +x /app/docker-entrypoint.sh
+
 USER nextjs
-CMD ["node", "S_Sensor/admin/server.js"]
+CMD ["/app/docker-entrypoint.sh"]
