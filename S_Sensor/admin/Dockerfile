@@ -67,13 +67,13 @@ EXPOSE 3000
 
 RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
 
-# Next.js standalone output
+# Next.js standalone output — public 디렉토리는 nextjs:nodejs 소유로 (entrypoint sed write 권한)
 COPY --from=builder /repo/S_Sensor/admin/.next/standalone ./
 COPY --from=builder /repo/S_Sensor/admin/.next/static ./S_Sensor/admin/.next/static
-COPY --from=builder /repo/S_Sensor/admin/public          ./S_Sensor/admin/public
+COPY --from=builder --chown=nextjs:nodejs /repo/S_Sensor/admin/public ./S_Sensor/admin/public
 
 # Runtime entrypoint — 컨테이너 시작 시 NEXT_PUBLIC_API_BASE 환경변수로 HTML sed inject.
-COPY S_Sensor/admin/docker-entrypoint.sh /app/docker-entrypoint.sh
+COPY --chown=nextjs:nodejs S_Sensor/admin/docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 
 USER nextjs
