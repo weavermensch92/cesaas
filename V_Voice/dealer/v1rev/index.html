@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HD건설기계 · Dealer v2</title>
+<title>HD건설기계 · Dealer v1.2026rev</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Geist+Mono:wght@300..700&display=swap" rel="stylesheet">
@@ -123,6 +123,13 @@ input,textarea,select{font:inherit;color:inherit;}
 .scale-cell.hi{color:var(--hd-prosperity);}
 .scale-cell.selected.lo{background:var(--hd-red);border-color:var(--hd-red);color:#fff;}
 .scale-cell.selected.mid{background:var(--hd-amber);border-color:var(--hd-amber);color:#fff;}
+.scale-cell.disabled{opacity:0.35;cursor:not-allowed;}
+.scale-cell.disabled:hover{border-color:var(--hd-steel-200);}
+.opt.hier-top{font-weight:600;background:var(--hd-steel-50,#F5F7F9);}
+.opt.hier-top.expanded{border-color:var(--hd-heritage);}
+.opt.hier-child{margin-left:18px;font-size:12px;}
+.opt.hier-child .opt-num{width:18px;height:18px;font-size:9px;}
+.txt-area.hier-other{margin-left:18px;margin-top:4px;width:calc(100% - 18px);min-height:48px;}
 .scale-cell.selected.hi{background:var(--hd-prosperity);border-color:var(--hd-prosperity);color:#fff;}
 
 .txt-input,.txt-area{width:100%;padding:8px 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-size:13px;}
@@ -289,16 +296,10 @@ const SEGMENTS = [
   { id:'gov_public',      color:'#38BDF8', i18n:{ru:'Гос. сектор',   en:'Gov/Public',    ko:'정부·공공' }},
 ];
 
-// CTT survey_v2_dealer_ctt의 question id prefix → Block 라벨.
-const BLOCK_LABELS = {
-  a: { ru:'A · Сегмент',    en:'A · Segment',    ko:'A · 세그먼트',   color:'#16A34A' },
-  b: { ru:'B · Критерии',   en:'B · Criteria',   ko:'B · 가중치',     color:'#0EA5E9' },
-  c: { ru:'C · Покупка',    en:'C · Purchase',   ko:'C · 구매 의향',  color:'#F59E0B' },
-  d: { ru:'D · Контакт',    en:'D · Contact',    ko:'D · 연락',       color:'#64748B' },
-};
+// 042 survey_v1_dealer_2026rev — sort_order 기반 단일 진행 (Block 라벨 미사용).
+const BLOCK_LABELS = null;
 
-const CTT_AXIS_RANK_QID = 'q_v2dctt_b1_axis_ranks';
-const CTT_AXIS_RANK_MAX = 3;
+// 042 q_v1d26_decision_roles의 첫 옵션 메타 rank_max 사용. 클라이언트는 'options[0].rank_max'로 분기.
 
 // 6 DW axis 라벨 다국어 — radar SVG 라벨 + 헥사 패널 공통.
 const AXIS_LABEL = {
@@ -325,6 +326,8 @@ const I18N = {
        no_token:'Требуется вход',
        no_token_hint:'Выпустите токен в админ-консоли (раздел дилеров) и перейдите по URL с параметром <code>?token=...</code>',
        radar_axes_short:'Нужно ≥ 3 осей (сейчас {n})',
+       unique_ten_blocked:'10 баллов уже у оси «{axis}». Сначала снимите, чтобы поставить здесь.',
+       hier_other_placeholder:'Уточните…',
        load_error_prefix:'Ошибка загрузки опроса',
        api_base_missing:'API_BASE не настроен' },
   en:{ dealer_profile:'Dealer Profile',
@@ -341,6 +344,8 @@ const I18N = {
        no_token:'Login required',
        no_token_hint:'Issue a token in the admin console (dealers section), then open the URL with <code>?token=...</code>',
        radar_axes_short:'Need ≥ 3 axes (now {n})',
+       unique_ten_blocked:'10 is already on «{axis}». Clear it first to use 10 here.',
+       hier_other_placeholder:'Please specify…',
        load_error_prefix:'Failed to load survey',
        api_base_missing:'API_BASE is not configured' },
   ko:{ dealer_profile:'딜러 프로필',
@@ -357,6 +362,8 @@ const I18N = {
        no_token:'로그인 필요',
        no_token_hint:'어드민 콘솔(딜러 발급 메뉴)에서 토큰을 발급받은 후 URL에 <code>?token=...</code>로 진입하세요',
        radar_axes_short:'레이더에 필요한 축 ≥ 3 (현재 {n})',
+       unique_ten_blocked:'10점은 「{axis}」 축에 이미 부여됨. 해제 후 다시 시도',
+       hier_other_placeholder:'직접 입력해 주세요…',
        load_error_prefix:'설문 로드 실패',
        api_base_missing:'API_BASE 미설정' },
 };
@@ -435,7 +442,8 @@ async function loadSurvey(){
   if (!API_BASE) { state.loadError = t('api_base_missing'); renderQA(); return; }
   try {
     // 명시 survey_id로 v2(CTT) 고정 — v1·v1.2026rev와 다중 active 환경에서 안전.
-    const r = await fetch(`${API_BASE}/surveys-get?audience=dealer&survey_id=survey_v2_dealer_ctt`);
+    // 명시 survey_id로 v1.2026rev 고정 — v1·v2와 다중 active 환경에서 안전.
+    const r = await fetch(`${API_BASE}/surveys-get?audience=dealer&survey_id=survey_v1_dealer_2026rev`);
     if (!r.ok) throw new Error(`${r.status}: ${await r.text()}`);
     const d = await r.json();
     state.survey = d.survey;
@@ -528,7 +536,9 @@ function renderRadar(){
     const p = pt(i, 1.18);
     const ax = state.axes[i];
     const v = axes[ax];
-    const vStr = v != null ? v.toFixed(1) : '–';
+    // 사용자에게 보이는 점수는 1~10 raw (scoreOf의 /2 정규화 전). polygon shape은 v(1~5)로 그대로.
+    const vRaw = state.answers[`q_v1d26_dw_${ax}`];
+    const vStr = typeof vRaw === 'number' ? String(vRaw) : (v != null ? v.toFixed(1) : '–');
     const axLabel = AXIS_LABEL[ax] ? tx(AXIS_LABEL[ax]) : ax;
     out += `<text x="${p.x.toFixed(1)}" y="${(p.y-4).toFixed(1)}" text-anchor="middle" font-family="Noto Sans KR" font-size="11" font-weight="600" fill="#002554">${axLabel}</text>`;
     out += `<text x="${p.x.toFixed(1)}" y="${(p.y+8).toFixed(1)}" text-anchor="middle" font-family="Geist Mono" font-size="9.5" fill="#63666A">${vStr}</text>`;
@@ -568,24 +578,15 @@ let _currentPage = 0;
 
 // q.id가 'q_v2dctt_<block><n>_...' 패턴이면 첫 block 문자(a/b/c/d)를 페이지 key로 사용 → 4 Block 페이저.
 // 패턴 미일치 시 PAGE_SIZE chunk fallback (survey_v1 호환).
-function blockKeyOf(q) {
-  const m = /^q_v2dctt_([abcd])\d/i.exec(q.id || '');
-  return m ? m[1].toLowerCase() : null;
-}
+function blockKeyOf(_q) { return null; }  // v1.2026rev — Block 그룹핑 미사용
 
 function getPages(){
+  // axis 질문(DW 6축)은 center 그리드. 나머지 question은 sort_order로 정렬 후 PAGE_SIZE chunk.
+  // 옵션 _meta.dependsOn에 의해 hidden 상태인 질문은 페이지 카운트에 포함 (조건 만족 시 노출).
   const otherQs = state.questions
     .filter((q) => !q.axis)
     .sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
 
-  // CTT v2 — Block A/B/C/D 그룹핑
-  if (otherQs.length && otherQs.every(blockKeyOf)) {
-    const grouped = { a:[], b:[], c:[], d:[] };
-    for (const q of otherQs) grouped[blockKeyOf(q)].push(q);
-    return ['a','b','c','d'].map((k) => grouped[k]).filter((arr) => arr.length);
-  }
-
-  // legacy — PAGE_SIZE chunk
   const pages = [];
   for (let i = 0; i < otherQs.length; i += PAGE_SIZE) {
     pages.push(otherQs.slice(i, i + PAGE_SIZE));
@@ -643,26 +644,11 @@ function renderPageNav(total){
     if (i === _currentPage) cls += ' active';
     else if (pages[i] && pages[i].every((q) => !q.required || hasAnswer(q))) cls += ' done';
     d.className = cls;
-    // CTT v2 — Block prefix로 dot 색상·tooltip.
-    const blockKey = pages[i] && pages[i][0] ? blockKeyOf(pages[i][0]) : null;
-    const block = blockKey ? BLOCK_LABELS[blockKey] : null;
-    if (block) {
-      d.style.borderColor = block.color;
-      if (cls.includes('active') || cls.includes('done')) d.style.background = block.color;
-      d.title = `${tx(block)} (${i+1}/${total})`;
-    } else {
-      d.title = `Page ${i+1}/${total}`;
-    }
+    d.title = `Page ${i+1}/${total}`;
     d.onclick = () => gotoPage(i, true);
     dots.appendChild(d);
   }
-  // Counter — Block 라벨 + page count.
-  const curBlockKey = pages[_currentPage] && pages[_currentPage][0]
-    ? blockKeyOf(pages[_currentPage][0]) : null;
-  const curBlock = curBlockKey ? BLOCK_LABELS[curBlockKey] : null;
-  counter.textContent = curBlock
-    ? `${tx(curBlock)} · ${_currentPage+1}/${total}`
-    : `${_currentPage+1}/${total}`;
+  counter.textContent = `${_currentPage+1}/${total}`;
 
   const prev = document.getElementById('btnPrev');
   const next = document.getElementById('btnNext');
@@ -726,6 +712,15 @@ function hasAnswer(q){
   const v = state.answers[q.id];
   if (q.type === 'consent') return v === true;
   if (q.type === 'multi_select') return Array.isArray(v) && v.length > 0;
+  // 계층 single_select — {choice, other_text?} 형태. choice 필수, is_other면 other_text 비어있지 않아야.
+  const isHier = q.type === 'single_select'
+    && Array.isArray(q.options) && q.options.some((o) => typeof o.level === 'number');
+  if (isHier) {
+    if (!v || typeof v !== 'object' || !v.choice) return false;
+    const selOpt = q.options.find((o) => o.value === v.choice);
+    if (selOpt?.is_other && (!v.other_text || !String(v.other_text).trim())) return false;
+    return true;
+  }
   return v !== undefined && v !== null && v !== '';
 }
 
@@ -739,8 +734,30 @@ function renderQuestion(q){
   const kindLabel = `<span class="qa-kind">${q.type}</span>`;
   const title = `<div class="qa-title">${questionTitle(q)}${q.required ? `<span class="req">*</span>` : ''}</div>`;
 
+  // 조건부 follow-up — 옵션 첫 항목 _meta.dependsOn에 부모 question_id + value 명시 시
+  // 부모 답변에 그 value 미포함이면 hidden + required 면제.
+  const depMeta = q.options?.[0]?._meta?.dependsOn;
+  if (depMeta && depMeta.question_id && depMeta.value) {
+    const parentAns = state.answers[depMeta.question_id];
+    const satisfied = Array.isArray(parentAns)
+      ? parentAns.includes(depMeta.value)
+      : parentAns === depMeta.value;
+    if (!satisfied) {
+      wrap.style.display = 'none';
+      wrap.dataset.hiddenByDep = '1';
+      return wrap;
+    }
+  }
+
+  // 042 q_v1d26_usage_hier — 계층 single_select. options에 level/parent_id 메타 있으면 펼침 UI.
+  const isHierarchical = q.type === 'single_select'
+    && Array.isArray(q.options)
+    && q.options.some((o) => typeof o.level === 'number');
+
   let body = '';
-  if (q.type === 'single_select') {
+  if (isHierarchical) {
+    body = renderHierarchicalBody(q, cur);
+  } else if (q.type === 'single_select') {
     const opts = q.options || [];
     body = `<div class="opts">${opts.map((o, i) => `
       <div class="opt${cur === o.value ? ' selected' : ''}" data-q="${q.id}" data-v="${escapeAttr(o.value)}" data-kind="single">
@@ -749,15 +766,16 @@ function renderQuestion(q){
   } else if (q.type === 'multi_select') {
     const arr = Array.isArray(cur) ? cur : [];
     const opts = q.options || [];
-    // B-Q1 axis_ranks — 클릭 순서대로 1·2·3 순위 표시, 4번째 클릭 차단.
-    const isRanked = q.id === CTT_AXIS_RANK_QID;
-    body = `<div class="opts${isRanked ? ' ranked' : ''}">${opts.map((o, i) => {
-      const rankIdx = arr.indexOf(o.value);  // 0/1/2 = 1·2·3순위
+    // 옵션 첫 항목에 rank_max 메타 있으면 ranked multi_select — 클릭 순서대로 1·N 순위 부여.
+    const rankMax = opts[0]?.rank_max;
+    const isRanked = typeof rankMax === 'number' && rankMax > 0;
+    body = `<div class="opts${isRanked ? ' ranked' : ''}" data-rank-max="${isRanked ? rankMax : ''}">${opts.map((o, i) => {
+      const rankIdx = arr.indexOf(o.value);
       const isSel = rankIdx >= 0;
       const badge = isRanked
         ? (isSel ? `${rankIdx + 1}` : '+')
         : (isSel ? '✓' : `${i+1}`);
-      return `<div class="opt${isSel ? ' selected' : ''}${isRanked && isSel ? ' rank-' + (rankIdx+1) : ''}" data-q="${q.id}" data-v="${escapeAttr(o.value)}" data-kind="${isRanked ? 'ranked' : 'multi'}">
+      return `<div class="opt${isSel ? ' selected' : ''}${isRanked && isSel ? ' rank-' + (rankIdx+1) : ''}" data-q="${q.id}" data-v="${escapeAttr(o.value)}" data-kind="${isRanked ? 'ranked' : 'multi'}" data-rank-max="${isRanked ? rankMax : ''}">
         <span class="opt-num">${badge}</span><span>${optionLabel(o)}</span>
       </div>`;
     }).join('')}</div>`;
@@ -765,9 +783,17 @@ function renderQuestion(q){
     body = `<div class="scale-grid s5">${[1,2,3,4,5].map((n) => `
       <div class="scale-cell${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`).join('')}</div>`;
   } else if (q.type === 'scale_1_10') {
+    // DW 6축 unique 10 — 다른 axis 질문이 이미 10이면 본 question의 10셀 disabled.
+    const isDw = q.axis && state.axes.includes(q.axis);
+    const otherTenAxis = isDw
+      ? state.axes.find((a) => a !== q.axis && state.answers[`q_v1d26_dw_${a}`] === 10)
+      : null;
     body = `<div class="scale-grid s10">${[1,2,3,4,5,6,7,8,9,10].map((n) => {
       const tone = n <= 4 ? 'lo' : n <= 7 ? 'mid' : 'hi';
-      return `<div class="scale-cell ${tone}${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`;
+      const disabled = (n === 10 && otherTenAxis) ? true : false;
+      const cls = `scale-cell ${tone}${cur === n ? ' selected' : ''}${disabled ? ' disabled' : ''}`;
+      const tip = disabled ? ` title="${t('unique_ten_blocked').replace('{axis}', otherTenAxis)}"` : '';
+      return `<div class="${cls}" data-q="${q.id}" data-v="${n}" data-kind="scale" data-disabled="${disabled ? '1' : ''}"${tip}>${n}</div>`;
     }).join('')}</div>`;
   } else if (q.type === 'nps') {
     body = `<div class="scale-grid nps">${[0,1,2,3,4,5,6,7,8,9,10].map((n) => {
@@ -799,6 +825,46 @@ function optionLabel(o){
   const k = `label_${state.lang}`;
   return o[k] || o.label_ru || o.label_en || o.label_ko || o.value || '';
 }
+
+// 042 계층 single_select — level 0(대분류 4) 클릭 → level 1(자식) 펼침. level 0 자체는 선택 불가(트리거 only).
+// 답변 형식: {choice: '2.3' | '2_other', other_text?: '...'}. is_other 옵션 선택 시 conditional textarea 노출.
+function renderHierarchicalBody(q, cur){
+  const opts = Array.isArray(q.options) ? q.options : [];
+  const choice = cur && typeof cur === 'object' ? cur.choice : null;
+  const otherText = cur && typeof cur === 'object' ? (cur.other_text || '') : '';
+  // 어느 level 0이 펼쳐졌는지 — state에 보존 (lazily init)
+  if (!state.hierExpand) state.hierExpand = {};
+  // 현재 선택한 choice의 parent를 자동 펼침
+  if (choice) {
+    const sel = opts.find((o) => o.value === choice);
+    if (sel && sel.parent_id && !(q.id in state.hierExpand)) state.hierExpand[q.id] = sel.parent_id;
+  }
+  const expanded = state.hierExpand[q.id] || null;
+
+  const level0 = opts.filter((o) => o.level === 0);
+  let html = '<div class="opts hier">';
+  for (const top of level0) {
+    const isExp = expanded === top.value;
+    const arrow = isExp ? '▼' : '▶';
+    html += `<div class="opt hier-top${isExp ? ' expanded' : ''}" data-q="${q.id}" data-v="${escapeAttr(top.value)}" data-kind="hier-top">
+      <span class="opt-num">${arrow}</span><span>${optionLabel(top)}</span>
+    </div>`;
+    if (isExp) {
+      const children = opts.filter((o) => o.level === 1 && o.parent_id === top.value);
+      for (const c of children) {
+        const selected = choice === c.value;
+        html += `<div class="opt hier-child${selected ? ' selected' : ''}" data-q="${q.id}" data-v="${escapeAttr(c.value)}" data-kind="hier-child"${c.is_other ? ' data-is-other="1"' : ''}>
+          <span class="opt-num">${c.is_other ? '✎' : '•'}</span><span>${optionLabel(c)}</span>
+        </div>`;
+        if (c.is_other && selected) {
+          html += `<textarea class="txt-area hier-other" data-q="${q.id}" data-kind="hier-other" placeholder="${t('hier_other_placeholder')}">${escapeText(otherText)}</textarea>`;
+        }
+      }
+    }
+  }
+  html += '</div>';
+  return html;
+}
 function escapeAttr(s){ return String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function escapeText(s){ return String(s).replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 
@@ -818,17 +884,17 @@ function bindOne(wrap){
       renderQA(); renderRadar(); refreshSubmit();
     };
   });
-  // B-Q1 ranked — 클릭 순서대로 1·2·3 순위 부여. 4번째 클릭 차단(이미 3개 선택된 상태에서 새 옵션 추가 무시).
+  // ranked multi_select — 옵션 메타 rank_max 동적. 클릭 순서대로 1·N 순위 부여, N+1번째 클릭 차단.
   wrap.querySelectorAll('.opt[data-kind="ranked"]').forEach((el) => {
     el.onclick = () => {
       const q = el.dataset.q, v = el.dataset.v;
+      const rankMax = Number(el.dataset.rankMax || 3);
       const cur = Array.isArray(state.answers[q]) ? state.answers[q].slice() : [];
       const idx = cur.indexOf(v);
       if (idx >= 0) {
-        // 선택 해제 — 뒷 순위가 자동으로 한 칸씩 올라옴
-        cur.splice(idx, 1);
+        cur.splice(idx, 1);  // 선택 해제 — 뒷 순위 자동 한 칸씩 올라옴
       } else {
-        if (cur.length >= CTT_AXIS_RANK_MAX) return;  // max 3
+        if (cur.length >= rankMax) return;
         cur.push(v);
       }
       state.answers[q] = cur;
@@ -836,7 +902,9 @@ function bindOne(wrap){
     };
   });
   wrap.querySelectorAll('.scale-cell[data-kind="scale"]').forEach((el) => {
-    el.onclick = () => { const q=el.dataset.q, v=Number(el.dataset.v);
+    el.onclick = () => {
+      if (el.dataset.disabled === '1') return;  // unique 10 — 다른 axis 10이면 차단
+      const q=el.dataset.q, v=Number(el.dataset.v);
       state.answers[q] = state.answers[q] === v ? null : v;
       if (state.answers[q] === null) delete state.answers[q];
       renderQA(); renderRadar(); refreshSubmit();
@@ -844,6 +912,36 @@ function bindOne(wrap){
   });
   wrap.querySelectorAll('input[data-kind="number"]').forEach((el) => {
     el.oninput = () => { const v = el.value === '' ? null : Number(el.value); state.answers[el.dataset.q] = v; refreshSubmit(); };
+  });
+  // 계층 single_select — level 0 클릭은 펼침 토글 only (값 미설정)
+  wrap.querySelectorAll('.opt[data-kind="hier-top"]').forEach((el) => {
+    el.onclick = () => {
+      const q = el.dataset.q, v = el.dataset.v;
+      if (!state.hierExpand) state.hierExpand = {};
+      state.hierExpand[q] = state.hierExpand[q] === v ? null : v;
+      renderQA(); refreshSubmit();
+    };
+  });
+  // 계층 level 1 자식 클릭 — choice 저장. is_other면 textarea 노출(answer.other_text 보존)
+  wrap.querySelectorAll('.opt[data-kind="hier-child"]').forEach((el) => {
+    el.onclick = () => {
+      const q = el.dataset.q, v = el.dataset.v;
+      const prev = state.answers[q] && typeof state.answers[q] === 'object' ? state.answers[q] : {};
+      if (prev.choice === v) {
+        delete state.answers[q];  // 토글 해제
+      } else {
+        state.answers[q] = { choice: v, other_text: el.dataset.isOther === '1' ? (prev.other_text || '') : null };
+      }
+      renderQA(); refreshSubmit();
+    };
+  });
+  wrap.querySelectorAll('textarea[data-kind="hier-other"]').forEach((el) => {
+    el.oninput = () => {
+      const q = el.dataset.q;
+      const prev = state.answers[q] && typeof state.answers[q] === 'object' ? state.answers[q] : { choice: null };
+      state.answers[q] = { ...prev, other_text: el.value };
+      refreshSubmit();
+    };
   });
   wrap.querySelectorAll('input[data-kind="text"],textarea[data-kind="text"]').forEach((el) => {
     el.oninput = () => { state.answers[el.dataset.q] = el.value; refreshSubmit(); };
@@ -857,7 +955,8 @@ function refreshSubmit(){
   const btn = document.getElementById('btnSubmit');
   const reqQs = state.questions.filter((q) => q.required);
   const allOk = reqQs.every((q) => hasAnswer(q));
-  const hasCompany = !!state.target_company.trim();
+  // 042 — target_company는 정식 question(q_v1d26_target_company)이 required + dealer card input이 fallback.
+  const hasCompany = !!(state.answers['q_v1d26_target_company'] || state.target_company?.trim());
   btn.disabled = !(allOk && hasCompany);
   btn.textContent = t('submit');
   // Re-render page dots in case answers state changed (done indicators)
@@ -880,6 +979,12 @@ async function onSubmit(){
   const subQ = state.questions.find((q) => q.type === 'consent' && /subscri|подписк|수신/i.test(questionTitle(q)));
   const dataQ = state.questions.find((q) => q.type === 'consent' && (q.required === true || /process|обработ|처리/i.test(questionTitle(q))));
 
+  // 042 — META 키 폐기. target_company·contact_*는 정식 question 답변에서 추출.
+  const ansFor = (qid) => {
+    const v = state.answers[qid];
+    return (typeof v === 'string' && v.trim()) ? v.trim() : null;
+  };
+
   const answersArr = state.questions.map((q) => ({ question_id: q.id, answer: state.answers[q.id] ?? null }));
 
   const payload = {
@@ -896,14 +1001,14 @@ async function onSubmit(){
     answers: answersArr,
     preference_axes,
     dealer_hypothesis_segment: state.segment,
-    target_company: state.target_company.trim(),
-    contact_name:  state.contact_name.trim()  || null,
-    contact_phone: state.contact_phone.trim() || null,
-    notes:         state.notes.trim()         || null,
+    target_company: ansFor('q_v1d26_target_company') ?? (state.target_company?.trim() || null),
+    contact_name:   ansFor('q_v1d26_contact_name')   ?? (state.contact_name?.trim()  || null),
+    contact_phone:  ansFor('q_v1d26_contact_phone')  ?? (state.contact_phone?.trim() || null),
+    notes:          state.notes?.trim() || null,
   };
 
   const id = crypto.randomUUID();
-  const rec = { id, payload, idempotency_key: `${id}_v2` };
+  const rec = { id, payload, idempotency_key: `${id}_v1rev` };
   setToast(null);
   try {
     if (state.online) {
