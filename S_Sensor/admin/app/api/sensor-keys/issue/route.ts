@@ -60,7 +60,7 @@ function buildManifest(crms: CrmDefRow[]): string {
   const manifest = {
     manifest_version: 3,
     name: 'HD건설기계 Sensor',
-    version: '0.2.0',
+    version: '0.3.0',
     description: 'CRM 화면을 자동 캡쳐해 HD건설기계 영업 데이터 플랫폼으로 전송합니다.',
     permissions: ['activeTab', 'storage', 'scripting', 'alarms'],
     host_permissions: matches,

@@ -32,8 +32,9 @@
 | 키워드 | 위치 |
 |---|---|
 | MV3 manifest·permissions·host_permissions | `extension/manifest.json` |
-| CRM 매트릭스 (data-driven) | `extension/crm_definitions.json` (DB: `crm_definitions` 테이블) |
-| URL 매칭·SPA pushState·debounce | `extension/content.js` |
+| CRM 매트릭스 (data-driven) | DB `crm_definitions` 테이블 → Extension은 GET `/crm-definitions`로 fetch (`extension/lib/crm_rules.js`) · 번들 `extension/crm_definitions.json`은 cold-start fallback |
+| URL 매칭·SPA pushState·debounce | `extension/content.js` (CRM 테이블은 background 메시지로 수신) |
+| 동적 CRM 규칙 endpoint (HMAC GET) | `backend/functions/crm-definitions/index.ts` |
 | captureVisibleTab·quality fallback | `extension/background.js` · `extension/lib/capture.js` |
 | 16KB 청크·HMAC·재시도 8회·idempotency | `extension/lib/{chunk,hmac,sender}.js` |
 | IndexedDB 큐 1000건·drain·trim | `extension/lib/queue.js` |
@@ -106,3 +107,4 @@ RLS: service_role 전권 / `is_hd_admin()` read + normalized_fields update.
 | 2026-05-18 | v0.3 — `005_runtime.sql`(rule_versions·publish_rule) + `007_normalize_queue.sql`(queue·lock·save·requeue RPC) + `normalize-worker` + `shared/{rules,llm,storage,normalize}` |
 | 2026-05-18 | v0.4 — `008_admin_audit.sql`(normalized_field_edits·edit_normalized_field·enqueue_normalize_priority RPC) + 4 Admin Edge Functions + `shared/{admin_auth,pagination}` + Next.js Admin UI |
 | 2026-05-19 | v0.5 — Phase D.3 — `shared/lead_scoring.ts` (V_Voice 중복) + normalize-worker가 save_normalized 후 scoreLead 호출. deno.json에 `harness2/` alias. `021_disable_trigger_scoring.sql`이 upsert_lead_from_cluster의 PERFORM 라인 제거. |
+| 2026-05-25 | v0.6 — Extension CRM 규칙 동적화. `backend/functions/crm-definitions/` (HMAC GET) + `extension/lib/crm_rules.js`(chrome.storage 캐시, 15분 alarm 갱신). content.js는 background에 요청하고 번들 JSON은 cold-start fallback 전용. 한계: manifest `content_scripts.matches`는 빌드 시점 고정 → 신규 CRM 도메인은 여전히 ZIP 재발급. |

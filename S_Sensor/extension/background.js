@@ -7,6 +7,7 @@ import { enqueue, popPending, updateStatus, trim } from './lib/queue.js';
 import { sendCapture } from './lib/sender.js';
 import { estimateKb, pickFallbackQuality } from './lib/capture.js';
 import { appendLog } from './lib/error.js';
+import { getTable as getCrmTable, refresh as refreshCrmRules, CRM_REFRESH_INTERVAL_MS } from './lib/crm_rules.js';
 
 const DRAIN_INTERVAL_MS = 5 * 60 * 1000;
 const TRIM_INTERVAL_MS  = 30 * 60 * 1000;
@@ -22,6 +23,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
   if (msg.type === 'drain_now') {
     drainQueue().then(() => sendResponse({ ok: true }));
+    return true;
+  }
+  if (msg.type === 'crm_rules_get') {
+    getCrmTable()
+      .then((table) => sendResponse({ ok: true, ...table }))
+      .catch((e) => sendResponse({ ok: false, error: String(e) }));
     return true;
   }
   return false;
@@ -106,14 +113,25 @@ self.addEventListener('online', () => {
   drainQueue().catch(() => {});
 });
 
-// 주기 drain·trim — chrome.alarms로 service worker 깨우기
+// 주기 drain·trim·crm 규칙 갱신 — chrome.alarms로 service worker 깨우기
 chrome.alarms.create('drain', { periodInMinutes: DRAIN_INTERVAL_MS / 60000 });
 chrome.alarms.create('trim', { periodInMinutes: TRIM_INTERVAL_MS / 60000 });
+chrome.alarms.create('crm_refresh', { periodInMinutes: CRM_REFRESH_INTERVAL_MS / 60000 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'drain') drainQueue().catch(() => {});
   if (alarm.name === 'trim') trim().catch(() => {});
+  if (alarm.name === 'crm_refresh') refreshCrmRules().catch(() => {});
+});
+
+// install/startup 직후 1회 — CRM 규칙은 자격증명 갖춰진 뒤에만 의미 있음
+chrome.runtime.onInstalled.addListener(() => {
+  refreshCrmRules().catch(() => {});
+});
+chrome.runtime.onStartup?.addListener?.(() => {
+  refreshCrmRules().catch(() => {});
 });
 
 // 시작 시 1회
 drainQueue().catch(() => {});
+refreshCrmRules().catch(() => {});

@@ -1,7 +1,8 @@
 // content.js — URL 매칭 + 캡쳐 트리거 (S_10.02 · S_10.03).
 // CRM 분류·entity 추출은 백엔드. 여기는 raw URL + raw 이미지만.
 //
-// CRM 매트릭스는 crm_definitions.json (data-driven — § 4.3 하드코드 지양).
+// CRM 매트릭스는 background.js가 백엔드 GET /crm-definitions에서 받아 캐시한다.
+// 실패·cold-start 시 번들 crm_definitions.json fallback. content_scripts.matches는 manifest 빌드 시점 고정.
 
 import { collectMeta } from './lib/capture.js';
 import { getConfig } from './lib/config.js';
@@ -23,7 +24,16 @@ let lastUrl = location.href;
 })();
 
 async function loadCrmTable() {
-  // crm_definitions.json은 web_accessible_resource. fetch로 로드.
+  // 1) background가 들고 있는 동적 테이블 우선 시도
+  try {
+    const res = await chrome.runtime.sendMessage({ type: 'crm_rules_get' });
+    if (res && res.ok && res.defs && Object.keys(res.defs).length > 0) {
+      return res.defs;
+    }
+  } catch (_) {
+    // service worker 미기동 등 — 번들 fallback으로 이어감
+  }
+  // 2) 번들 fallback — 최초 설치 직후, 백엔드 실패 시
   const url = chrome.runtime.getURL('crm_definitions.json');
   const res = await fetch(url);
   return res.json();
