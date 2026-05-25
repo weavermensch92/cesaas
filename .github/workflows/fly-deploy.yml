@@ -1,0 +1,40 @@
+name: fly-deploy
+
+# main 브랜치에 push되면 hd-poc-admin Fly.io app에 자동 배포.
+# 위버가 매번 PowerShell로 flyctl deploy 안 해도 됨.
+#
+# 1회 setup: GitHub repo → Settings → Secrets and variables → Actions
+#   - FLY_API_TOKEN: 로컬 PowerShell `flyctl auth token` 출력 (FlyV1 fm2_...)
+#
+# 트리거:
+#   - main에 push (PR 머지 또는 직접 commit)
+#   - 또는 Actions 탭에서 수동 실행 (workflow_dispatch)
+
+on:
+  push:
+    branches: [main]
+    # dealer/visitor HTML 또는 admin/Dockerfile 변경 시만 실행
+    paths:
+      - 'S_Sensor/admin/**'
+      - 'V_Voice/dealer/**'
+      - 'V_Voice/visitor/**'
+      - 'C_Common/packages/core/**'
+      - 'C_Common/packages/design/**'
+      - 'fly.toml'
+      - '.github/workflows/fly-deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: fly-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - name: Deploy to Fly.io
+        run: flyctl deploy --config fly.toml --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
