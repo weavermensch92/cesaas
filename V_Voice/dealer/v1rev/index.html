@@ -130,6 +130,7 @@ input,textarea,select{font:inherit;color:inherit;}
 .opt.hier-child{margin-left:18px;font-size:12px;}
 .opt.hier-child .opt-num{width:18px;height:18px;font-size:9px;}
 .txt-area.hier-other{margin-left:18px;margin-top:4px;width:calc(100% - 18px);min-height:48px;}
+.txt-area.multi-other{margin-top:6px;width:100%;min-height:48px;font-size:12px;}
 .scale-cell.selected.hi{background:var(--hd-prosperity);border-color:var(--hd-prosperity);color:#fff;}
 
 .txt-input,.txt-area{width:100%;padding:8px 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-size:13px;}
@@ -221,7 +222,9 @@ input,textarea,select{font:inherit;color:inherit;}
       <div id="dealerCard"></div>
     </div>
 
-    <div class="section-block">
+    <div class="section-block" style="display:none;">
+      <!-- v1.2026rev — 회사명·담당자·연락처는 정식 question(q_v1d26_target_company / _contact_name / _contact_phone)에서 받음.
+           메모는 안 받음. 좌측 sidebar 입력은 v1·v2 호환을 위해 DOM만 보존 (display:none). -->
       <div class="panel-head" id="lbl_target_head">Информация о клиенте</div>
       <div class="target">
         <label id="lbl_company">Company *</label><input id="inp_company" type="text" autocomplete="off"/>
@@ -413,7 +416,18 @@ async function queueUpdate(id,patch){const db=await openDb(); return new Promise
 async function refreshQueue(){state.queueCount=await queueCountFn(); const el=document.getElementById('queuePill'); if(el) el.textContent=`${t('queue')} ${state.queueCount}`;}
 
 /* API */
-const API_BASE = (window.HD_API_BASE || '').replace(/\/$/,'');
+// API_BASE: 1) URL 쿼리 ?api_base=... 2) window.HD_API_BASE (host inject) 3) 빈 문자열(미설정 에러)
+const _urlParams = new URLSearchParams(window.location.search);
+const _apiBaseFromUrl = _urlParams.get('api_base');
+if (_apiBaseFromUrl) {
+  try { localStorage.setItem('hd_api_base', _apiBaseFromUrl); } catch {}
+}
+const API_BASE = (
+  _apiBaseFromUrl
+    || window.HD_API_BASE
+    || (() => { try { return localStorage.getItem('hd_api_base'); } catch { return ''; } })()
+    || ''
+).replace(/\/$/,'');
 async function postOne(rec){
   if (!API_BASE) throw new Error(t('api_base_missing'));
   const res = await fetch(`${API_BASE}/responses-receive`, {
@@ -734,19 +748,14 @@ function renderQuestion(q){
   const kindLabel = `<span class="qa-kind">${q.type}</span>`;
   const title = `<div class="qa-title">${questionTitle(q)}${q.required ? `<span class="req">*</span>` : ''}</div>`;
 
-  // 조건부 follow-up — 옵션 첫 항목 _meta.dependsOn에 부모 question_id + value 명시 시
-  // 부모 답변에 그 value 미포함이면 hidden + required 면제.
+  // 조건부 follow-up — 옵션 첫 항목 _meta.dependsOn 표식이 있으면 UI에서 **항상 hidden**.
+  // 기타 텍스트 입력은 부모 multi_select의 is_other 옵션 선택 시 inline textarea로 받음.
+  // payload는 onSubmit에서 부모 question id + '_other' 키로 별 entry 추가해 DB에 매핑.
   const depMeta = q.options?.[0]?._meta?.dependsOn;
   if (depMeta && depMeta.question_id && depMeta.value) {
-    const parentAns = state.answers[depMeta.question_id];
-    const satisfied = Array.isArray(parentAns)
-      ? parentAns.includes(depMeta.value)
-      : parentAns === depMeta.value;
-    if (!satisfied) {
-      wrap.style.display = 'none';
-      wrap.dataset.hiddenByDep = '1';
-      return wrap;
-    }
+    wrap.style.display = 'none';
+    wrap.dataset.hiddenByDep = '1';
+    return wrap;
   }
 
   // 042 q_v1d26_usage_hier — 계층 single_select. options에 level/parent_id 메타 있으면 펼침 UI.
@@ -766,19 +775,32 @@ function renderQuestion(q){
   } else if (q.type === 'multi_select') {
     const arr = Array.isArray(cur) ? cur : [];
     const opts = q.options || [];
-    // 옵션 첫 항목에 rank_max 메타 있으면 ranked multi_select — 클릭 순서대로 1·N 순위 부여.
-    const rankMax = opts[0]?.rank_max;
-    const isRanked = typeof rankMax === 'number' && rankMax > 0;
-    body = `<div class="opts${isRanked ? ' ranked' : ''}" data-rank-max="${isRanked ? rankMax : ''}">${opts.map((o, i) => {
+    // ranked — 옵션 어느 한 곳에 rank_max 메타 있으면 ranked 모드 (042는 첫 옵션, 일반화)
+    const rankOpt = opts.find((o) => typeof o.rank_max === 'number' && o.rank_max > 0);
+    const rankMax = rankOpt?.rank_max;
+    const isRanked = !!rankMax;
+    // inline 기타 — 어느 옵션이라도 is_other 플래그 있으면 그 옵션 선택 시 같은 question 안에 textarea 노출.
+    const otherOpt = opts.find((o) => o.is_other === true);
+    const otherText = state.answers[q.id + '__other'] || '';
+    const otherSelected = otherOpt && arr.includes(otherOpt.value);
+
+    let optsHtml = '';
+    for (let i = 0; i < opts.length; i++) {
+      const o = opts[i];
       const rankIdx = arr.indexOf(o.value);
       const isSel = rankIdx >= 0;
       const badge = isRanked
         ? (isSel ? `${rankIdx + 1}` : '+')
         : (isSel ? '✓' : `${i+1}`);
-      return `<div class="opt${isSel ? ' selected' : ''}${isRanked && isSel ? ' rank-' + (rankIdx+1) : ''}" data-q="${q.id}" data-v="${escapeAttr(o.value)}" data-kind="${isRanked ? 'ranked' : 'multi'}" data-rank-max="${isRanked ? rankMax : ''}">
+      optsHtml += `<div class="opt${isSel ? ' selected' : ''}${isRanked && isSel ? ' rank-' + (rankIdx+1) : ''}" data-q="${q.id}" data-v="${escapeAttr(o.value)}" data-kind="${isRanked ? 'ranked' : 'multi'}" data-rank-max="${isRanked ? rankMax : ''}">
         <span class="opt-num">${badge}</span><span>${optionLabel(o)}</span>
       </div>`;
-    }).join('')}</div>`;
+      // 본 옵션이 is_other이고 선택된 상태면 바로 아래 inline textarea.
+      if (o.is_other === true && isSel) {
+        optsHtml += `<textarea class="txt-area multi-other" data-q="${q.id}" data-kind="multi-other" placeholder="${t('hier_other_placeholder')}">${escapeText(otherText)}</textarea>`;
+      }
+    }
+    body = `<div class="opts${isRanked ? ' ranked' : ''}" data-rank-max="${isRanked ? rankMax : ''}">${optsHtml}</div>`;
   } else if (q.type === 'scale_1_5') {
     body = `<div class="scale-grid s5">${[1,2,3,4,5].map((n) => `
       <div class="scale-cell${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`).join('')}</div>`;
@@ -903,8 +925,19 @@ function bindOne(wrap){
   });
   wrap.querySelectorAll('.scale-cell[data-kind="scale"]').forEach((el) => {
     el.onclick = () => {
-      if (el.dataset.disabled === '1') return;  // unique 10 — 다른 axis 10이면 차단
-      const q=el.dataset.q, v=Number(el.dataset.v);
+      if (el.dataset.disabled === '1') return;  // unique 10 — 다른 axis 10이면 차단 (render 측 가드)
+      const q = el.dataset.q, v = Number(el.dataset.v);
+      // 추가 가드 — render 측 disabled가 누락된 경우에도 클릭 시 한 번 더 검증.
+      if (v === 10) {
+        const qObj = state.questions.find((qq) => qq.id === q);
+        if (qObj?.axis && state.axes.includes(qObj.axis)) {
+          const otherTen = state.axes.find((a) => a !== qObj.axis && state.answers[`q_v1d26_dw_${a}`] === 10);
+          if (otherTen) {
+            alert(t('unique_ten_blocked').replace('{axis}', otherTen));
+            return;
+          }
+        }
+      }
       state.answers[q] = state.answers[q] === v ? null : v;
       if (state.answers[q] === null) delete state.answers[q];
       renderQA(); renderRadar(); refreshSubmit();
@@ -940,6 +973,14 @@ function bindOne(wrap){
       const q = el.dataset.q;
       const prev = state.answers[q] && typeof state.answers[q] === 'object' ? state.answers[q] : { choice: null };
       state.answers[q] = { ...prev, other_text: el.value };
+      refreshSubmit();
+    };
+  });
+  // multi_select inline "기타" 텍스트 — answer는 array 그대로, 텍스트는 state.answers[q+'__other']
+  wrap.querySelectorAll('textarea[data-kind="multi-other"]').forEach((el) => {
+    el.oninput = () => {
+      const q = el.dataset.q;
+      state.answers[q + '__other'] = el.value;
       refreshSubmit();
     };
   });
@@ -986,6 +1027,22 @@ async function onSubmit(){
   };
 
   const answersArr = state.questions.map((q) => ({ question_id: q.id, answer: state.answers[q.id] ?? null }));
+
+  // multi_select inline "기타" 텍스트 — state.answers[q.id + '__other'] → 별도 answer entry 추가.
+  // 046 마이그레이션에서 *_other follow-up question을 폐기하고 multi 옵션 `is_other:true` + parent question id의 _other_text 키로 보낸다.
+  for (const q of state.questions) {
+    if (q.type !== 'multi_select') continue;
+    const opts = q.options || [];
+    const otherOpt = opts.find((o) => o.is_other === true);
+    if (!otherOpt) continue;
+    const arr = Array.isArray(state.answers[q.id]) ? state.answers[q.id] : [];
+    if (!arr.includes(otherOpt.value)) continue;
+    const txt = (state.answers[q.id + '__other'] || '').trim();
+    if (!txt) continue;
+    // 042 follow-up question id 패턴: q_v1d26_factors → q_v1d26_factors_other 등.
+    // dependsOn으로 UI 숨겨졌어도 DB에는 row가 있어 FK 안전.
+    answersArr.push({ question_id: q.id + '_other', answer: txt });
+  }
 
   const payload = {
     survey_id: state.survey.id,
