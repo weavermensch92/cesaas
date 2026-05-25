@@ -757,16 +757,28 @@ function renderDealerCard(){
 function hasAnswer(q){
   const v = state.answers[q.id];
   if (q.type === 'consent') return v === true;
-  if (q.type === 'multi_select') return Array.isArray(v) && v.length > 0;
-  // 계층 single_select — {choice, other_text?} 형태. choice 필수, is_other면 other_text 비어있지 않아야.
-  const isHier = q.type === 'single_select'
+  // 계층 (single 또는 multi_select with level 메타)
+  const isHier = (q.type === 'single_select' || q.type === 'multi_select')
     && Array.isArray(q.options) && q.options.some((o) => typeof o.level === 'number');
-  if (isHier) {
+  if (isHier && q.type === 'multi_select') {
+    if (!Array.isArray(v) || v.length === 0) return false;
+    // is_other 선택돼 있으면 parent별 other_text 채워졌는지 검사
+    for (const val of v) {
+      const opt = q.options.find((o) => o.value === val);
+      if (opt?.is_other) {
+        const txt = state.answers[q.id + '__other_' + opt.parent_id];
+        if (!txt || !String(txt).trim()) return false;
+      }
+    }
+    return true;
+  }
+  if (isHier) {  // single_select hierarchical
     if (!v || typeof v !== 'object' || !v.choice) return false;
     const selOpt = q.options.find((o) => o.value === v.choice);
     if (selOpt?.is_other && (!v.other_text || !String(v.other_text).trim())) return false;
     return true;
   }
+  if (q.type === 'multi_select') return Array.isArray(v) && v.length > 0;
   return v !== undefined && v !== null && v !== '';
 }
 
@@ -888,21 +900,43 @@ function optionLabel(o){
 // 답변 형식: {choice: '2.3' | '2_other', other_text?: '...'}. is_other 옵션 선택 시 conditional textarea 노출.
 function renderHierarchicalBody(q, cur){
   const opts = Array.isArray(q.options) ? q.options : [];
-  const choice = cur && typeof cur === 'object' ? cur.choice : null;
-  const otherText = cur && typeof cur === 'object' ? (cur.other_text || '') : '';
-  // 어느 level 0이 펼쳐졌는지 — state에 보존 (lazily init)
+  const isMulti = q.type === 'multi_select';
+  // multi_select: cur = array of values. single_select: cur = {choice, other_text}.
+  const selectedValues = isMulti
+    ? (Array.isArray(cur) ? cur : [])
+    : (cur && typeof cur === 'object' && cur.choice ? [cur.choice] : []);
+  const otherTextSingle = !isMulti && cur && typeof cur === 'object' ? (cur.other_text || '') : '';
+  // multi_select: 4 대분류별 other_text 분리 — state.answers[q.id + '__other_' + parentId]
+  const otherTextByParent = (parentId) => {
+    if (!isMulti) return otherTextSingle;
+    return state.answers[q.id + '__other_' + parentId] || '';
+  };
+
+  // 펼침 상태 — single은 단일, multi는 array (여러 대분류 동시 펼침)
   if (!state.hierExpand) state.hierExpand = {};
-  // 현재 선택한 choice의 parent를 자동 펼침
-  if (choice) {
-    const sel = opts.find((o) => o.value === choice);
-    if (sel && sel.parent_id && !(q.id in state.hierExpand)) state.hierExpand[q.id] = sel.parent_id;
+  // 자동 펼침 — 선택한 값의 parent들을 펼침
+  for (const v of selectedValues) {
+    const sel = opts.find((o) => o.value === v);
+    if (sel && sel.parent_id) {
+      const cur = state.hierExpand[q.id];
+      if (isMulti) {
+        const arr = Array.isArray(cur) ? cur.slice() : (cur ? [cur] : []);
+        if (!arr.includes(sel.parent_id)) arr.push(sel.parent_id);
+        state.hierExpand[q.id] = arr;
+      } else if (!(q.id in state.hierExpand)) {
+        state.hierExpand[q.id] = sel.parent_id;
+      }
+    }
   }
-  const expanded = state.hierExpand[q.id] || null;
+  const expandedRaw = state.hierExpand[q.id];
+  const expandedSet = new Set(
+    Array.isArray(expandedRaw) ? expandedRaw : (expandedRaw ? [expandedRaw] : [])
+  );
 
   const level0 = opts.filter((o) => o.level === 0);
-  let html = '<div class="opts hier">';
+  let html = `<div class="opts hier${isMulti ? ' multi' : ''}">`;
   for (const top of level0) {
-    const isExp = expanded === top.value;
+    const isExp = expandedSet.has(top.value);
     const arrow = isExp ? '▼' : '▶';
     html += `<div class="opt hier-top${isExp ? ' expanded' : ''}" data-q="${q.id}" data-v="${escapeAttr(top.value)}" data-kind="hier-top">
       <span class="opt-num">${arrow}</span><span>${optionLabel(top)}</span>
@@ -910,12 +944,15 @@ function renderHierarchicalBody(q, cur){
     if (isExp) {
       const children = opts.filter((o) => o.level === 1 && o.parent_id === top.value);
       for (const c of children) {
-        const selected = choice === c.value;
-        html += `<div class="opt hier-child${selected ? ' selected' : ''}" data-q="${q.id}" data-v="${escapeAttr(c.value)}" data-kind="hier-child"${c.is_other ? ' data-is-other="1"' : ''}>
-          <span class="opt-num">${c.is_other ? '✎' : '•'}</span><span>${optionLabel(c)}</span>
+        const selected = selectedValues.includes(c.value);
+        const mark = isMulti
+          ? (selected ? '✓' : (c.is_other ? '✎' : '+'))
+          : (c.is_other ? '✎' : '•');
+        html += `<div class="opt hier-child${selected ? ' selected' : ''}" data-q="${q.id}" data-v="${escapeAttr(c.value)}" data-kind="hier-child"${c.is_other ? ' data-is-other="1"' : ''} data-parent="${escapeAttr(top.value)}">
+          <span class="opt-num">${mark}</span><span>${optionLabel(c)}</span>
         </div>`;
         if (c.is_other && selected) {
-          html += `<textarea class="txt-area hier-other" data-q="${q.id}" data-kind="hier-other" placeholder="${t('hier_other_placeholder')}">${escapeText(otherText)}</textarea>`;
+          html += `<textarea class="txt-area hier-other" data-q="${q.id}" data-kind="hier-other" data-parent="${escapeAttr(top.value)}" placeholder="${t('hier_other_placeholder')}">${escapeText(otherTextByParent(top.value))}</textarea>`;
         }
       }
     }
@@ -983,33 +1020,60 @@ function bindOne(wrap){
   wrap.querySelectorAll('input[data-kind="number"]').forEach((el) => {
     el.oninput = () => { const v = el.value === '' ? null : Number(el.value); state.answers[el.dataset.q] = v; refreshSubmit(); };
   });
-  // 계층 single_select — level 0 클릭은 펼침 토글 only (값 미설정)
+  // 계층 level 0 클릭 — 펼침 토글 (single은 단일 대분류, multi는 여러 대분류 동시 펼침 가능)
   wrap.querySelectorAll('.opt[data-kind="hier-top"]').forEach((el) => {
     el.onclick = () => {
-      const q = el.dataset.q, v = el.dataset.v;
+      const qid = el.dataset.q, v = el.dataset.v;
+      const qObj = state.questions.find((q) => q.id === qid);
+      const isMulti = qObj?.type === 'multi_select';
       if (!state.hierExpand) state.hierExpand = {};
-      state.hierExpand[q] = state.hierExpand[q] === v ? null : v;
-      renderQA(); refreshSubmit();
-    };
-  });
-  // 계층 level 1 자식 클릭 — choice 저장. is_other면 textarea 노출(answer.other_text 보존)
-  wrap.querySelectorAll('.opt[data-kind="hier-child"]').forEach((el) => {
-    el.onclick = () => {
-      const q = el.dataset.q, v = el.dataset.v;
-      const prev = state.answers[q] && typeof state.answers[q] === 'object' ? state.answers[q] : {};
-      if (prev.choice === v) {
-        delete state.answers[q];  // 토글 해제
+      if (isMulti) {
+        const cur = state.hierExpand[qid];
+        const arr = Array.isArray(cur) ? cur.slice() : (cur ? [cur] : []);
+        const idx = arr.indexOf(v);
+        if (idx >= 0) arr.splice(idx, 1); else arr.push(v);
+        state.hierExpand[qid] = arr;
       } else {
-        state.answers[q] = { choice: v, other_text: el.dataset.isOther === '1' ? (prev.other_text || '') : null };
+        state.hierExpand[qid] = state.hierExpand[qid] === v ? null : v;
       }
       renderQA(); refreshSubmit();
     };
   });
+  // 계층 level 1 자식 클릭 — single: choice 저장 / multi: array 토글
+  wrap.querySelectorAll('.opt[data-kind="hier-child"]').forEach((el) => {
+    el.onclick = () => {
+      const qid = el.dataset.q, v = el.dataset.v;
+      const qObj = state.questions.find((q) => q.id === qid);
+      const isMulti = qObj?.type === 'multi_select';
+      if (isMulti) {
+        const arr = Array.isArray(state.answers[qid]) ? state.answers[qid].slice() : [];
+        const idx = arr.indexOf(v);
+        if (idx >= 0) arr.splice(idx, 1); else arr.push(v);
+        if (arr.length === 0) delete state.answers[qid]; else state.answers[qid] = arr;
+      } else {
+        const prev = state.answers[qid] && typeof state.answers[qid] === 'object' ? state.answers[qid] : {};
+        if (prev.choice === v) {
+          delete state.answers[qid];
+        } else {
+          state.answers[qid] = { choice: v, other_text: el.dataset.isOther === '1' ? (prev.other_text || '') : null };
+        }
+      }
+      renderQA(); refreshSubmit();
+    };
+  });
+  // 계층 inline "기타" 텍스트 — multi는 parent별 분리 키, single은 단일 other_text
   wrap.querySelectorAll('textarea[data-kind="hier-other"]').forEach((el) => {
     el.oninput = () => {
-      const q = el.dataset.q;
-      const prev = state.answers[q] && typeof state.answers[q] === 'object' ? state.answers[q] : { choice: null };
-      state.answers[q] = { ...prev, other_text: el.value };
+      const qid = el.dataset.q;
+      const parent = el.dataset.parent;
+      const qObj = state.questions.find((q) => q.id === qid);
+      const isMulti = qObj?.type === 'multi_select';
+      if (isMulti && parent) {
+        state.answers[qid + '__other_' + parent] = el.value;
+      } else {
+        const prev = state.answers[qid] && typeof state.answers[qid] === 'object' ? state.answers[qid] : { choice: null };
+        state.answers[qid] = { ...prev, other_text: el.value };
+      }
       refreshSubmit();
     };
   });
@@ -1065,20 +1129,36 @@ async function onSubmit(){
 
   const answersArr = state.questions.map((q) => ({ question_id: q.id, answer: state.answers[q.id] ?? null }));
 
-  // multi_select inline "기타" 텍스트 — state.answers[q.id + '__other'] → 별도 answer entry 추가.
-  // 046 마이그레이션에서 *_other follow-up question을 폐기하고 multi 옵션 `is_other:true` + parent question id의 _other_text 키로 보낸다.
+  // multi_select inline "기타" 텍스트 → 별도 answer entry로 송출.
   for (const q of state.questions) {
     if (q.type !== 'multi_select') continue;
     const opts = q.options || [];
-    const otherOpt = opts.find((o) => o.is_other === true);
-    if (!otherOpt) continue;
     const arr = Array.isArray(state.answers[q.id]) ? state.answers[q.id] : [];
-    if (!arr.includes(otherOpt.value)) continue;
-    const txt = (state.answers[q.id + '__other'] || '').trim();
-    if (!txt) continue;
-    // 042 follow-up question id 패턴: q_v1d26_factors → q_v1d26_factors_other 등.
-    // dependsOn으로 UI 숨겨졌어도 DB에는 row가 있어 FK 안전.
-    answersArr.push({ question_id: q.id + '_other', answer: txt });
+    const isHierMulti = opts.some((o) => typeof o.level === 'number');
+    if (isHierMulti) {
+      // 계층 multi — parent별 _other 옵션 4개 (1_other ~ 4_other). 각각 textarea 별도.
+      for (const opt of opts) {
+        if (!opt.is_other) continue;
+        if (!arr.includes(opt.value)) continue;
+        const txt = (state.answers[q.id + '__other_' + opt.parent_id] || '').trim();
+        if (!txt) continue;
+        // answer 본문(array)에 이미 '1_other' 등이 포함됨. 텍스트는 question_id에 parent 접미사로 송출.
+        // FK 회피 — q_v1d26_usage_hier_other_text 같은 합성 id는 DB에 없으므로 hidden answer 채널 활용:
+        // 일반 q.id의 array에 "1_other:테스트" 같은 형태로 inline string으로 추가.
+        const idx = arr.indexOf(opt.value);
+        if (idx >= 0) arr[idx] = `${opt.value}:${txt}`;
+      }
+      if (arr.length) answersArr.find((a) => a.question_id === q.id).answer = arr;
+    } else {
+      // 평면 multi — 단일 _other 옵션 + state.answers[q+'__other'] 텍스트
+      const otherOpt = opts.find((o) => o.is_other === true);
+      if (!otherOpt) continue;
+      if (!arr.includes(otherOpt.value)) continue;
+      const txt = (state.answers[q.id + '__other'] || '').trim();
+      if (!txt) continue;
+      // 042 follow-up question id 패턴: q_v1d26_factors → q_v1d26_factors_other 등 (DB row 있음, FK 안전)
+      answersArr.push({ question_id: q.id + '_other', answer: txt });
+    }
   }
 
   const payload = {
