@@ -63,7 +63,14 @@ input,textarea,select{font:inherit;color:inherit;}
 .seg{display:flex;align-items:center;gap:8px;padding:8px 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-size:12.5px;color:var(--hd-ink);cursor:pointer;transition:border-color 0.1s,background 0.1s;}
 .seg:hover{border-color:var(--hd-steel-400);}
 .seg.active{border-color:var(--hd-heritage);background:var(--hd-accent-50);font-weight:600;}
+.seg.active.rank-1{border-color:#16A34A;}
+.seg.active.rank-2{border-color:#0EA5E9;}
+.seg.active.rank-3{border-color:#F59E0B;}
 .seg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.seg-rank{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;font-family:var(--hd-mono);font-size:10.5px;font-weight:700;color:#fff;background:var(--hd-heritage);}
+.seg.active.rank-1 .seg-rank{background:#16A34A;}
+.seg.active.rank-2 .seg-rank{background:#0EA5E9;}
+.seg.active.rank-3 .seg-rank{background:#F59E0B;}
 .hint{margin-top:14px;padding:10px 12px;background:var(--hd-steel-50);border-left:3px solid var(--hd-discovery);border-radius:4px;font-size:11.5px;color:var(--hd-gray);line-height:1.55;}
 .survey-meta{margin-top:12px;padding:10px 12px;background:var(--hd-accent-50);border-left:3px solid var(--hd-heritage);border-radius:4px;font-size:11.5px;color:var(--hd-prosperity);line-height:1.5;font-family:var(--hd-mono);}
 
@@ -222,9 +229,10 @@ input,textarea,select{font:inherit;color:inherit;}
       <div id="dealerCard"></div>
     </div>
 
-    <div class="section-block" style="display:none;">
-      <!-- v1.2026rev — 회사명·담당자·연락처는 정식 question(q_v1d26_target_company / _contact_name / _contact_phone)에서 받음.
-           메모는 안 받음. 좌측 sidebar 입력은 v1·v2 호환을 위해 DOM만 보존 (display:none). -->
+    <div class="section-block">
+      <!-- 회사명·담당자·연락처·메모는 좌측 sidebar 공통 입력에서 받음 (모든 페이지에 노출).
+           047 마이그레이션이 q_v1d26_target_company / _contact_name / _contact_phone 정식 question 3개 DELETE — 우측 본문에는 안 보임.
+           payload는 좌측 input 값을 그대로 송출 (onSubmit의 target_company / contact_name / contact_phone). -->
       <div class="panel-head" id="lbl_target_head">Информация о клиенте</div>
       <div class="target">
         <label id="lbl_company">Company *</label><input id="inp_company" type="text" autocomplete="off"/>
@@ -330,6 +338,7 @@ const I18N = {
        no_token_hint:'Выпустите токен в админ-консоли (раздел дилеров) и перейдите по URL с параметром <code>?token=...</code>',
        radar_axes_short:'Нужно ≥ 3 осей (сейчас {n})',
        unique_ten_blocked:'10 баллов уже у оси «{axis}». Сначала снимите, чтобы поставить здесь.',
+       unique_point_blocked:'Балл {n} уже использован на другой оси. Каждая ось получает уникальный балл.',
        hier_other_placeholder:'Уточните…',
        load_error_prefix:'Ошибка загрузки опроса',
        api_base_missing:'API_BASE не настроен' },
@@ -348,6 +357,7 @@ const I18N = {
        no_token_hint:'Issue a token in the admin console (dealers section), then open the URL with <code>?token=...</code>',
        radar_axes_short:'Need ≥ 3 axes (now {n})',
        unique_ten_blocked:'10 is already on «{axis}». Clear it first to use 10 here.',
+       unique_point_blocked:'Score {n} is already used on another axis. Each axis must have a unique score.',
        hier_other_placeholder:'Please specify…',
        load_error_prefix:'Failed to load survey',
        api_base_missing:'API_BASE is not configured' },
@@ -366,6 +376,7 @@ const I18N = {
        no_token_hint:'어드민 콘솔(딜러 발급 메뉴)에서 토큰을 발급받은 후 URL에 <code>?token=...</code>로 진입하세요',
        radar_axes_short:'레이더에 필요한 축 ≥ 3 (현재 {n})',
        unique_ten_blocked:'10점은 「{axis}」 축에 이미 부여됨. 해제 후 다시 시도',
+       unique_point_blocked:'{n}점은 이미 다른 축에 부여됨. 6 axis는 서로 다른 점수를 받습니다.',
        hier_other_placeholder:'직접 입력해 주세요…',
        load_error_prefix:'설문 로드 실패',
        api_base_missing:'API_BASE 미설정' },
@@ -373,7 +384,7 @@ const I18N = {
 
 /* ============================================================================ */
 const state = {
-  lang:'ru', segment:null, answers:{},
+  lang:'ru', segment:[], answers:{},
   target_company:'', contact_name:'', contact_phone:'', notes:'',
   token:null, dealerId:null, event:null,
   online:navigator.onLine, queueCount:0,
@@ -511,14 +522,33 @@ function computeAxes(){
 /* ============================================================================
    Render
    ============================================================================ */
+// 8 segments — 클릭 순서대로 최대 3개까지 ranked 선택 (1·2·3 순위 표시).
+// state.segment: string[] (0~3 entries). 1순위가 dealer_hypothesis_segment.
+const SEGMENT_RANK_MAX = 3;
 function renderSegments(){
   const list = document.getElementById('segList');
   list.innerHTML = '';
+  const sel = Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []);
+  state.segment = sel;
   for (const s of SEGMENTS) {
     const el = document.createElement('div');
-    el.className = 'seg' + (state.segment === s.id ? ' active' : '');
-    el.innerHTML = `<span class="seg-dot" style="background:${s.color}"></span><span>${tx(s.i18n)}</span>`;
-    el.onclick = () => { state.segment = state.segment === s.id ? null : s.id; renderSegments(); renderRadar(); };
+    const rankIdx = sel.indexOf(s.id);
+    const active = rankIdx >= 0;
+    el.className = 'seg' + (active ? ' active rank-' + (rankIdx + 1) : '');
+    const badge = active ? `<span class="seg-rank">${rankIdx + 1}</span>` : '';
+    el.innerHTML = `<span class="seg-dot" style="background:${s.color}"></span><span>${tx(s.i18n)}</span>${badge}`;
+    el.onclick = () => {
+      const cur = Array.isArray(state.segment) ? state.segment.slice() : [];
+      const idx = cur.indexOf(s.id);
+      if (idx >= 0) {
+        cur.splice(idx, 1);  // 해제 시 뒷 순위가 자동으로 올라옴
+      } else {
+        if (cur.length >= SEGMENT_RANK_MAX) return;  // 최대 3
+        cur.push(s.id);
+      }
+      state.segment = cur;
+      renderSegments(); renderRadar();
+    };
     list.appendChild(el);
   }
 }
@@ -567,8 +597,10 @@ function renderRadar(){
       out += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="#00AD1D"/>`;
     }
   }
-  if (state.segment) {
-    const seg = SEGMENTS.find((s) => s.id === state.segment);
+  // 8 segments ranked — 1순위 segment의 색상 점선 outline.
+  const segArr = Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []);
+  if (segArr.length > 0) {
+    const seg = SEGMENTS.find((s) => s.id === segArr[0]);
     if (seg) out += `<circle cx="${cx}" cy="${cy}" r="${R+7}" fill="none" stroke="${seg.color}" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.55"/>`;
   }
   out += `</svg>`;
@@ -805,16 +837,20 @@ function renderQuestion(q){
     body = `<div class="scale-grid s5">${[1,2,3,4,5].map((n) => `
       <div class="scale-cell${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`).join('')}</div>`;
   } else if (q.type === 'scale_1_10') {
-    // DW 6축 unique 10 — 다른 axis 질문이 이미 10이면 본 question의 10셀 disabled.
+    // DW 6축 unique 점수 — 다른 axis가 이미 사용한 점수 셀은 disabled.
+    // 6 axis 각각 1~10 중 서로 다른 점수 부여 (한 점수가 한 axis에만).
     const isDw = q.axis && state.axes.includes(q.axis);
-    const otherTenAxis = isDw
-      ? state.axes.find((a) => a !== q.axis && state.answers[`q_v1d26_dw_${a}`] === 10)
-      : null;
+    const usedByOthers = isDw
+      ? new Set(state.axes
+          .filter((a) => a !== q.axis)
+          .map((a) => state.answers[`q_v1d26_dw_${a}`])
+          .filter((v) => typeof v === 'number'))
+      : new Set();
     body = `<div class="scale-grid s10">${[1,2,3,4,5,6,7,8,9,10].map((n) => {
       const tone = n <= 4 ? 'lo' : n <= 7 ? 'mid' : 'hi';
-      const disabled = (n === 10 && otherTenAxis) ? true : false;
+      const disabled = usedByOthers.has(n);
       const cls = `scale-cell ${tone}${cur === n ? ' selected' : ''}${disabled ? ' disabled' : ''}`;
-      const tip = disabled ? ` title="${t('unique_ten_blocked').replace('{axis}', otherTenAxis)}"` : '';
+      const tip = disabled ? ` title="${t('unique_point_blocked').replace('{n}', n)}"` : '';
       return `<div class="${cls}" data-q="${q.id}" data-v="${n}" data-kind="scale" data-disabled="${disabled ? '1' : ''}"${tip}>${n}</div>`;
     }).join('')}</div>`;
   } else if (q.type === 'nps') {
@@ -925,17 +961,18 @@ function bindOne(wrap){
   });
   wrap.querySelectorAll('.scale-cell[data-kind="scale"]').forEach((el) => {
     el.onclick = () => {
-      if (el.dataset.disabled === '1') return;  // unique 10 — 다른 axis 10이면 차단 (render 측 가드)
+      if (el.dataset.disabled === '1') return;  // unique 점수 가드 (render 측)
       const q = el.dataset.q, v = Number(el.dataset.v);
-      // 추가 가드 — render 측 disabled가 누락된 경우에도 클릭 시 한 번 더 검증.
-      if (v === 10) {
-        const qObj = state.questions.find((qq) => qq.id === q);
-        if (qObj?.axis && state.axes.includes(qObj.axis)) {
-          const otherTen = state.axes.find((a) => a !== qObj.axis && state.answers[`q_v1d26_dw_${a}`] === 10);
-          if (otherTen) {
-            alert(t('unique_ten_blocked').replace('{axis}', otherTen));
-            return;
-          }
+      // 추가 가드 — 클릭 시 한 번 더 검증. DW 6축에서 다른 axis가 이미 v 점수 사용 시 차단.
+      const qObj = state.questions.find((qq) => qq.id === q);
+      if (qObj?.axis && state.axes.includes(qObj.axis)) {
+        const used = state.axes
+          .filter((a) => a !== qObj.axis)
+          .map((a) => state.answers[`q_v1d26_dw_${a}`])
+          .includes(v);
+        if (used) {
+          alert(t('unique_point_blocked').replace('{n}', v));
+          return;
         }
       }
       state.answers[q] = state.answers[q] === v ? null : v;
@@ -1057,7 +1094,8 @@ async function onSubmit(){
     captured_at: new Date().toISOString(),
     answers: answersArr,
     preference_axes,
-    dealer_hypothesis_segment: state.segment,
+    dealer_hypothesis_segment: Array.isArray(state.segment) ? (state.segment[0] ?? null) : (state.segment ?? null),
+    dealer_hypothesis_segments: Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []),
     target_company: ansFor('q_v1d26_target_company') ?? (state.target_company?.trim() || null),
     contact_name:   ansFor('q_v1d26_contact_name')   ?? (state.contact_name?.trim()  || null),
     contact_phone:  ansFor('q_v1d26_contact_phone')  ?? (state.contact_phone?.trim() || null),
@@ -1095,7 +1133,7 @@ function setToast(msg, kind){
 }
 
 function resetState(){
-  state.segment = null; state.answers = {};
+  state.segment = []; state.answers = {};
   state.target_company = ''; state.contact_name = ''; state.contact_phone = ''; state.notes = '';
   ['inp_company','inp_contact','inp_phone','inp_notes'].forEach((id) => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('btnReset').style.display = 'none';
