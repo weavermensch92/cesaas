@@ -44,6 +44,8 @@ jobs:
           DB 미연결. CTT Expo 2026 Dealer 인터뷰 폼 (26문항·다국어 ko/ru/en).
           EOF
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true  # Pages 자동 활성화 시도 (Settings 1 클릭 우회)
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site
