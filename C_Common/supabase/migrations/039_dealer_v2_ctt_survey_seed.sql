@@ -1,9 +1,10 @@
 -- 039_dealer_v2_ctt_survey_seed.sql
 -- CTT Moscow 2026 부스용 dealer 설문 v2 시드 — 18문항 (Block A 5 / B 6 / C 4 / D 3).
 --
--- 변경 요지:
---   1) 기존 survey_v1_dealer → status='archived'. dealer/v2 HTML은 audience=dealer의 active를 가져오므로
---      자동으로 신규 v2로 전환.
+-- 변경 요지 (v2 — 2026-05-25 정정):
+--   1) 기존 survey_v1_dealer는 **그대로 active 유지** — 위버 결정 (5/26 부스에서 두 버전 병행 가능).
+--      이전 초안의 `UPDATE surveys SET status='archived' WHERE id='survey_v1_dealer'` 절 제거.
+--      Studio에서 dealer audience에 v1·v2 둘 다 active 표시. surveys-get은 updated_at desc로 v2 우선 fetch.
 --   2) 신규 surveys row 'survey_v2_dealer_ctt' INSERT — version_label='2.0', brief_group_id 새 UUID,
 --      estimated_minutes=8, target_audience='dealer', status='active'.
 --   3) 18 survey_questions INSERT.
@@ -25,15 +26,7 @@
 BEGIN;
 
 -- ============================================================================
--- 1. 기존 v1 archive
--- ============================================================================
-UPDATE surveys
-   SET status = 'archived'
- WHERE id = 'survey_v1_dealer'
-   AND status = 'active';
-
--- ============================================================================
--- 2. 신규 v2 survey row
+-- 1. 신규 v2 survey row (v1은 그대로 active 유지)
 -- ============================================================================
 INSERT INTO surveys (
   id, title, description, target_audience,
@@ -363,16 +356,11 @@ ON CONFLICT (id) DO UPDATE
 -- ============================================================================
 DO $verify$
 DECLARE
-  _v1_active INT;
   _v2_active INT;
   _q_count   INT;
   _axis_filled INT;
 BEGIN
-  SELECT COUNT(*) INTO _v1_active
-    FROM surveys WHERE id = 'survey_v1_dealer' AND status = 'active';
-  IF _v1_active != 0 THEN
-    RAISE EXCEPTION '039 verification failed: survey_v1_dealer still active';
-  END IF;
+  -- v1은 의도적으로 active 유지 — archive 체크 생략.
 
   SELECT COUNT(*) INTO _v2_active
     FROM surveys WHERE id = 'survey_v2_dealer_ctt' AND status = 'active';
