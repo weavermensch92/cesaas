@@ -60,20 +60,23 @@ function extractAxisDataV1_2026rev(answers: Array<{ question_id: string; answer:
   };
 }
 
-// 042 DW 6축 unique 10 검증 — count(value==10) ≤ 1.
+// 042 DW 6축 unique 점수 검증 — 6 axis의 점수가 서로 달라야 함 (한 점수가 한 axis에만).
 const V1_2026REV_DW_QIDS = [
   'q_v1d26_dw_price', 'q_v1d26_dw_fuel', 'q_v1d26_dw_durability',
   'q_v1d26_dw_service', 'q_v1d26_dw_reference', 'q_v1d26_dw_versatility',
 ];
-function validateUniqueTen(answers: Array<{ question_id: string; answer: unknown }>): void {
-  let count10 = 0;
+function validateUniqueScores(answers: Array<{ question_id: string; answer: unknown }>): void {
+  const used = new Map<number, string>();
   for (const a of answers) {
     if (!V1_2026REV_DW_QIDS.includes(a.question_id)) continue;
     const v = typeof a.answer === 'number' ? a.answer : null;
-    if (v === 10) count10 += 1;
-  }
-  if (count10 > 1) {
-    throw new ApiError('validation_failed', 'DW 6축 중 10점은 한 axis에만 허용됩니다', { count_10: count10 });
+    if (v === null) continue;
+    if (used.has(v)) {
+      throw new ApiError('validation_failed',
+        `점수 ${v}은(는) 이미 ${used.get(v)} axis에 부여됨. 6 axis는 서로 다른 점수를 받습니다.`,
+        { duplicate_score: v, used_by: used.get(v), conflict: a.question_id });
+    }
+    used.set(v, a.question_id);
   }
 }
 
@@ -178,8 +181,8 @@ export async function handle(req: Request): Promise<Response> {
       const synthesized = extractAxisDataV2(payload.answers, payload.survey_id);
       axisData = { ...synthesized, ...(payload.axis_data ?? {}) };
     } else if (payload.survey_id === V1_DEALER_2026REV_SURVEY_ID) {
-      // DW unique 10 사전 검증 (클라이언트 가드 우회 케이스 차단)
-      validateUniqueTen(payload.answers);
+      // DW 6축 unique 점수 사전 검증 — 같은 점수가 두 axis에 부여되면 거부.
+      validateUniqueScores(payload.answers);
       const synthesized = extractAxisDataV1_2026rev(payload.answers);
       axisData = { ...synthesized, ...(payload.axis_data ?? {}) };
     }

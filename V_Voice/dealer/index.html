@@ -222,9 +222,10 @@ input,textarea,select{font:inherit;color:inherit;}
       <div id="dealerCard"></div>
     </div>
 
-    <div class="section-block" style="display:none;">
-      <!-- v1.2026rev — 회사명·담당자·연락처는 정식 question(q_v1d26_target_company / _contact_name / _contact_phone)에서 받음.
-           메모는 안 받음. 좌측 sidebar 입력은 v1·v2 호환을 위해 DOM만 보존 (display:none). -->
+    <div class="section-block">
+      <!-- 회사명·담당자·연락처·메모는 좌측 sidebar 공통 입력에서 받음 (모든 페이지에 노출).
+           047 마이그레이션이 q_v1d26_target_company / _contact_name / _contact_phone 정식 question 3개 DELETE — 우측 본문에는 안 보임.
+           payload는 좌측 input 값을 그대로 송출 (onSubmit의 target_company / contact_name / contact_phone). -->
       <div class="panel-head" id="lbl_target_head">Информация о клиенте</div>
       <div class="target">
         <label id="lbl_company">Company *</label><input id="inp_company" type="text" autocomplete="off"/>
@@ -330,6 +331,7 @@ const I18N = {
        no_token_hint:'Выпустите токен в админ-консоли (раздел дилеров) и перейдите по URL с параметром <code>?token=...</code>',
        radar_axes_short:'Нужно ≥ 3 осей (сейчас {n})',
        unique_ten_blocked:'10 баллов уже у оси «{axis}». Сначала снимите, чтобы поставить здесь.',
+       unique_point_blocked:'Балл {n} уже использован на другой оси. Каждая ось получает уникальный балл.',
        hier_other_placeholder:'Уточните…',
        load_error_prefix:'Ошибка загрузки опроса',
        api_base_missing:'API_BASE не настроен' },
@@ -348,6 +350,7 @@ const I18N = {
        no_token_hint:'Issue a token in the admin console (dealers section), then open the URL with <code>?token=...</code>',
        radar_axes_short:'Need ≥ 3 axes (now {n})',
        unique_ten_blocked:'10 is already on «{axis}». Clear it first to use 10 here.',
+       unique_point_blocked:'Score {n} is already used on another axis. Each axis must have a unique score.',
        hier_other_placeholder:'Please specify…',
        load_error_prefix:'Failed to load survey',
        api_base_missing:'API_BASE is not configured' },
@@ -366,6 +369,7 @@ const I18N = {
        no_token_hint:'어드민 콘솔(딜러 발급 메뉴)에서 토큰을 발급받은 후 URL에 <code>?token=...</code>로 진입하세요',
        radar_axes_short:'레이더에 필요한 축 ≥ 3 (현재 {n})',
        unique_ten_blocked:'10점은 「{axis}」 축에 이미 부여됨. 해제 후 다시 시도',
+       unique_point_blocked:'{n}점은 이미 다른 축에 부여됨. 6 axis는 서로 다른 점수를 받습니다.',
        hier_other_placeholder:'직접 입력해 주세요…',
        load_error_prefix:'설문 로드 실패',
        api_base_missing:'API_BASE 미설정' },
@@ -805,16 +809,20 @@ function renderQuestion(q){
     body = `<div class="scale-grid s5">${[1,2,3,4,5].map((n) => `
       <div class="scale-cell${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`).join('')}</div>`;
   } else if (q.type === 'scale_1_10') {
-    // DW 6축 unique 10 — 다른 axis 질문이 이미 10이면 본 question의 10셀 disabled.
+    // DW 6축 unique 점수 — 다른 axis가 이미 사용한 점수 셀은 disabled.
+    // 6 axis 각각 1~10 중 서로 다른 점수 부여 (한 점수가 한 axis에만).
     const isDw = q.axis && state.axes.includes(q.axis);
-    const otherTenAxis = isDw
-      ? state.axes.find((a) => a !== q.axis && state.answers[`q_v1d26_dw_${a}`] === 10)
-      : null;
+    const usedByOthers = isDw
+      ? new Set(state.axes
+          .filter((a) => a !== q.axis)
+          .map((a) => state.answers[`q_v1d26_dw_${a}`])
+          .filter((v) => typeof v === 'number'))
+      : new Set();
     body = `<div class="scale-grid s10">${[1,2,3,4,5,6,7,8,9,10].map((n) => {
       const tone = n <= 4 ? 'lo' : n <= 7 ? 'mid' : 'hi';
-      const disabled = (n === 10 && otherTenAxis) ? true : false;
+      const disabled = usedByOthers.has(n);
       const cls = `scale-cell ${tone}${cur === n ? ' selected' : ''}${disabled ? ' disabled' : ''}`;
-      const tip = disabled ? ` title="${t('unique_ten_blocked').replace('{axis}', otherTenAxis)}"` : '';
+      const tip = disabled ? ` title="${t('unique_point_blocked').replace('{n}', n)}"` : '';
       return `<div class="${cls}" data-q="${q.id}" data-v="${n}" data-kind="scale" data-disabled="${disabled ? '1' : ''}"${tip}>${n}</div>`;
     }).join('')}</div>`;
   } else if (q.type === 'nps') {
@@ -925,17 +933,18 @@ function bindOne(wrap){
   });
   wrap.querySelectorAll('.scale-cell[data-kind="scale"]').forEach((el) => {
     el.onclick = () => {
-      if (el.dataset.disabled === '1') return;  // unique 10 — 다른 axis 10이면 차단 (render 측 가드)
+      if (el.dataset.disabled === '1') return;  // unique 점수 가드 (render 측)
       const q = el.dataset.q, v = Number(el.dataset.v);
-      // 추가 가드 — render 측 disabled가 누락된 경우에도 클릭 시 한 번 더 검증.
-      if (v === 10) {
-        const qObj = state.questions.find((qq) => qq.id === q);
-        if (qObj?.axis && state.axes.includes(qObj.axis)) {
-          const otherTen = state.axes.find((a) => a !== qObj.axis && state.answers[`q_v1d26_dw_${a}`] === 10);
-          if (otherTen) {
-            alert(t('unique_ten_blocked').replace('{axis}', otherTen));
-            return;
-          }
+      // 추가 가드 — 클릭 시 한 번 더 검증. DW 6축에서 다른 axis가 이미 v 점수 사용 시 차단.
+      const qObj = state.questions.find((qq) => qq.id === q);
+      if (qObj?.axis && state.axes.includes(qObj.axis)) {
+        const used = state.axes
+          .filter((a) => a !== qObj.axis)
+          .map((a) => state.answers[`q_v1d26_dw_${a}`])
+          .includes(v);
+        if (used) {
+          alert(t('unique_point_blocked').replace('{n}', v));
+          return;
         }
       }
       state.answers[q] = state.answers[q] === v ? null : v;
