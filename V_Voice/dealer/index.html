@@ -63,7 +63,14 @@ input,textarea,select{font:inherit;color:inherit;}
 .seg{display:flex;align-items:center;gap:8px;padding:8px 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-size:12.5px;color:var(--hd-ink);cursor:pointer;transition:border-color 0.1s,background 0.1s;}
 .seg:hover{border-color:var(--hd-steel-400);}
 .seg.active{border-color:var(--hd-heritage);background:var(--hd-accent-50);font-weight:600;}
+.seg.active.rank-1{border-color:#16A34A;}
+.seg.active.rank-2{border-color:#0EA5E9;}
+.seg.active.rank-3{border-color:#F59E0B;}
 .seg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.seg-rank{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;font-family:var(--hd-mono);font-size:10.5px;font-weight:700;color:#fff;background:var(--hd-heritage);}
+.seg.active.rank-1 .seg-rank{background:#16A34A;}
+.seg.active.rank-2 .seg-rank{background:#0EA5E9;}
+.seg.active.rank-3 .seg-rank{background:#F59E0B;}
 .hint{margin-top:14px;padding:10px 12px;background:var(--hd-steel-50);border-left:3px solid var(--hd-discovery);border-radius:4px;font-size:11.5px;color:var(--hd-gray);line-height:1.55;}
 .survey-meta{margin-top:12px;padding:10px 12px;background:var(--hd-accent-50);border-left:3px solid var(--hd-heritage);border-radius:4px;font-size:11.5px;color:var(--hd-prosperity);line-height:1.5;font-family:var(--hd-mono);}
 
@@ -377,7 +384,7 @@ const I18N = {
 
 /* ============================================================================ */
 const state = {
-  lang:'ru', segment:null, answers:{},
+  lang:'ru', segment:[], answers:{},
   target_company:'', contact_name:'', contact_phone:'', notes:'',
   token:null, dealerId:null, event:null,
   online:navigator.onLine, queueCount:0,
@@ -515,14 +522,33 @@ function computeAxes(){
 /* ============================================================================
    Render
    ============================================================================ */
+// 8 segments — 클릭 순서대로 최대 3개까지 ranked 선택 (1·2·3 순위 표시).
+// state.segment: string[] (0~3 entries). 1순위가 dealer_hypothesis_segment.
+const SEGMENT_RANK_MAX = 3;
 function renderSegments(){
   const list = document.getElementById('segList');
   list.innerHTML = '';
+  const sel = Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []);
+  state.segment = sel;
   for (const s of SEGMENTS) {
     const el = document.createElement('div');
-    el.className = 'seg' + (state.segment === s.id ? ' active' : '');
-    el.innerHTML = `<span class="seg-dot" style="background:${s.color}"></span><span>${tx(s.i18n)}</span>`;
-    el.onclick = () => { state.segment = state.segment === s.id ? null : s.id; renderSegments(); renderRadar(); };
+    const rankIdx = sel.indexOf(s.id);
+    const active = rankIdx >= 0;
+    el.className = 'seg' + (active ? ' active rank-' + (rankIdx + 1) : '');
+    const badge = active ? `<span class="seg-rank">${rankIdx + 1}</span>` : '';
+    el.innerHTML = `<span class="seg-dot" style="background:${s.color}"></span><span>${tx(s.i18n)}</span>${badge}`;
+    el.onclick = () => {
+      const cur = Array.isArray(state.segment) ? state.segment.slice() : [];
+      const idx = cur.indexOf(s.id);
+      if (idx >= 0) {
+        cur.splice(idx, 1);  // 해제 시 뒷 순위가 자동으로 올라옴
+      } else {
+        if (cur.length >= SEGMENT_RANK_MAX) return;  // 최대 3
+        cur.push(s.id);
+      }
+      state.segment = cur;
+      renderSegments(); renderRadar();
+    };
     list.appendChild(el);
   }
 }
@@ -571,8 +597,10 @@ function renderRadar(){
       out += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="#00AD1D"/>`;
     }
   }
-  if (state.segment) {
-    const seg = SEGMENTS.find((s) => s.id === state.segment);
+  // 8 segments ranked — 1순위 segment의 색상 점선 outline.
+  const segArr = Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []);
+  if (segArr.length > 0) {
+    const seg = SEGMENTS.find((s) => s.id === segArr[0]);
     if (seg) out += `<circle cx="${cx}" cy="${cy}" r="${R+7}" fill="none" stroke="${seg.color}" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.55"/>`;
   }
   out += `</svg>`;
@@ -1066,7 +1094,8 @@ async function onSubmit(){
     captured_at: new Date().toISOString(),
     answers: answersArr,
     preference_axes,
-    dealer_hypothesis_segment: state.segment,
+    dealer_hypothesis_segment: Array.isArray(state.segment) ? (state.segment[0] ?? null) : (state.segment ?? null),
+    dealer_hypothesis_segments: Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []),
     target_company: ansFor('q_v1d26_target_company') ?? (state.target_company?.trim() || null),
     contact_name:   ansFor('q_v1d26_contact_name')   ?? (state.contact_name?.trim()  || null),
     contact_phone:  ansFor('q_v1d26_contact_phone')  ?? (state.contact_phone?.trim() || null),
@@ -1104,7 +1133,7 @@ function setToast(msg, kind){
 }
 
 function resetState(){
-  state.segment = null; state.answers = {};
+  state.segment = []; state.answers = {};
   state.target_company = ''; state.contact_name = ''; state.contact_phone = ''; state.notes = '';
   ['inp_company','inp_contact','inp_phone','inp_notes'].forEach((id) => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('btnReset').style.display = 'none';
