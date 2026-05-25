@@ -20,12 +20,30 @@ import type { ClassificationYaml } from 'harness2/types.ts';
 import { classifyVoiceSegmentCore } from 'harness2/apply_rules.ts';
 
 export type AxisData = {
+  // legacy v1
   scale?: string | null;
   usage?: string | null;
   annual_operating_hours?: string | null;
   annual_deal_rub?: string | null;
-  fleet_size?: string | null;
   decision_role?: string | null;
+  // CTT v2 — survey_v2_dealer_ctt 신규 필드
+  work_env?: string | null;
+  fleet_size?: string | null;
+  annual_budget?: string | null;
+  annual_days?: string | null;
+  role?: string | null;
+  daily_hours?: string | null;
+  severity?: number | null;
+  service_sat?: number | null;
+  self_report_ranks?: string[] | null;
+  pain_points?: string[] | null;
+  current_brands?: string[] | null;
+  purchase_mode?: string | null;
+  plan_12m?: string | null;
+  equip_types?: string[] | null;
+  booth_interest?: string[] | null;
+  channel?: string | null;
+  heatmap_scores?: Record<string, number> | null;
 };
 
 export interface SegmentResult {
@@ -35,23 +53,45 @@ export interface SegmentResult {
 }
 
 // 유효 segment enum. LLM 응답 파싱 시 sanity check.
+// CTT v2 8 + legacy v1 6 한시 보존.
 const VALID_SEGMENTS = new Set([
-  'mining', 'key_account', 'construction_heavy',
-  'agriculture', 'forestry', 'general_construction', 'rental', 'other',
+  // CTT v2 — 8 segment
+  'individual', 'fleet_rental', 'key_account', 'mining',
+  'infrastructure', 'agri_plantation', 'quarry', 'gov_public',
+  // legacy v1 — 한시 보존 (mining/key_account는 v2와 동일 키)
+  'construction_heavy', 'agriculture', 'forestry',
+  'general_construction', 'rental', 'other',
 ]);
 
 // ============================================================================
-// Fallback — DB 로드 실패 시. 이전 v0.5 inline 미러. R_10.05 voice_segment와 동일 의미.
+// Fallback — DB 로드 실패 시. R_10.05 v2 voice_segment 미러 (037_seed).
+// 1차: A-Q2 work_env 직접 매핑. 2차: fleet/budget/role 조합. 3차: legacy usage.
 // ============================================================================
 const INLINE_RULES: Array<{ segment: string; match: (a: AxisData) => boolean }> = [
+  // 1차 — work_env 직접 매핑 (survey_v2_dealer_ctt q_v2dctt_a2_work_env 8지선다)
+  { segment: 'individual',       match: (a) => a.work_env === 'individual_owner' },
+  { segment: 'fleet_rental',     match: (a) => a.work_env === 'fleet_rental' },
+  { segment: 'key_account',      match: (a) => a.work_env === 'large_corporate' },
+  { segment: 'mining',           match: (a) => a.work_env === 'mining' },
+  { segment: 'infrastructure',   match: (a) => a.work_env === 'infrastructure' },
+  { segment: 'agri_plantation',  match: (a) => a.work_env === 'agri_plantation' },
+  { segment: 'quarry',           match: (a) => a.work_env === 'quarry' },
+  { segment: 'gov_public',       match: (a) => a.work_env === 'gov_public' },
+
+  // 2차 — fleet + budget + role 조합 fallback
+  { segment: 'key_account',      match: (a) =>
+      a.annual_budget === 'XL' || (a.fleet_size === 'XL' && a.role === 'executive') },
+  { segment: 'fleet_rental',     match: (a) => a.fleet_size === 'L' || a.fleet_size === 'XL' },
+
+  // 3차 — legacy axis.usage 호환 (survey_v1_dealer 응답)
+  { segment: 'mining',               match: (a) => a.usage === 'mining' },
+  { segment: 'infrastructure',       match: (a) => a.usage === 'construction_heavy' },
+  { segment: 'agri_plantation',      match: (a) => a.usage === 'agriculture' || a.usage === 'forestry' },
+  { segment: 'fleet_rental',         match: (a) => a.usage === 'rental' },
   { segment: 'key_account',          match: (a) => a.annual_deal_rub === 'large' },
-  { segment: 'mining',               match: (a) => a.usage === 'mining' && (a.scale === 'L' || a.scale === 'XL') },
-  { segment: 'construction_heavy',   match: (a) => a.usage === 'construction_heavy' && ['M', 'L', 'XL'].includes(a.scale ?? '') },
-  { segment: 'forestry',             match: (a) => a.usage === 'forestry' },
-  { segment: 'agriculture',          match: (a) => a.usage === 'agriculture' },
-  { segment: 'general_construction', match: (a) => a.usage === 'general_construction' },
-  { segment: 'rental',               match: (a) => a.usage === 'rental' },
-  { segment: 'other',                match: () => true },
+
+  // 기본값 — 미해당 시 individual
+  { segment: 'individual',           match: () => true },
 ];
 
 function classifyInline(a: AxisData): SegmentResult {
@@ -60,13 +100,13 @@ function classifyInline(a: AxisData): SegmentResult {
       return { segment: r.segment, confidence: 1.0, method: 'server_rule_fallback' };
     }
   }
-  return { segment: 'other', confidence: 0.5, method: 'server_rule_fallback' };
+  return { segment: 'individual', confidence: 0.5, method: 'server_rule_fallback' };
 }
 
-// V-004 — LLM 보조. deterministic이 'other'·axis.usage 있을 때만 fire. 비용 게이트.
+// V-004 — LLM 보조. deterministic이 'other'·axis.usage/work_env 있을 때만 fire. 비용 게이트.
 async function classifyViaLlm(a: AxisData): Promise<SegmentResult | null> {
-  // axis 안에 분류기가 쓸 만한 단서가 충분한가? usage 정도는 있어야 의미 있음.
-  if (!a.usage) return null;
+  // axis 안에 분류기가 쓸 만한 단서가 충분한가? usage 또는 work_env 정도는 있어야 의미 있음.
+  if (!a.usage && !a.work_env) return null;
   try {
     const axisJson = JSON.stringify(a);
     const userText = `6 axis 응답:\n${axisJson}\n\n위 응답으로 segment 분류. JSON만.`;
@@ -123,8 +163,9 @@ export async function classifyServerSide(a: AxisData): Promise<SegmentResult> {
     determResult = classifyInline(a);
   }
 
-  // V-004 — deterministic이 'other' + axis.usage 있으면 LLM 보조. 실패해도 deterministic 유지.
-  if (determResult.segment === 'other' && a.usage) {
+  // V-004 — deterministic이 'other' + axis.usage/work_env 있으면 LLM 보조. 실패해도 deterministic 유지.
+  // (037_v2 default 룰이 'individual'을 반환하므로 segment === 'other'는 *Core fall-through 케이스 한정.)
+  if (determResult.segment === 'other' && (a.usage || a.work_env)) {
     const llm = await classifyViaLlm(a);
     if (llm) return llm;
   }

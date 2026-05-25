@@ -25,6 +25,7 @@ import {
   classifyLeadPriorityCore,
 } from 'harness2/apply_rules.ts';
 import type {
+  AxisOverride,
   ClassificationYaml,
   EvaluationContext,
   LeadQualityYaml,
@@ -181,14 +182,19 @@ export async function scoreLead(leadId: string): Promise<ScoreLeadResult> {
       const pb = (r10_07.body?.playbook as Record<string, PlaybookEntry> | undefined)?.[lead.segment];
       if (pb) {
         title = pb.title_ko ?? pb.title_ru ?? title;
+
+        // R_10.07 v2 — Top-2 axis pair → axis_overrides merge.
+        // preference_axes에서 가장 높은 2축을 골라 알파벳 정렬한 'a+b' key로 lookup.
+        const override = lookupAxisOverride(pb, latestResponse?.preference_axes);
+
         weapons = {
           ko: pb.talking_points_ko ?? [],
           ru: pb.talking_points_ru ?? [],
-          items: pb.sales_weapons ?? [],
+          items: mergeUnique(pb.sales_weapons ?? [], override?.weapons ?? []),
         };
         pitch = {
-          ko: pb.pitch_examples_ko ?? [],
-          ru: pb.pitch_examples_ru ?? [],
+          ko: mergeUnique(pb.pitch_examples_ko ?? [], override?.pitch_examples_ko ?? []),
+          ru: mergeUnique(pb.pitch_examples_ru ?? [], override?.pitch_examples_ru ?? []),
         };
         models = pb.related_models ?? [];
         nextAction = pb.next_action_template
@@ -241,6 +247,41 @@ export async function scoreLead(leadId: string): Promise<ScoreLeadResult> {
     ...(dwAlignment != null ? { dw_alignment: dwAlignment, dw_bonus: dwBonus } : {}),
   });
   return { ok: true, lead_id: leadId, score, grade, priority, score_version: scoreVersion };
+}
+
+// R_10.07 v2 — preference_axes에서 가장 높은 2축을 골라 'a+b' (알파벳 정렬) key로
+// pb.axis_overrides lookup. 동점 처리는 DW_AXES 정의 순서(price/fuel/.../versatility).
+function lookupAxisOverride(
+  pb: PlaybookEntry,
+  preferenceAxes: unknown,
+): AxisOverride | null {
+  if (!pb.axis_overrides || !preferenceAxes || typeof preferenceAxes !== 'object') return null;
+
+  const entries: Array<[DWAxis, number]> = [];
+  for (const axis of DW_AXES) {
+    const v = (preferenceAxes as Record<string, unknown>)[axis];
+    if (typeof v === 'number' && Number.isFinite(v)) entries.push([axis, v]);
+  }
+  if (entries.length < 2) return null;
+
+  // 점수 desc, 동점 시 원래 순서 보존(stable sort).
+  entries.sort((a, b) => b[1] - a[1]);
+  const top2 = [entries[0][0], entries[1][0]].sort();
+  const key = `${top2[0]}+${top2[1]}`;
+  return pb.axis_overrides[key] ?? null;
+}
+
+function mergeUnique(...lists: string[][]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const list of lists) {
+    for (const item of list) {
+      if (!item || seen.has(item)) continue;
+      seen.add(item);
+      out.push(item);
+    }
+  }
+  return out;
 }
 
 // R_10.01.005 dw_alignment_bonus — preference_axes(1~5) × hd_strength_matrix[segment] 내적.

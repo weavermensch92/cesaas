@@ -16,6 +16,7 @@ const ITEMS: Item[] = [
   { href: '/voice/dealers',     label: 'Voice · Dealers',    match: (p) => p.startsWith('/voice/dealers'), adminOnly: true },
   { href: '/voice/responses',   label: 'Voice · Responses',  match: (p) => p.startsWith('/voice/responses') },
   { href: '/voice/aggregates',  label: 'Voice · Insight',    match: (p) => p.startsWith('/voice/aggregates') },
+  { href: '/voice/heatmap',     label: 'Voice · Heatmap',    match: (p) => p.startsWith('/voice/heatmap') },
   { href: '/studio',            label: 'Studio · V_60',      match: (p) => p.startsWith('/studio') },
   { href: '/t-test',            label: 'T_08 · 통과 판정',     match: (p) => p.startsWith('/t-test') },
   { href: '/dealers',           label: '딜러 등록',           match: (p) => p === '/dealers' || p.startsWith('/dealers/'), adminOnly: true },
