@@ -61,7 +61,7 @@ jobs:
       - name: Deploy Edge Functions
         run: |
           cd S_Sensor/backend       && supabase functions deploy --project-ref "$REF" --no-verify-jwt captures-chunks captures-finalize normalize-worker admin-captures admin-clusters admin-field-edit admin-normalize-trigger admin-members admin-settings admin-llm-usage auth-me auth-mark-password-set
-          cd ../../V_Voice/backend  && supabase functions deploy --project-ref "$REF" --no-verify-jwt responses-receive voice-responses voice-aggregates voice-csv-export studio-build-survey studio-deploy surveys-get dealer-tokens-issue dealer-tokens-list dealer-tokens-revoke dealer-consultations dealer-playbook voice-realtime
+          cd ../../V_Voice/backend  && supabase functions deploy --project-ref "$REF" --no-verify-jwt responses-receive voice-responses voice-aggregates voice-heatmap voice-csv-export studio-build-survey studio-deploy surveys-get dealer-tokens-issue dealer-tokens-list dealer-tokens-revoke dealer-consultations dealer-playbook voice-realtime
           cd ../../U_Unified/backend && supabase functions deploy --project-ref "$REF" --no-verify-jwt admin-leads admin-leads-detail admin-lead-associate
           cd ../../T_Test/backend   && supabase functions deploy --project-ref "$REF" --no-verify-jwt admin-test-summary
 
@@ -97,7 +97,7 @@ jobs:
       - name: Deploy Edge Functions
         run: |
           cd S_Sensor/backend       && supabase functions deploy --project-ref "$REF" --no-verify-jwt captures-chunks captures-finalize normalize-worker admin-captures admin-clusters admin-field-edit admin-normalize-trigger admin-members admin-settings admin-llm-usage auth-me auth-mark-password-set
-          cd ../../V_Voice/backend  && supabase functions deploy --project-ref "$REF" --no-verify-jwt responses-receive voice-responses voice-aggregates voice-csv-export studio-build-survey studio-deploy surveys-get dealer-tokens-issue dealer-tokens-list dealer-tokens-revoke dealer-consultations dealer-playbook voice-realtime
+          cd ../../V_Voice/backend  && supabase functions deploy --project-ref "$REF" --no-verify-jwt responses-receive voice-responses voice-aggregates voice-heatmap voice-csv-export studio-build-survey studio-deploy surveys-get dealer-tokens-issue dealer-tokens-list dealer-tokens-revoke dealer-consultations dealer-playbook voice-realtime
           cd ../../U_Unified/backend && supabase functions deploy --project-ref "$REF" --no-verify-jwt admin-leads admin-leads-detail admin-lead-associate
           cd ../../T_Test/backend   && supabase functions deploy --project-ref "$REF" --no-verify-jwt admin-test-summary
 
