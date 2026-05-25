@@ -1,0 +1,59 @@
+name: pages-deploy
+
+# V_Voice/dealer/demo/index.html을 GitHub Pages에 publish.
+# fly.io org token이 SSO로 막힌 환경에서 데모 페이지 즉시 보여주기 위한 우회.
+#
+# 1회 setup (위버 클릭 1번):
+#   https://github.com/weavermensch92/cesaas/settings/pages
+#   → Source: GitHub Actions 선택 → Save
+#
+# 이후 main 머지 시 자동 publish.
+# URL: https://weavermensch92.github.io/cesaas/
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'V_Voice/dealer/demo/**'
+      - '.github/workflows/pages-deploy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Stage public files
+        run: |
+          mkdir -p _site
+          cp V_Voice/dealer/demo/index.html _site/index.html
+          # 루트에 데모 안내 redirect (선택)
+          cat > _site/README.md <<EOF
+          # HD건설기계 — Dealer Demo
+
+          이 페이지는 \`V_Voice/dealer/demo/index.html\`의 데모 미러입니다.
+          DB 미연결. CTT Expo 2026 Dealer 인터뷰 폼 (26문항·다국어 ko/ru/en).
+          EOF
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
