@@ -267,6 +267,30 @@ export async function getVoiceAggregates(filters: { from?: string; to?: string; 
   });
 }
 
+// CTT 2026 — 8 segment × 6 axis 히트맵.
+export type HeatmapTier = 'primary' | 'secondary' | 'base' | 'none';
+export type HeatmapAxis = 'price' | 'fuel' | 'durability' | 'service' | 'reference' | 'versatility';
+export interface VoiceHeatmapCell { avg: number; n: number; tier: HeatmapTier }
+export interface VoiceHeatmapRow {
+  segment: string;
+  respondents: number;
+  axes: Record<HeatmapAxis, VoiceHeatmapCell>;
+}
+export interface VoiceHeatmap {
+  matrix: VoiceHeatmapRow[];
+  totals: { respondents: number; by_segment: Record<string, number> };
+  tier_thresholds: { primary: number; secondary: number; base: number };
+  survey_id: string;
+  truncated: boolean;
+}
+export async function getVoiceHeatmap(filters: {
+  from?: string; to?: string; event?: string; survey_id?: string;
+} = {}): Promise<VoiceHeatmap> {
+  return request('GET', '/voice-heatmap', {
+    from: filters.from, to: filters.to, event: filters.event, survey_id: filters.survey_id,
+  });
+}
+
 // V-034 — 실시간 응답률·에러 카드 (Admin /voice/aggregates 폴링).
 export interface VoiceRealtimeWindow {
   total: number;
