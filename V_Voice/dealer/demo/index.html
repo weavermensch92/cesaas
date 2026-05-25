@@ -1,1435 +1,1283 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>HD건설기계 · Dealer Demo (DB 미연결)</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Geist+Mono:wght@300..700&display=swap" rel="stylesheet">
-<style>
-/* ============================================================================
-   HD CI 2026 — C_Common/packages/design 미러
-   ============================================================================ */
-:root {
-  --hd-eco:#00E600; --hd-heritage:#00AD1D; --hd-prosperity:#008233; --hd-dark-green:#024638;
-  --hd-bright-green:#79D97C; --hd-light-green:#C7E995; --hd-green-gray:#BFCEC2;
-  --hd-discovery:#003087; --hd-trust:#002554; --hd-light-blue:#B1E4E3; --hd-blue-gray:#DBE2E9;
-  --hd-gray:#63666A; --hd-paper:#FFFFFF; --hd-bg:#f6f8f6;
-  --hd-ink:var(--hd-trust); --hd-ink-2:var(--hd-discovery); --hd-ink-text:var(--hd-gray);
-  --hd-accent:var(--hd-heritage); --hd-accent-2:var(--hd-prosperity); --hd-accent-50:#e8f7eb;
-  --hd-steel-900:#2b2f33; --hd-steel-700:#4f535a; --hd-steel-500:var(--hd-gray);
-  --hd-steel-400:#91969d; --hd-steel-300:#b8bcc2; --hd-steel-200:#d6dadf;
-  --hd-steel-100:#e9edf0; --hd-steel-50:#f3f5f7;
-  --hd-red:#b91c1c; --hd-amber:#b45309;
-  --hd-radius:6px; --hd-radius-lg:10px;
-  --hd-border:1px solid var(--hd-steel-200);
-  --hd-font:'Noto Sans KR','Malgun Gothic',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
-  --hd-mono:'Geist Mono',ui-monospace,'SF Mono',monospace;
-  --hd-shadow-1:0 2px 6px rgba(0,0,0,0.06);
-}
-*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
-html,body{height:100%;}
-body{background:var(--hd-bg);color:var(--hd-ink-text);font-family:var(--hd-font);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased;}
-button{font:inherit;cursor:pointer;}
-input,textarea,select{font:inherit;color:inherit;}
-.num{font-feature-settings:"tnum";font-variant-numeric:tabular-nums;}
-.mono{font-family:var(--hd-mono);}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="theme-color" content="#002554" />
+  <title>HD건설기계 — Dealer Demo (DB 미연결)</title>
+  <style>
+    /* HD CI 2026 — subset for single-HTML Dealer. 본질은 packages/design. */
+    :root {
+      --hd-eco:#00E600; --hd-heritage:#00AD1D; --hd-prosperity:#008233; --hd-dark-green:#024638;
+      --hd-discovery:#003087; --hd-trust:#002554;
+      --hd-gray:#63666A; --hd-paper:#fff; --hd-bg:#f6f8f6;
+      --hd-steel-200:#d6dadf; --hd-steel-300:#b8bcc2; --hd-steel-100:#e9edf0; --hd-steel-50:#f3f5f7;
+      --hd-amber:#b45309; --hd-red:#b91c1c;
+      --hd-radius:6px; --hd-radius-lg:10px;
+      --hd-font:'Noto Sans KR','Malgun Gothic',-apple-system,Segoe UI,Arial,sans-serif;
+      --hd-font-display:'HD Sans',var(--hd-font);
+    }
+    *{box-sizing:border-box;}
+    html,body{margin:0;padding:0;background:var(--hd-bg);font-family:var(--hd-font);color:#1d1d1f;-webkit-font-smoothing:antialiased;}
+    body{min-height:100dvh;}
+    a{color:var(--hd-discovery);}
 
-/* Top bar */
-.topbar{display:flex;align-items:center;gap:12px;padding:12px 22px;background:var(--hd-paper);border-bottom:var(--hd-border);box-shadow:var(--hd-shadow-1);}
-.brand{display:flex;align-items:center;gap:10px;}
-.brand-mark{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:var(--hd-heritage);color:#fff;font-weight:800;font-size:16px;border-radius:var(--hd-radius);}
-.brand-name{font-weight:700;color:var(--hd-ink);letter-spacing:-0.01em;}
-.brand-name b{color:var(--hd-heritage);}
-.crumb{font-size:11.5px;color:var(--hd-gray);}
-.spacer{flex:1;}
-.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--hd-steel-50);border:var(--hd-border);border-radius:999px;font-size:11.5px;color:var(--hd-gray);font-family:var(--hd-mono);}
-.pill.green{background:var(--hd-accent-50);border-color:#cce5d0;color:var(--hd-prosperity);}
-.pill.amber{background:#fffbeb;border-color:#fde68a;color:var(--hd-amber);}
-.net-dot{width:7px;height:7px;border-radius:50%;background:var(--hd-prosperity);}
-.net-dot.off{background:var(--hd-amber);}
-.lang-sel{height:28px;padding:0 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-family:var(--hd-mono);font-size:11.5px;}
+    .hd-app{display:flex;flex-direction:column;min-height:100dvh;}
+    header.topbar{background:var(--hd-trust);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;}
+    header .mark{width:28px;height:28px;border-radius:6px;background:var(--hd-heritage);display:grid;place-items:center;color:#002554;font-weight:900;font-family:var(--hd-font-display);}
+    header h1{margin:0;font:700 16px/1.2 var(--hd-font-display);letter-spacing:-0.01em;}
+    header .sub{font-size:12.5px;color:rgba(255,255,255,0.62);}
+    header .spacer{flex:1;}
+    header select{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:4px 8px;font:inherit;font-size:12px;}
+    header .badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#fff;background:rgba(255,255,255,0.1);padding:3px 8px;border-radius:999px;}
+    header .dot{width:7px;height:7px;border-radius:50%;background:#34d399;}
+    header .dot.off{background:#fbbf24;}
+    header .dot.err{background:var(--hd-red);}
 
-/* Stage */
-.stage{display:grid;grid-template-columns:300px 1fr 420px;gap:14px;padding:14px;min-height:calc(100vh - 56px);}
-.panel{background:var(--hd-paper);border:var(--hd-border);border-radius:var(--hd-radius-lg);padding:16px;overflow:hidden;}
-.panel-head{font-family:var(--hd-mono);font-size:10.5px;color:var(--hd-gray);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;}
-.panel-head b{color:var(--hd-heritage);font-weight:600;}
-@media (max-width:1100px){.stage{grid-template-columns:1fr;gap:10px;}}
+    main{flex:1;padding:18px;max-width:760px;width:100%;margin:0 auto;}
+    .card{background:var(--hd-paper);border:1px solid var(--hd-steel-200);border-radius:var(--hd-radius-lg);padding:18px;margin-bottom:14px;}
+    .step-h{font:700 22px/1.1 var(--hd-font-display);color:var(--hd-heritage);letter-spacing:-0.01em;margin:0 0 4px;}
+    .step-sub{font:600 15px/1.3 var(--hd-font-display);color:var(--hd-discovery);margin:0 0 14px;}
 
-/* Segments */
-.seg-list{display:flex;flex-direction:column;gap:5px;}
-.seg{display:flex;align-items:center;gap:8px;padding:8px 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-size:12.5px;color:var(--hd-ink);cursor:pointer;transition:border-color 0.1s,background 0.1s;}
-.seg:hover{border-color:var(--hd-steel-400);}
-.seg.active{border-color:var(--hd-heritage);background:var(--hd-accent-50);font-weight:600;}
-.seg.active.rank-1{border-color:#16A34A;}
-.seg.active.rank-2{border-color:#0EA5E9;}
-.seg.active.rank-3{border-color:#F59E0B;}
-.seg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-.seg-rank{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;font-family:var(--hd-mono);font-size:10.5px;font-weight:700;color:#fff;background:var(--hd-heritage);}
-.seg.active.rank-1 .seg-rank{background:#16A34A;}
-.seg.active.rank-2 .seg-rank{background:#0EA5E9;}
-.seg.active.rank-3 .seg-rank{background:#F59E0B;}
-.hint{margin-top:14px;padding:10px 12px;background:var(--hd-steel-50);border-left:3px solid var(--hd-discovery);border-radius:4px;font-size:11.5px;color:var(--hd-gray);line-height:1.55;}
-.survey-meta{margin-top:12px;padding:10px 12px;background:var(--hd-accent-50);border-left:3px solid var(--hd-heritage);border-radius:4px;font-size:11.5px;color:var(--hd-prosperity);line-height:1.5;font-family:var(--hd-mono);}
+    .q{margin-bottom:18px;}
+    .q-title{font-weight:600;font-size:15px;margin-bottom:8px;color:#1d1d1f;}
+    .q-meta{color:var(--hd-gray);font-size:12px;margin-left:6px;font-weight:400;}
 
-/* Target */
-.target{display:grid;grid-template-columns:90px 1fr;gap:8px 12px;margin-bottom:14px;padding:12px;background:var(--hd-steel-50);border:var(--hd-border);border-radius:var(--hd-radius);}
-.target label{font-family:var(--hd-mono);font-size:10.5px;color:var(--hd-gray);letter-spacing:0.04em;align-self:center;text-transform:uppercase;}
-.target input,.target textarea{width:100%;padding:7px 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-size:13px;}
-.target textarea{min-height:46px;resize:vertical;}
-.target input:focus,.target textarea:focus{outline:none;border-color:var(--hd-heritage);}
+    /* big touch radios */
+    .opts{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));}
+    .opts.cols-3{grid-template-columns:repeat(3,1fr);}
+    .opt{display:block;padding:14px 12px;border:1px solid var(--hd-steel-300);background:#fff;border-radius:8px;cursor:pointer;text-align:center;font-size:14px;line-height:1.2;min-height:54px;display:flex;align-items:center;justify-content:center;}
+    .opt:active{transform:scale(0.98);}
+    .opt.sel{border-color:var(--hd-heritage);background:#e8f7eb;color:#002554;font-weight:600;box-shadow:inset 0 0 0 1px var(--hd-heritage);}
+    .opts.scale .opt{min-width:48px;font-variant-numeric:tabular-nums;font-weight:600;}
 
-/* Radar */
-.radar-wrap{display:flex;align-items:center;justify-content:center;padding:10px;min-height:380px;border:var(--hd-border);border-radius:var(--hd-radius);background:linear-gradient(180deg,var(--hd-paper) 0%,var(--hd-steel-50) 100%);}
-.radar-wrap svg{max-width:100%;height:auto;}
-.radar-empty{font-size:12px;color:var(--hd-gray);font-family:var(--hd-mono);}
+    /* nps row */
+    .nps{display:grid;grid-template-columns:repeat(11,1fr);gap:6px;}
+    .nps .opt{padding:12px 0;font-weight:700;font-size:14px;min-height:42px;}
+    .nps .opt.lo{color:var(--hd-red);}
+    .nps .opt.mid{color:var(--hd-amber);}
+    .nps .opt.hi{color:var(--hd-prosperity);}
+    .nps .opt.sel{color:#fff !important;background:var(--hd-prosperity);border-color:var(--hd-prosperity);}
 
-/* Summary */
-.summary{margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-.metric{padding:10px 12px;border:var(--hd-border);border-radius:var(--hd-radius);background:var(--hd-paper);}
-.metric-label{font-family:var(--hd-mono);font-size:9.5px;color:var(--hd-gray);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;}
-.metric-value{font-weight:700;font-size:16px;color:var(--hd-ink);}
+    /* slider */
+    input[type=range]{width:100%;}
+    .slider-vals{display:flex;justify-content:space-between;font-size:12px;color:var(--hd-gray);}
 
-/* Q&A */
-.qa-list{display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 200px);overflow-y:auto;padding-right:4px;}
-.qa-list::-webkit-scrollbar{width:6px;} .qa-list::-webkit-scrollbar-thumb{background:var(--hd-steel-300);border-radius:3px;}
-.qa{padding:12px 14px;border:var(--hd-border);border-radius:var(--hd-radius);background:var(--hd-paper);}
-.qa.answered{border-color:var(--hd-bright-green);background:#f4fbf5;}
-.qa-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-.qa-axis{display:inline-block;padding:2px 8px;background:var(--hd-steel-100);border-radius:999px;font-family:var(--hd-mono);font-size:9.5px;color:var(--hd-gray);letter-spacing:0.06em;text-transform:uppercase;}
-.qa.answered .qa-axis{background:var(--hd-accent-50);color:var(--hd-prosperity);}
-.qa-kind{font-family:var(--hd-mono);font-size:9.5px;color:var(--hd-steel-400);letter-spacing:0.04em;}
-.qa-title{font-size:13px;font-weight:500;color:var(--hd-ink);margin-bottom:10px;line-height:1.4;}
-.qa-title .req{color:var(--hd-red);font-weight:600;margin-left:4px;}
+    /* consent */
+    .consent{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--hd-steel-200);border-radius:8px;background:var(--hd-steel-50);}
+    .consent input{width:20px;height:20px;}
+    .consent label{cursor:pointer;font-size:14px;}
 
-.opts{display:flex;flex-direction:column;gap:5px;}
-.opt{display:flex;align-items:center;gap:10px;padding:8px 10px;border:var(--hd-border);border-radius:var(--hd-radius);background:var(--hd-paper);font-size:12.5px;color:var(--hd-ink-text);cursor:pointer;transition:border-color 0.1s,background 0.1s;}
-.opt:hover{border-color:var(--hd-steel-400);}
-.opt.selected{border-color:var(--hd-heritage);background:var(--hd-accent-50);color:var(--hd-ink);font-weight:500;}
-.opt-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:var(--hd-border);border-radius:999px;font-family:var(--hd-mono);font-size:11px;font-weight:600;background:var(--hd-paper);color:var(--hd-gray);flex-shrink:0;}
-.opt.selected .opt-num{background:var(--hd-heritage);color:var(--hd-paper);border-color:var(--hd-heritage);}
-/* B-Q1 ranked — 1·2·3 순위 색상 */
-.opts.ranked .opt.rank-1 .opt-num{background:#16A34A;border-color:#16A34A;color:#fff;}
-.opts.ranked .opt.rank-2 .opt-num{background:#0EA5E9;border-color:#0EA5E9;color:#fff;}
-.opts.ranked .opt.rank-3 .opt-num{background:#F59E0B;border-color:#F59E0B;color:#fff;}
-.opts.ranked .opt.rank-1{border-color:#16A34A;}
-.opts.ranked .opt.rank-2{border-color:#0EA5E9;}
-.opts.ranked .opt.rank-3{border-color:#F59E0B;}
+    /* nav */
+    .nav{display:flex;gap:8px;margin-top:18px;}
+    .btn{padding:12px 20px;border-radius:8px;border:1px solid var(--hd-steel-300);background:#fff;color:#1d1d1f;font:600 14px var(--hd-font);cursor:pointer;}
+    .btn:active{transform:scale(0.98);}
+    .btn.primary{background:var(--hd-prosperity);color:#fff;border-color:var(--hd-prosperity);}
+    .btn.primary:disabled{background:var(--hd-steel-300);border-color:var(--hd-steel-300);color:#fff;cursor:not-allowed;opacity:0.7;}
+    .btn.full{flex:1;}
 
-.scale-grid{display:grid;gap:4px;}
-.scale-grid.s5{grid-template-columns:repeat(5,1fr);}
-.scale-grid.s10{grid-template-columns:repeat(10,1fr);}
-.scale-grid.nps{grid-template-columns:repeat(11,1fr);}
-.scale-cell{padding:8px 0;text-align:center;border:var(--hd-border);border-radius:var(--hd-radius);background:var(--hd-paper);font-family:var(--hd-mono);font-size:11px;font-weight:600;color:var(--hd-gray);cursor:pointer;}
-.scale-cell:hover{border-color:var(--hd-steel-400);}
-.scale-cell.selected{background:var(--hd-heritage);color:#fff;border-color:var(--hd-heritage);}
-.scale-cell.lo{color:var(--hd-red);}
-.scale-cell.mid{color:var(--hd-amber);}
-.scale-cell.hi{color:var(--hd-prosperity);}
-.scale-cell.selected.lo{background:var(--hd-red);border-color:var(--hd-red);color:#fff;}
-.scale-cell.selected.mid{background:var(--hd-amber);border-color:var(--hd-amber);color:#fff;}
-.scale-cell.disabled{opacity:0.35;cursor:not-allowed;}
-.scale-cell.disabled:hover{border-color:var(--hd-steel-200);}
-.opt.hier-top{font-weight:600;background:var(--hd-steel-50,#F5F7F9);}
-.opt.hier-top.expanded{border-color:var(--hd-heritage);}
-.opt.hier-child{margin-left:18px;font-size:12px;}
-.opt.hier-child .opt-num{width:18px;height:18px;font-size:9px;}
-.txt-area.hier-other{margin-left:18px;margin-top:4px;width:calc(100% - 18px);min-height:48px;}
-.txt-area.multi-other{margin-top:6px;width:100%;min-height:48px;font-size:12px;}
-.scale-cell.selected.hi{background:var(--hd-prosperity);border-color:var(--hd-prosperity);color:#fff;}
+    /* playbook */
+    .pb{border:1px solid var(--hd-heritage);background:#e8f7eb;border-radius:12px;padding:18px;}
+    .pb h2{margin:0 0 6px;font:700 20px var(--hd-font-display);color:var(--hd-prosperity);}
+    .pb .seg{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:var(--hd-trust);color:#fff;font-size:12px;font-weight:600;letter-spacing:0.02em;}
+    .pb .pb-live{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:var(--hd-prosperity);color:#fff;font-size:10px;font-weight:700;letter-spacing:0.04em;margin-left:6px;text-transform:uppercase;cursor:help;}
+    .pb h3{font:600 14px var(--hd-font);color:var(--hd-trust);margin:14px 0 4px;text-transform:uppercase;letter-spacing:0.04em;}
+    .pb ul{margin:0;padding-left:18px;}
+    .pb li{margin-bottom:4px;font-size:14px;}
+    .pb .pitch{background:#fff;border:1px solid var(--hd-prosperity);border-radius:8px;padding:12px;margin-top:6px;font-style:italic;color:var(--hd-trust);}
+    .pb .prio{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:14px;margin-bottom:8px;}
+    .pb .prio.p1{color:var(--hd-red);}
+    .pb .prio.p2{color:var(--hd-amber);}
+    .pb .prio.p3{color:var(--hd-discovery);}
+    .pb .prio.p4,.pb .prio.p5{color:var(--hd-gray);}
 
-.txt-input,.txt-area{width:100%;padding:8px 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-size:13px;}
-.txt-area{min-height:64px;resize:vertical;}
-.txt-input:focus,.txt-area:focus{outline:none;border-color:var(--hd-heritage);}
-.num-input{width:140px;padding:8px 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-family:var(--hd-mono);font-size:13px;}
+    .progress{height:4px;background:var(--hd-steel-100);border-radius:2px;overflow:hidden;margin-bottom:16px;}
+    .progress > i{display:block;height:100%;background:var(--hd-heritage);transition:width 0.2s;}
 
-.consent{display:flex;align-items:flex-start;gap:9px;padding:10px 14px;border:var(--hd-border);border-radius:var(--hd-radius);font-size:12.5px;line-height:1.45;color:var(--hd-ink);cursor:pointer;background:var(--hd-paper);}
-.consent input{margin-top:2px;accent-color:var(--hd-heritage);}
-.req{color:var(--hd-red);font-weight:600;}
+    .hidden{display:none !important;}
+    .ghost{color:var(--hd-gray);font-size:12px;}
 
-/* 2-col profile grid (center bottom) */
-.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-@media (max-width:1400px){.profile-grid{grid-template-columns:1fr;}}
+    /* tutorial — 첫 접속 온보딩 + 헤더 도움말 버튼으로 재호출 */
+    header .help-btn{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:999px;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font:700 14px var(--hd-font);padding:0;}
+    header .help-btn:hover{background:rgba(255,255,255,0.2);}
+    .tut-overlay{position:fixed;inset:0;background:rgba(0,37,84,0.55);display:flex;align-items:flex-end;justify-content:center;z-index:100;padding:0;}
+    @media (min-width:520px){ .tut-overlay{align-items:center;padding:18px;} }
+    .tut-modal{background:#fff;width:100%;max-width:520px;border-radius:16px 16px 0 0;padding:22px 22px 18px;box-shadow:0 -12px 30px rgba(0,0,0,0.18);}
+    @media (min-width:520px){ .tut-modal{border-radius:14px;padding:24px;} }
+    .tut-step-num{font:600 11px var(--hd-font);color:var(--hd-prosperity);letter-spacing:0.08em;text-transform:uppercase;}
+    .tut-t{font:700 22px/1.2 var(--hd-font-display);color:var(--hd-trust);letter-spacing:-0.01em;margin:6px 0 10px;}
+    .tut-b{font-size:15px;line-height:1.5;color:#1d1d1f;margin:0 0 14px;}
+    .tut-tip{font-size:13px;line-height:1.45;color:var(--hd-gray);background:var(--hd-steel-50);border-left:3px solid var(--hd-heritage);padding:8px 12px;border-radius:4px;}
+    .tut-dots{display:flex;gap:6px;justify-content:center;margin:16px 0 14px;}
+    .tut-dots i{width:7px;height:7px;border-radius:50%;background:var(--hd-steel-300);display:block;transition:background 0.2s;}
+    .tut-dots i.on{background:var(--hd-heritage);}
+    .tut-nav{display:flex;gap:8px;align-items:center;}
+    .tut-skip{font:600 13px var(--hd-font);color:var(--hd-gray);background:none;border:0;padding:8px 4px;cursor:pointer;}
+    .tut-skip:hover{color:var(--hd-trust);}
+    .tut-spacer{flex:1;}
 
-/* Right column · fixed viewport-height + paginated */
-.right-fixed{display:flex;flex-direction:column;height:calc(100vh - 56px - 28px);}
-.page-nav{flex-shrink:0;display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:var(--hd-border);}
-.page-nav-dots{display:flex;gap:6px;flex:1;}
-.page-dot{flex:1;height:4px;background:var(--hd-steel-200);border-radius:2px;transition:background 0.2s;}
-.page-dot.active{background:var(--hd-heritage);}
-.page-dot.done{background:var(--hd-bright-green);}
-.page-counter{font-family:var(--hd-mono);font-size:11px;color:var(--hd-gray);font-weight:600;}
-.pager-viewport{flex:1;overflow:hidden;position:relative;}
-.pager-track{display:flex;height:100%;transition:transform 0.42s cubic-bezier(0.4,0.0,0.2,1);}
-.pager-page{flex-shrink:0;width:100%;padding-right:6px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
-.pager-page::-webkit-scrollbar{width:6px;} .pager-page::-webkit-scrollbar-thumb{background:var(--hd-steel-300);border-radius:3px;}
-.page-controls{flex-shrink:0;display:flex;gap:8px;margin-top:10px;}
-.page-controls .btn{flex:1;padding:11px 14px;}
-.page-controls .btn.ghost{flex:0 0 80px;}
-
-/* Dealer Profile card */
-.dealer-card{padding:12px;background:linear-gradient(135deg,var(--hd-trust) 0%,var(--hd-discovery) 100%);color:#fff;border-radius:var(--hd-radius);margin-bottom:14px;}
-.dealer-card .dc-row{display:flex;justify-content:space-between;align-items:center;font-family:var(--hd-mono);font-size:10.5px;letter-spacing:0.04em;opacity:0.85;text-transform:uppercase;margin-bottom:4px;}
-.dealer-card .dc-id{font-family:var(--hd-mono);font-size:14px;font-weight:600;letter-spacing:0.02em;margin-bottom:6px;color:var(--hd-light-blue);}
-.dealer-card .dc-meta{font-size:11.5px;line-height:1.5;opacity:0.9;}
-.dealer-card .dc-meta b{font-weight:600;opacity:1;}
-.dealer-card.empty{background:var(--hd-steel-100);color:var(--hd-gray);}
-.dealer-card.empty .dc-id{color:var(--hd-gray);}
-
-/* Section block headers within columns */
-.section-block{margin-top:18px;}
-.section-block:first-child{margin-top:0;}
-
-/* Submit */
-.submit-row{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
-.btn{padding:12px 16px;border:var(--hd-border);border-radius:var(--hd-radius);background:var(--hd-paper);color:var(--hd-ink);font-weight:600;font-size:13px;transition:background 0.1s,opacity 0.1s;}
-.btn:hover{background:var(--hd-steel-50);}
-.btn.primary{background:var(--hd-heritage);border-color:var(--hd-heritage);color:#fff;}
-.btn.primary:hover{background:var(--hd-prosperity);border-color:var(--hd-prosperity);}
-.btn:disabled{opacity:0.45;cursor:not-allowed;}
-.btn:disabled:hover{background:var(--hd-paper);}
-.btn.ghost{background:transparent;border-color:transparent;color:var(--hd-gray);font-weight:400;}
-.btn.ghost:hover{background:var(--hd-steel-50);}
-
-.toast{padding:10px 14px;border:var(--hd-border);border-radius:var(--hd-radius);font-size:12.5px;}
-.toast.ok{background:var(--hd-accent-50);border-color:#b6e0bf;color:var(--hd-prosperity);}
-.toast.err{background:#fef2f2;border-color:#fecaca;color:var(--hd-red);}
-.toast.warn{background:#fffbeb;border-color:#fde68a;color:var(--hd-amber);}
-
-.loading{padding:40px 20px;text-align:center;color:var(--hd-gray);font-family:var(--hd-mono);font-size:12px;}
-</style>
+    /* history — 딜러 본인 상담 이력 */
+    header .hist-btn{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;height:26px;padding:0 10px;cursor:pointer;font:600 12px var(--hd-font);display:inline-flex;align-items:center;gap:5px;}
+    header .hist-btn:hover{background:rgba(255,255,255,0.2);}
+    header .hist-btn.on{background:var(--hd-heritage);border-color:var(--hd-heritage);}
+    .hist-list{display:flex;flex-direction:column;gap:8px;}
+    .hist-row{background:var(--hd-paper);border:1px solid var(--hd-steel-200);border-radius:var(--hd-radius);padding:12px 14px;display:flex;flex-direction:column;gap:4px;}
+    .hist-row .top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;}
+    .hist-row .co{font:700 15px var(--hd-font-display);color:var(--hd-trust);min-width:0;flex:1;}
+    .hist-row .when{font-size:11px;color:var(--hd-gray);font-variant-numeric:tabular-nums;}
+    .hist-row .meta{font-size:13px;color:#1d1d1f;}
+    .hist-row .meta .seg{display:inline-flex;align-items:center;padding:1px 7px;border-radius:999px;background:var(--hd-steel-50);font-size:11px;font-weight:600;color:var(--hd-discovery);margin-right:6px;}
+    .hist-row .meta .nps{font-weight:700;}
+    .hist-row .meta .nps.lo{color:var(--hd-red);}
+    .hist-row .meta .nps.mid{color:var(--hd-amber);}
+    .hist-row .meta .nps.hi{color:var(--hd-prosperity);}
+    .hist-row .notes{font-size:13px;color:var(--hd-gray);white-space:pre-wrap;}
+    .hist-empty{padding:32px 14px;text-align:center;color:var(--hd-gray);font-size:14px;}
+  </style>
 </head>
 <body>
-
-<header class="topbar">
-  <span class="brand"><span class="brand-mark">H</span><span class="brand-name"><b>HD</b>건설기계 · Dealer v2</span></span>
-  <span class="crumb" id="surveyCrumb">Загрузка опроса…</span>
-  <span class="spacer"></span>
-  <span class="pill" id="tokenStatus">no token</span>
-  <span class="pill" id="netPill"><span class="net-dot" id="netDot"></span><span id="netLabel">Online</span></span>
-  <span class="pill" id="queuePill">Очередь 0</span>
-  <a id="verSwitch" href="/dealer/" title="Открыть Dealer v1 (текущая)"
-     class="pill"
-     style="text-decoration:none;color:inherit;font-weight:600;letter-spacing:0.04em;">
-    &larr; v1
-  </a>
-  <select id="langSel" class="lang-sel">
-    <option value="ru">RU</option><option value="en">EN</option><option value="ko">KO</option>
-  </select>
-</header>
-
-<main class="stage">
-
-  <!-- LEFT — Dealer Profile · Target · Hypothesis -->
-  <aside class="panel">
-    <div class="section-block">
-      <div class="panel-head" id="lbl_dealer_profile">Dealer Profile</div>
-      <div id="dealerCard"></div>
-    </div>
-
-    <div class="section-block">
-      <!-- 회사명·담당자·연락처·메모는 좌측 sidebar 공통 입력에서 받음 (모든 페이지에 노출).
-           047 마이그레이션이 q_v1d26_target_company / _contact_name / _contact_phone 정식 question 3개 DELETE — 우측 본문에는 안 보임.
-           payload는 좌측 input 값을 그대로 송출 (onSubmit의 target_company / contact_name / contact_phone). -->
-      <div class="panel-head" id="lbl_target_head">Информация о клиенте</div>
-      <div class="target">
-        <label id="lbl_company">Company *</label><input id="inp_company" type="text" autocomplete="off"/>
-        <label id="lbl_contact">Contact</label><input id="inp_contact" type="text" autocomplete="off"/>
-        <label id="lbl_phone">Phone</label><input id="inp_phone" type="text" inputmode="tel" autocomplete="off"/>
-        <label id="lbl_notes">Notes</label><textarea id="inp_notes" autocomplete="off"></textarea>
+  <div class="hd-app">
+    <header class="topbar">
+      <span class="mark">H</span>
+      <div>
+        <h1 id="brand">HD건설기계</h1>
+        <span class="sub" id="surveyTitle">Dealer Interview</span>
       </div>
-    </div>
+      <span class="spacer"></span>
+      <span class="badge"><span id="netDot" class="dot"></span><span id="netLabel">Online</span></span>
+      <span class="badge" id="queueBadge" title="송출 대기">큐 0</span>
+      <button id="histBtn" class="hist-btn" type="button" aria-label="history">📋 <span id="histBtnLabel">이력</span></button>
+      <button id="helpBtn" class="help-btn" type="button" aria-label="help" title="?">?</button>
+      <a id="verSwitch" href="/dealer/v2/" title="Открыть Dealer v2 (3-col radar)"
+         style="display:inline-flex;align-items:center;padding:4px 10px;
+                border:1px solid rgba(255,255,255,0.25);border-radius:999px;
+                background:rgba(255,255,255,0.08);color:#fff;
+                font:600 11px var(--hd-font);text-decoration:none;letter-spacing:0.04em;">
+        v2 &rarr;
+      </a>
+      <select id="langSel" aria-label="lang">
+        <option value="ru">RU</option><option value="en">EN</option><option value="ko">KO</option>
+      </select>
+    </header>
 
-    <div class="section-block">
-      <div class="panel-head"><b>8</b> Segments · <span id="lbl_hypothesis">гипотеза</span></div>
-      <div class="seg-list" id="segList"></div>
-      <div class="hint" id="lbl_hypothesis_help"></div>
-    </div>
+    <main id="root"></main>
+    <datalist id="target-company-list"></datalist>
+    <div id="tutOverlay" class="tut-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="tutTitle"></div>
+  </div>
 
-    <div class="survey-meta" id="surveyMeta" style="display:none;"></div>
-  </aside>
-
-  <!-- CENTER — Summary · Radar · 회사 프로필 2x3 -->
-  <section class="panel">
-    <div class="section-block">
-      <div class="panel-head" id="lbl_summary_head">Среднее · Сильная · Слабая</div>
-      <div class="summary" id="summary"></div>
-    </div>
-
-    <div class="section-block">
-      <div class="panel-head" id="lbl_radar_head">Карта позиционирования · автовывод по ответам</div>
-      <div class="radar-wrap" id="radarWrap">
-        <span class="radar-empty">Появится после ответов</span>
-      </div>
-    </div>
-
-    <div class="section-block">
-      <div class="panel-head" id="lbl_profile_head">Профиль компании (6 осей)</div>
-      <div class="profile-grid" id="profileGrid"></div>
-    </div>
-  </section>
-
-  <!-- RIGHT — 마케팅 + NPS + 동의 · 페이지네이션 · 슬라이드 -->
-  <aside class="panel right-fixed">
-    <div class="page-nav">
-      <span class="panel-head" style="margin:0;flex-shrink:0;"><span id="lbl_interview">Интервью клиента</span></span>
-      <div class="page-nav-dots" id="pageDots"></div>
-      <span class="page-counter" id="pageCounter">0/0</span>
-    </div>
-    <div class="pager-viewport" id="pagerViewport">
-      <div class="pager-track" id="pagerTrack"></div>
-    </div>
-    <div class="page-controls">
-      <button class="btn ghost" id="btnPrev" disabled>← Назад</button>
-      <button class="btn" id="btnNext">Далее →</button>
-      <button class="btn primary" id="btnSubmit" disabled style="display:none;">Сохранить + CRM Sync</button>
-      <button class="btn ghost" id="btnReset" style="display:none;">Новое интервью</button>
-    </div>
-    <div id="toastSlot"></div>
-  </aside>
-
-</main>
-
-<script>
-/* ============================================================================
-   DEMO_SURVEY_QUESTIONS — 042+045+046+048 inline 시드 (DB 미연결 전용)
-   26 questions: 3 contact* + 6 DW axes scale_1_10 + 1 hierarchical multi + others
-   * contact 3개는 047에서 폐기. 좌측 sidebar 입력으로 받음 → 본 inline에서도 제외.
-   ============================================================================ */
-const _OPT_USAGE_HIER = [
-  {value:"1",label_ru:"Строительная площадка",label_en:"Construction site (overall)",label_ko:"건설 현장 전반",level:0,parent_id:null,order:0},
-    {value:"1.1",label_ru:"Строительная техника",label_en:"Construction vehicles",label_ko:"건설 차량",level:1,parent_id:"1",order:1},
-    {value:"1.2",label_ru:"Землеройная техника",label_en:"Earthmoving machinery",label_ko:"토공 기계",level:1,parent_id:"1",order:2},
-    {value:"1.3",label_ru:"Дорожно-строительная техника",label_en:"Road construction machinery",label_ko:"도로 건설 기계",level:1,parent_id:"1",order:3},
-    {value:"1.4",label_ru:"Подъёмное оборудование, краны и транспорт",label_en:"Lifting, cranes & material handling",label_ko:"양중 기기, 크레인 및 운반 장비",level:1,parent_id:"1",order:4},
-    {value:"1.5",label_ru:"Строительное оборудование, инструменты и специальные системы",label_en:"Construction equipment, tools & special systems",label_ko:"건설 장비, 공구 및 특수 시스템",level:1,parent_id:"1",order:5},
-    {value:"1.6",label_ru:"Оборудование для бетонных работ",label_en:"Concrete work equipment",label_ko:"콘크리트 공사 장비",level:1,parent_id:"1",order:6},
-    {value:"1.7",label_ru:"Опалубка и леса",label_en:"Formwork & scaffolding",label_ko:"거푸집 및 비계",level:1,parent_id:"1",order:7},
-    {value:"1.8",label_ru:"Объекты на стройплощадке",label_en:"Site facilities",label_ko:"현장 시설",level:1,parent_id:"1",order:8},
-    {value:"1_other",label_ru:"Другое (укажите)",label_en:"Other (specify)",label_ko:"기타 (직접 입력)",level:1,parent_id:"1",is_other:true,order:9},
-  {value:"2",label_ru:"Добыча, переработка и транспортировка полезных ископаемых",label_en:"Mineral mining, processing & transport",label_ko:"광물 채굴, 가공 및 운반",level:0,parent_id:null,order:10},
-    {value:"2.1",label_ru:"Шахтная техника для добычи",label_en:"Mining machinery for excavation & operation",label_ko:"채굴 건설 및 채굴 작업용 광산 기계 및 시설",level:1,parent_id:"2",order:11},
-    {value:"2.2",label_ru:"Техника для геологоразведки",label_en:"Geological exploration equipment",label_ko:"지질 탐사용 기계 및 장치",level:1,parent_id:"2",order:12},
-    {value:"2.3",label_ru:"Переработка и обогащение полезных ископаемых",label_en:"Mineral processing & beneficiation",label_ko:"광물 가공 및 선광용 기계 및 장치",level:1,parent_id:"2",order:13},
-    {value:"2.4",label_ru:"Транспортировка и хранение полезных ископаемых",label_en:"Mineral transport & storage",label_ko:"광물 운반 및 보관용 기계 및 장비",level:1,parent_id:"2",order:14},
-    {value:"2.5",label_ru:"Запчасти и вспомогательные материалы",label_en:"Parts, spares & auxiliary materials",label_ko:"부품, 예비 부품 및 보조 재료",level:1,parent_id:"2",order:15},
-    {value:"2.6",label_ru:"Цифровые технологии и инновации в горнодобыче",label_en:"Digital tech & innovation for mining",label_ko:"광업의 디지털 기술 및 혁신 솔루션",level:1,parent_id:"2",order:16},
-    {value:"2.7",label_ru:"Исследования и разработки",label_en:"R&D",label_ko:"연구 및 개발",level:1,parent_id:"2",order:17},
-    {value:"2.8",label_ru:"Безопасность в горнодобыче",label_en:"Mining safety",label_ko:"광업 산업 안전",level:1,parent_id:"2",order:18},
-    {value:"2.9",label_ru:"Защита окружающей среды в горнодобыче",label_en:"Mining environmental protection",label_ko:"광업 환경 보호",level:1,parent_id:"2",order:19},
-    {value:"2_other",label_ru:"Другое (укажите)",label_en:"Other (specify)",label_ko:"기타 (직접 입력)",level:1,parent_id:"2",is_other:true,order:20},
-  {value:"3",label_ru:"Производство строительных материалов",label_en:"Building materials production",label_ko:"건축 자재 생산",level:0,parent_id:null,order:21},
-    {value:"3.1",label_ru:"Цемент, известь, гипс",label_en:"Cement, lime, gypsum",label_ko:"시멘트, 석회, 석고 건축 자재 제조",level:1,parent_id:"3",order:22},
-    {value:"3.2",label_ru:"Бетон, ЖБИ и сборные конструкции",label_en:"Concrete, RC products & prefabricated elements",label_ko:"콘크리트, 콘크리트 제품 및 프리패브 부재 생산 기계",level:1,parent_id:"3",order:23},
-    {value:"3.3",label_ru:"Асфальтобетонные заводы",label_en:"Asphalt production plants",label_ko:"아스팔트 생산 기계 및 플랜트",level:1,parent_id:"3",order:24},
-    {value:"3_other",label_ru:"Другое (укажите)",label_en:"Other (specify)",label_ko:"기타 (직접 입력)",level:1,parent_id:"3",is_other:true,order:25},
-  {value:"4",label_ru:"Запчасти, расходники, смазочные материалы и сервис",label_en:"Parts, consumables, lubricants & service",label_ko:"부품, 소모품, 윤활유 및 서비스 공급",level:0,parent_id:null,order:26},
-    {value:"4.1",label_ru:"Запчасти и комплектующие для техники",label_en:"Spare parts & components",label_ko:"기계용 예비 부품 및 구성품",level:1,parent_id:"4",order:27},
-    {value:"4.2",label_ru:"Сервис",label_en:"Service",label_ko:"서비스",level:1,parent_id:"4",order:28},
-    {value:"4.3",label_ru:"Испытания, измерения и контроль процессов",label_en:"Test, measurement & process control",label_ko:"시험, 측정 및 공정 제어 장치",level:1,parent_id:"4",order:29},
-    {value:"4.4",label_ru:"Связь и навигация",label_en:"Communications & navigation",label_ko:"통신 및 항법",level:1,parent_id:"4",order:30},
-    {value:"4.5",label_ru:"Безопасность труда",label_en:"Work safety",label_ko:"작업 안전",level:1,parent_id:"4",order:31},
-    {value:"4_other",label_ru:"Другое (укажите)",label_en:"Other (specify)",label_ko:"기타 (직접 입력)",level:1,parent_id:"4",is_other:true,order:32},
-];
-const DEMO_SURVEY_QUESTIONS = [
-  // DW 6축 — 045 title 복원본 + scale_1_10 unique 점수
-  {id:'q_v1d26_dw_price',type:'scale_1_10',axis:'price',required:true,sort_order:11,title_ru:'Цена / финансирование — насколько важно',title_en:'Price / financing — importance',title_ko:'가격·금융 조건의 중요도'},
-  {id:'q_v1d26_dw_fuel',type:'scale_1_10',axis:'fuel',required:true,sort_order:12,title_ru:'Расход топлива и время работы — насколько важно',title_en:'Fuel efficiency & uptime — importance',title_ko:'연료 효율·가동 시간의 중요도'},
-  {id:'q_v1d26_dw_durability',type:'scale_1_10',axis:'durability',required:true,sort_order:13,title_ru:'Надёжность и срок службы — насколько важно',title_en:'Durability & reliability — importance',title_ko:'내구성·신뢰성의 중요도'},
-  {id:'q_v1d26_dw_service',type:'scale_1_10',axis:'service',required:true,sort_order:14,title_ru:'Сервисная сеть и поставка запчастей — насколько важно',title_en:'Service network & parts — importance',title_ko:'서비스 네트워크·부품 조달의 중요도'},
-  {id:'q_v1d26_dw_reference',type:'scale_1_10',axis:'reference',required:true,sort_order:15,title_ru:'Референсы и узнаваемость бренда — насколько важно',title_en:'Project references & brand — importance',title_ko:'프로젝트 레퍼런스·인지도의 중요도'},
-  {id:'q_v1d26_dw_versatility',type:'scale_1_10',axis:'versatility',required:true,sort_order:16,title_ru:'Многозадачность и опции — насколько важно',title_en:'Multi-purpose versatility — importance',title_ko:'다목적 활용성·옵션의 중요도'},
-
-  // 계층 multi (048) — CTT Expo 4 대분류
-  {id:'q_v1d26_usage_hier',type:'multi_select',axis:null,required:true,sort_order:21,
-    title_ru:'Какие отрасли посетите на CTT Expo 2026?',
-    title_en:'Which CTT Expo 2026 product categories will you visit?',
-    title_ko:'CTT Expo 2026에서 방문할 제품 분야는?',
-    options:_OPT_USAGE_HIER},
-
-  {id:'q_v1d26_avg_days',type:'single_select',axis:null,required:true,sort_order:22,
-    title_ru:'Сколько дней в неделю в среднем работает одна единица техники?',
-    title_en:'Average days per week one unit of equipment operates?',
-    title_ko:'한 장비가 평균적으로 일하는 일수는? (주간 평균)',
-    options:[
-      {value:"0",label_ru:"0",label_en:"0",label_ko:"0"},
-      {value:"1",label_ru:"1",label_en:"1",label_ko:"1"},
-      {value:"2",label_ru:"2",label_en:"2",label_ko:"2"},
-      {value:"3",label_ru:"3",label_en:"3",label_ko:"3"},
-      {value:"4",label_ru:"4",label_en:"4",label_ko:"4"},
-      {value:"5",label_ru:"5",label_en:"5",label_ko:"5"},
-      {value:"6",label_ru:"6",label_en:"6",label_ko:"6"},
-      {value:"7",label_ru:"7",label_en:"7",label_ko:"7"}
-    ]},
-
-  {id:'q_v1d26_unit_count',type:'number',axis:null,required:false,sort_order:23,
-    title_ru:'Сколько единиц техники сейчас эксплуатируется?',
-    title_en:'How many units of equipment are currently in operation?',
-    title_ko:'총 가동되고 있는 장비 수 (대)'},
-
-  {id:'q_v1d26_revenue_rub',type:'single_select',axis:null,required:false,sort_order:24,
-    title_ru:'Среднегодовая выручка (₽)',title_en:'Average annual revenue (RUB)',title_ko:'연간 평균 매출액 (₽)',
-    options:[
-      {value:"lt_10m",label_ru:"< 10 млн ₽",label_en:"< 10M ₽",label_ko:"< 10M ₽"},
-      {value:"10_50m",label_ru:"10—50 млн ₽",label_en:"10—50M ₽",label_ko:"10—50M ₽"},
-      {value:"50_200m",label_ru:"50—200 млн ₽",label_en:"50—200M ₽",label_ko:"50—200M ₽"},
-      {value:"200_500m",label_ru:"200—500 млн ₽",label_en:"200—500M ₽",label_ko:"200—500M ₽"},
-      {value:"500m_1b",label_ru:"500 млн — 1 млрд ₽",label_en:"500M—1B ₽",label_ko:"500M—1B ₽"},
-      {value:"gt_1b",label_ru:"> 1 млрд ₽",label_en:"> 1B ₽",label_ko:"> 1B ₽"}
-    ]},
-
-  {id:'q_v1d26_fleet5',type:'single_select',axis:null,required:false,sort_order:25,
-    title_ru:'Сколько единиц техники в парке?',title_en:'How many units in your fleet?',title_ko:'보유 장비 수량',
-    options:[
-      {value:"0",label_ru:"0 ед.",label_en:"0 units",label_ko:"0대"},
-      {value:"1_10",label_ru:"1—10 ед.",label_en:"1—10 units",label_ko:"1—10대"},
-      {value:"10_50",label_ru:"10—50 ед.",label_en:"10—50 units",label_ko:"10—50대"},
-      {value:"50_100",label_ru:"50—100 ед.",label_en:"50—100 units",label_ko:"50—100대"},
-      {value:"gt_100",label_ru:"100+ ед.",label_en:"100+ units",label_ko:"100대+"}
-    ]},
-
-  // 의사결정 참여자 — ranked (rank_max:3, 첫 옵션 메타에)
-  {id:'q_v1d26_decision_roles',type:'multi_select',axis:null,required:false,sort_order:26,
-    title_ru:'Кто участвует в принятии решения о закупке? Выберите топ-3 по приоритету',
-    title_en:'Who participates in purchase decisions? Select top-3 in priority order',
-    title_ko:'의사결정 참여자 (클릭 순서대로 1·2·3 순위, 최대 3)',
-    options:[
-      {value:"owner",label_ru:"Собственник",label_en:"Owner",label_ko:"오너",rank_max:3},
-      {value:"procurement",label_ru:"Отдел закупок",label_en:"Procurement",label_ko:"구매팀"},
-      {value:"operator",label_ru:"Оператор",label_en:"Operator",label_ko:"오퍼레이터"},
-      {value:"site_manager",label_ru:"Прораб",label_en:"Site manager",label_ko:"현장소장"},
-      {value:"engineer",label_ru:"Инженер",label_en:"Engineer",label_ko:"엔지니어"},
-      {value:"hq",label_ru:"Согласование с HQ",label_en:"HQ approval",label_ko:"본사 승인"}
-    ]},
-
-  // 구매 결정 요소 + 기타 inline (046 is_other:true)
-  {id:'q_v1d26_factors',type:'multi_select',axis:null,required:false,sort_order:27,
-    title_ru:'Важнейшие факторы при выборе техники',title_en:'Key factors when choosing equipment',title_ko:'구매 결정 요소 (중요한 항목 모두)',
-    options:[
-      {value:"price",label_ru:"Цена",label_en:"Price",label_ko:"가격"},
-      {value:"financing",label_ru:"Условия финансирования",label_en:"Financing terms",label_ko:"금융 조건"},
-      {value:"reliability",label_ru:"Надёжность",label_en:"Reliability",label_ko:"신뢰성"},
-      {value:"service_network",label_ru:"Сервисная сеть",label_en:"Service network",label_ko:"서비스 네트워크"},
-      {value:"uptime_efficiency",label_ru:"Uptime / эффективность",label_en:"Uptime / efficiency",label_ko:"가동률·효율성"},
-      {value:"brand_reference",label_ru:"Референсы бренда",label_en:"Brand references",label_ko:"브랜드 레퍼런스"},
-      {value:"versatility",label_ru:"Универсальность",label_en:"Versatility",label_ko:"다목적성"},
-      {value:"fuel_efficiency",label_ru:"Топливная экономичность",label_en:"Fuel efficiency",label_ko:"연료 효율"},
-      {value:"resale_value",label_ru:"Остаточная стоимость",label_en:"Resale value",label_ko:"잔존 가치"},
-      {value:"training",label_ru:"Обучение операторов",label_en:"Operator training",label_ko:"운전자 교육"},
-      {value:"other",label_ru:"Другое",label_en:"Other",label_ko:"기타",is_other:true}
-    ]},
-
-  {id:'q_v1d26_channels',type:'multi_select',axis:null,required:false,sort_order:29,
-    title_ru:'Каналы получения информации о технике',title_en:'Information channels',title_ko:'정보 수집 채널',
-    options:[
-      {value:"trade_show",label_ru:"Выставка",label_en:"Trade show",label_ko:"전시회"},
-      {value:"dealer_open_house",label_ru:"Открытый дом дилера",label_en:"Dealer open house",label_ko:"딜러 오픈 하우스"},
-      {value:"online",label_ru:"Онлайн",label_en:"Online",label_ko:"온라인"},
-      {value:"industry_peer",label_ru:"Рекомендация коллег",label_en:"Industry peer recommendation",label_ko:"동업 업계 추천"},
-      {value:"other",label_ru:"Другое",label_en:"Other",label_ko:"기타",is_other:true}
-    ]},
-
-  {id:'q_v1d26_competitor_brands',type:'multi_select',axis:null,required:false,sort_order:31,
-    title_ru:'Какие бренды рассматриваете при покупке техники?',title_en:'Which brands do you consider when buying equipment?',title_ko:'장비 구매 시 고려하고 있는 브랜드',
-    options:[
-      {value:"caterpillar",label_ru:"Caterpillar",label_en:"Caterpillar",label_ko:"Caterpillar"},
-      {value:"komatsu",label_ru:"Komatsu",label_en:"Komatsu",label_ko:"Komatsu"},
-      {value:"volvo_ce",label_ru:"Volvo CE",label_en:"Volvo CE",label_ko:"Volvo CE"},
-      {value:"liebherr",label_ru:"Liebherr",label_en:"Liebherr",label_ko:"Liebherr"},
-      {value:"john_deere",label_ru:"John Deere",label_en:"John Deere",label_ko:"John Deere"},
-      {value:"hitachi",label_ru:"Hitachi",label_en:"Hitachi",label_ko:"Hitachi"},
-      {value:"jcb",label_ru:"JCB",label_en:"JCB",label_ko:"JCB"},
-      {value:"xcmg",label_ru:"XCMG",label_en:"XCMG",label_ko:"XCMG"},
-      {value:"sany",label_ru:"Sany",label_en:"Sany",label_ko:"Sany"},
-      {value:"sdlg",label_ru:"SDLG",label_en:"SDLG",label_ko:"SDLG"},
-      {value:"liugong",label_ru:"LiuGong",label_en:"LiuGong",label_ko:"LiuGong"},
-      {value:"zoomlion",label_ru:"Zoomlion",label_en:"Zoomlion",label_ko:"Zoomlion"},
-      {value:"other",label_ru:"Другое",label_en:"Other",label_ko:"기타",is_other:true}
-    ]},
-
-  {id:'q_v1d26_service_expect',type:'multi_select',axis:null,required:false,sort_order:32,
-    title_ru:'Какой сервис вы ожидаете?',title_en:'What service do you expect?',title_ko:'어떤 서비스를 기대하고 있는지',
-    options:[
-      {value:"parts_stock",label_ru:"Наличие запчастей у дилера",label_en:"Dealer parts stock",label_ko:"딜러 부품 재고 보유량"},
-      {value:"service_speed",label_ru:"Скорость реакции сервиса",label_en:"Service response speed",label_ko:"서비스 대응 속도"},
-      {value:"training",label_ru:"Обучение по технике и ТО",label_en:"Equipment & maintenance training",label_ko:"장비·정비 교육"},
-      {value:"other",label_ru:"Другое",label_en:"Other",label_ko:"기타",is_other:true}
-    ]},
-
-  // DEVELON NPS + 이유
-  {id:'q_v1d26_develon_score',type:'nps',axis:null,required:true,sort_order:34,
-    title_ru:'Готовность купить технику бренда DEVELON (0—10)',
-    title_en:'Likelihood to purchase DEVELON brand equipment (0—10)',
-    title_ko:'DEVELON 브랜드 구매 의사 (0—10)'},
-  {id:'q_v1d26_develon_reason',type:'text_long',axis:null,required:false,sort_order:35,
-    title_ru:'Почему такая оценка? (необязательно)',title_en:'Why this score? (optional)',title_ko:'점수 주는 이유'},
-
-  // 동의 2
-  {id:'q_v1d26_subscribe',type:'consent',axis:null,required:false,sort_order:40,
-    title_ru:'Согласны ли получать новостную рассылку HD Construction Equipment?',
-    title_en:'Subscribe to HD Construction Equipment newsletter?',
-    title_ko:'HD건설기계 후속 소식 수신 동의'},
-  {id:'q_v1d26_consent',type:'consent',axis:null,required:true,sort_order:41,
-    title_ru:'Согласие на обработку персональных данных',
-    title_en:'Consent to personal data processing',
-    title_ko:'개인정보 처리 동의 *'},
-];
-
-/* ============================================================================
-   SEGMENTS · R_10.05 v2 — CTT Moscow 2026 8 segment (037 시드와 동기)
-   ============================================================================ */
-const SEGMENTS = [
-  { id:'individual',      color:'#F59E0B', i18n:{ru:'Индивидуал.',   en:'Individual',    ko:'개인 사업자'}},
-  { id:'fleet_rental',    color:'#1E293B', i18n:{ru:'Парк/аренда',   en:'Fleet/Rental',  ko:'플릿·렌탈' }},
-  { id:'key_account',     color:'#8B5CF6', i18n:{ru:'Ключ. клиент',  en:'Key Account',   ko:'키 어카운트'}},
-  { id:'mining',          color:'#F87171', i18n:{ru:'Горнодобыча',   en:'Mining',        ko:'광업'      }},
-  { id:'infrastructure',  color:'#F97316', i18n:{ru:'Инфраструкт.',  en:'Infrastructure',ko:'인프라'    }},
-  { id:'agri_plantation', color:'#EAB308', i18n:{ru:'С/х · план.',   en:'Agri/Plant.',   ko:'농업·플랜.'}},
-  { id:'quarry',          color:'#14B8A6', i18n:{ru:'Карьер',        en:'Quarry',        ko:'채석장'    }},
-  { id:'gov_public',      color:'#38BDF8', i18n:{ru:'Гос. сектор',   en:'Gov/Public',    ko:'정부·공공' }},
-];
-
-// 042 survey_v1_dealer_2026rev — sort_order 기반 단일 진행 (Block 라벨 미사용).
-const BLOCK_LABELS = null;
-
-// 042 q_v1d26_decision_roles의 첫 옵션 메타 rank_max 사용. 클라이언트는 'options[0].rank_max'로 분기.
-
-// 6 DW axis 라벨 다국어 — radar SVG 라벨 + 헥사 패널 공통.
-const AXIS_LABEL = {
-  price:       { ru:'Цена',       en:'Price',       ko:'가격'     },
-  fuel:        { ru:'Топливо',    en:'Fuel',        ko:'연료'     },
-  durability:  { ru:'Надёжность', en:'Durability',  ko:'내구성'   },
-  service:     { ru:'Сервис',     en:'Service',     ko:'서비스'   },
-  reference:   { ru:'Референсы',  en:'Reference',   ko:'레퍼런스' },
-  versatility: { ru:'Универс.',   en:'Versatility', ko:'다목적'   },
-};
-
-const I18N = {
-  ru:{ dealer_profile:'Профиль дилера',
-       hypothesis:'гипотеза', hypothesis_help:'Дилер выбирает гипотетический сегмент. Сервер автоматически переклассифицирует — измеряется точность гипотезы.',
-       summary_head:'Среднее · Сильная · Слабая', profile_head:'Профиль компании (6 осей)',
-       target_head:'Информация о клиенте', company:'Компания *', contact:'Контакт', phone:'Телефон', notes:'Заметки',
-       radar_head:'Карта позиционирования · автовывод по ответам', interview:'Интервью клиента',
-       net_on:'Online', net_off:'Offline', queue:'Очередь',
-       submit:'Сохранить + CRM Sync', reset:'Новое интервью',
-       ok_sent:'Сохранено + отправлено', ok_offline:'Сохранено локально (offline)',
-       loading:'Загрузка опроса…', radar_empty:'Появится после ответов', survey_id:'Опрос',
-       avg:'Среднее', strong:'Сильнейшая ось', weak:'Слабейшая',
-       prev:'← Назад', next:'Далее →',
-       no_token:'Требуется вход',
-       no_token_hint:'Выпустите токен в админ-консоли (раздел дилеров) и перейдите по URL с параметром <code>?token=...</code>',
-       radar_axes_short:'Нужно ≥ 3 осей (сейчас {n})',
-       unique_ten_blocked:'10 баллов уже у оси «{axis}». Сначала снимите, чтобы поставить здесь.',
-       unique_point_blocked:'Балл {n} уже использован на другой оси. Каждая ось получает уникальный балл.',
-       hier_other_placeholder:'Уточните…',
-       load_error_prefix:'Ошибка загрузки опроса',
-       api_base_missing:'API_BASE не настроен' },
-  en:{ dealer_profile:'Dealer Profile',
-       hypothesis:'hypothesis', hypothesis_help:'Dealer toggles hypothesized segment. Server re-classifies independently — hypothesis accuracy measured.',
-       summary_head:'Avg · Strong · Weak', profile_head:'Company profile (6 axes)',
-       target_head:'Customer information', company:'Company *', contact:'Contact', phone:'Phone', notes:'Notes',
-       radar_head:'Positioning Map · derived from answers', interview:'Customer Interview',
-       net_on:'Online', net_off:'Offline', queue:'Queue',
-       submit:'Save + CRM Sync', reset:'New interview',
-       ok_sent:'Saved + sent', ok_offline:'Saved locally (offline)',
-       loading:'Loading survey…', radar_empty:'Shows up after answers', survey_id:'Survey',
-       avg:'Average', strong:'Strongest axis', weak:'Weakest',
-       prev:'← Prev', next:'Next →',
-       no_token:'Login required',
-       no_token_hint:'Issue a token in the admin console (dealers section), then open the URL with <code>?token=...</code>',
-       radar_axes_short:'Need ≥ 3 axes (now {n})',
-       unique_ten_blocked:'10 is already on «{axis}». Clear it first to use 10 here.',
-       unique_point_blocked:'Score {n} is already used on another axis. Each axis must have a unique score.',
-       hier_other_placeholder:'Please specify…',
-       load_error_prefix:'Failed to load survey',
-       api_base_missing:'API_BASE is not configured' },
-  ko:{ dealer_profile:'딜러 프로필',
-       hypothesis:'가설', hypothesis_help:'딜러가 인터뷰 중 가정하는 segment 라벨. 서버는 별도로 자동 재분류 — 가설 vs 자동 정확도가 측정됨.',
-       summary_head:'평균 · 최강 · 최약', profile_head:'회사 프로필 (6 axes · 2×3)',
-       target_head:'상담 대상 정보', company:'회사명 *', contact:'담당자', phone:'연락처', notes:'메모',
-       radar_head:'포지셔닝 맵 · 답변 기반 자동 도출', interview:'고객 인터뷰',
-       net_on:'Online', net_off:'Offline', queue:'큐',
-       submit:'저장 + CRM Sync', reset:'새 상담',
-       ok_sent:'저장 + 송출 완료', ok_offline:'오프라인 저장됨',
-       loading:'설문 로딩 중…', radar_empty:'답변 시작되면 표시', survey_id:'설문',
-       avg:'평균', strong:'최강 축', weak:'최약 축',
-       prev:'← 이전', next:'다음 →',
-       no_token:'로그인 필요',
-       no_token_hint:'어드민 콘솔(딜러 발급 메뉴)에서 토큰을 발급받은 후 URL에 <code>?token=...</code>로 진입하세요',
-       radar_axes_short:'레이더에 필요한 축 ≥ 3 (현재 {n})',
-       unique_ten_blocked:'10점은 「{axis}」 축에 이미 부여됨. 해제 후 다시 시도',
-       unique_point_blocked:'{n}점은 이미 다른 축에 부여됨. 6 axis는 서로 다른 점수를 받습니다.',
-       hier_other_placeholder:'직접 입력해 주세요…',
-       load_error_prefix:'설문 로드 실패',
-       api_base_missing:'API_BASE 미설정' },
-};
-
-/* ============================================================================ */
-const state = {
-  lang:'ru', segment:[], answers:{},
-  target_company:'', contact_name:'', contact_phone:'', notes:'',
-  token:null, dealerId:null, event:null,
-  online:navigator.onLine, queueCount:0,
-  survey:null, questions:[], axes:[],   // fetched
-  loadError:null,
-};
-function tx(o){ return (o && (o[state.lang] || o.ru || o.en || o.ko)) || ''; }
-function t(k){ return (I18N[state.lang] || I18N.ru)[k] || k; }
-function questionTitle(q){
-  const k = `title_${state.lang}`;
-  return q[k] || q.title_ru || q.title_en || q.title_ko || q.id;
-}
-
-/* JWT bootstrap */
-(function(){
-  const usp = new URLSearchParams(location.search);
-  const tok = usp.get('token');
-  if (tok) {
-    try { localStorage.setItem('hd_dealer_token', tok); } catch(_){}
-    const p = decodeJwt(tok);
-    if (p) {
-      if (p.sub)   try { localStorage.setItem('hd_dealer_id', p.sub); } catch(_){}
-      if (p.event) try { localStorage.setItem('hd_event', p.event); } catch(_){}
-    }
-    history.replaceState({}, '', location.pathname);
-  }
-  // 데모 모드 — token 없이도 폼 활성화. 가상 dealer id 주입.
-  state.token    = 'demo-token';
-  state.dealerId = localStorage.getItem('hd_dealer_id') || 'demo_dealer';
-  state.event    = localStorage.getItem('hd_event') || 'demo_event';
-})();
-function decodeJwt(tok){ try{ const p=tok.split('.'); return JSON.parse(atob(p[1].replace(/-/g,'+').replace(/_/g,'/')));} catch(_){return null;} }
-
-/* IndexedDB queue */
-const DB_NAME='hd_voice_dealer_v2', STORE='queue';
-function openDb(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,1); r.onupgradeneeded=(e)=>{const db=e.target.result; if(!db.objectStoreNames.contains(STORE)){const s=db.createObjectStore(STORE,{keyPath:'id'}); s.createIndex('status','status');}}; r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);});}
-async function queueAdd(rec){const db=await openDb(); rec.status='pending'; rec.attempts=0; rec.enqueued_at=new Date().toISOString(); await new Promise((res,rej)=>{const tx_=db.transaction(STORE,'readwrite'); tx_.objectStore(STORE).add(rec); tx_.oncomplete=res; tx_.onerror=()=>rej(tx_.error);}); return rec.id;}
-async function queueCountFn(){const db=await openDb(); return new Promise((res)=>{const tx_=db.transaction(STORE,'readonly'); const r=tx_.objectStore(STORE).index('status').count(IDBKeyRange.only('pending')); r.onsuccess=()=>res(r.result); r.onerror=()=>res(0);});}
-async function queueListPending(){const db=await openDb(); return new Promise((res)=>{const out=[]; const tx_=db.transaction(STORE,'readonly'); const cur=tx_.objectStore(STORE).index('status').openCursor(IDBKeyRange.only('pending')); cur.onsuccess=(e)=>{const c=e.target.result; if(c){out.push(c.value);c.continue();}else res(out);}; cur.onerror=()=>res(out);});}
-async function queueUpdate(id,patch){const db=await openDb(); return new Promise((res)=>{const tx_=db.transaction(STORE,'readwrite'); const st=tx_.objectStore(STORE); const get=st.get(id); get.onsuccess=()=>{const r=get.result; if(r){Object.assign(r,patch); st.put(r);} res();}; get.onerror=()=>res();});}
-async function refreshQueue(){state.queueCount=await queueCountFn(); const el=document.getElementById('queuePill'); if(el) el.textContent=`${t('queue')} ${state.queueCount}`;}
-
-/* API */
-// API_BASE: 1) URL 쿼리 ?api_base=... 2) window.HD_API_BASE (host inject) 3) 빈 문자열(미설정 에러)
-const _urlParams = new URLSearchParams(window.location.search);
-const _apiBaseFromUrl = _urlParams.get('api_base');
-if (_apiBaseFromUrl) {
-  try { localStorage.setItem('hd_api_base', _apiBaseFromUrl); } catch {}
-}
-const API_BASE = (
-  _apiBaseFromUrl
-    || window.HD_API_BASE
-    || (() => { try { return localStorage.getItem('hd_api_base'); } catch { return ''; } })()
-    || ''
-).replace(/\/$/,'');
-// 데모 모드 — DB 미연결. postOne·drainQueue 모두 console.log + alert mock.
-async function postOne(rec){
-  console.log('[DEMO] response payload (not sent):', rec.payload);
-  alert('데모 모드 — 응답이 DB로 전송되지 않습니다. 콘솔에서 payload 확인.');
-  return { id: 'demo-' + rec.id, lead_id: null, segment: null };
-}
-async function drainQueue(){ /* DEMO no-op */ }
-
-// 데모 모드 — DB 미연결. SURVEY를 inline 데이터로 로드. 042 시드와 동일 구조 + 048 multi_select.
-async function loadSurvey(){
-  state.survey = { id: 'survey_v1_dealer_2026rev_demo', title: 'Demo · v1.2026rev', target_audience: 'dealer' };
-  state.questions = DEMO_SURVEY_QUESTIONS;
-  state.axes = [...new Set(state.questions.map((q) => q.axis).filter(Boolean))];
-  state.loadError = null;
-  const meta = document.getElementById('surveyMeta');
-  if (meta) {
-    meta.textContent = `${state.survey.id} · ${state.questions.length} q · ${state.axes.length} axes · DEMO`;
-    meta.style.display = '';
-  }
-  const crumb = document.getElementById('surveyCrumb');
-  if (crumb) crumb.textContent = `${t('survey_id')}: demo (DB 미연결)`;
-  renderQA(); renderRadar(); refreshSubmit();
-}
-
-/* ============================================================================
-   Scoring — answer → 1~5 normalized
-   ============================================================================ */
-function scoreOf(q, ans){
-  if (ans == null || ans === '') return null;
-  if (q.type === 'scale_1_5' && typeof ans === 'number') return Math.max(1, Math.min(5, ans));
-  if (q.type === 'scale_1_10' && typeof ans === 'number') return Math.max(1, Math.min(5, ans / 2));
-  if (q.type === 'nps' && typeof ans === 'number') return Math.max(0, Math.min(5, ans / 2));
-  if (q.type === 'slider' && typeof ans === 'number') return Math.max(1, Math.min(5, ans));
-  if (q.type === 'number' && typeof ans === 'number') return null; // 자유 숫자 — axis 미반영
-  if (q.type === 'single_select') {
-    const opts = q.options || [];
-    const idx = opts.findIndex((o) => o.value === ans);
-    if (idx < 0) return null;
-    return ((idx + 1) / opts.length) * 5;
-  }
-  if (q.type === 'multi_select' && Array.isArray(ans)) {
-    return Math.min(5, Math.max(1, ans.length));
-  }
-  if (q.type === 'consent') return ans === true ? 5 : 0;
-  if (q.type === 'text_short' || q.type === 'text_long') return null;
-  return null;
-}
-function computeAxes(){
-  const out = {};
-  for (const ax of state.axes) {
-    const qs = state.questions.filter((q) => q.axis === ax);
-    const vals = qs.map((q) => scoreOf(q, state.answers[q.id])).filter((v) => v != null);
-    out[ax] = vals.length ? vals.reduce((s,v) => s+v, 0) / vals.length : null;
-  }
-  return out;
-}
-
-/* ============================================================================
-   Render
-   ============================================================================ */
-// 8 segments — 클릭 순서대로 최대 3개까지 ranked 선택 (1·2·3 순위 표시).
-// state.segment: string[] (0~3 entries). 1순위가 dealer_hypothesis_segment.
-const SEGMENT_RANK_MAX = 3;
-function renderSegments(){
-  const list = document.getElementById('segList');
-  list.innerHTML = '';
-  const sel = Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []);
-  state.segment = sel;
-  for (const s of SEGMENTS) {
-    const el = document.createElement('div');
-    const rankIdx = sel.indexOf(s.id);
-    const active = rankIdx >= 0;
-    el.className = 'seg' + (active ? ' active rank-' + (rankIdx + 1) : '');
-    const badge = active ? `<span class="seg-rank">${rankIdx + 1}</span>` : '';
-    el.innerHTML = `<span class="seg-dot" style="background:${s.color}"></span><span>${tx(s.i18n)}</span>${badge}`;
-    el.onclick = () => {
-      const cur = Array.isArray(state.segment) ? state.segment.slice() : [];
-      const idx = cur.indexOf(s.id);
-      if (idx >= 0) {
-        cur.splice(idx, 1);  // 해제 시 뒷 순위가 자동으로 올라옴
-      } else {
-        if (cur.length >= SEGMENT_RANK_MAX) return;  // 최대 3
-        cur.push(s.id);
-      }
-      state.segment = cur;
-      renderSegments(); renderRadar();
-    };
-    list.appendChild(el);
-  }
-}
-
-function renderRadar(){
-  const wrap = document.getElementById('radarWrap');
-  const N = state.axes.length;
-  if (N < 3) {
-    wrap.innerHTML = `<span class="radar-empty">${state.axes.length ? t('radar_axes_short').replace('{n}', N) : t('radar_empty')}</span>`;
-    document.getElementById('summary').innerHTML = '';
-    return;
-  }
-  const cx=200, cy=200, R=130;
-  const angle=(i)=>-Math.PI/2 + i*(2*Math.PI/N);
-  const pt=(i,f)=>({x:cx+Math.cos(angle(i))*R*f, y:cy+Math.sin(angle(i))*R*f});
-  const axes = computeAxes();
-
-  let out = `<svg width="400" height="400" viewBox="0 0 400 400">`;
-  for (let lv=1; lv<=5; lv++) {
-    const f = lv/5;
-    const pts = state.axes.map((_,i)=>{const p=pt(i,f); return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;}).join(' ');
-    out += `<polygon points="${pts}" fill="none" stroke="${lv===5?'#d6dadf':'#e9edf0'}" stroke-width="${lv===5?1:0.6}"/>`;
-  }
-  for (let i=0; i<N; i++) {
-    const p = pt(i,1);
-    out += `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="#e9edf0" stroke-width="0.6"/>`;
-  }
-  for (let i=0; i<N; i++) {
-    const p = pt(i, 1.18);
-    const ax = state.axes[i];
-    const v = axes[ax];
-    // 사용자에게 보이는 점수는 1~10 raw (scoreOf의 /2 정규화 전). polygon shape은 v(1~5)로 그대로.
-    const vRaw = state.answers[`q_v1d26_dw_${ax}`];
-    const vStr = typeof vRaw === 'number' ? String(vRaw) : (v != null ? v.toFixed(1) : '–');
-    const axLabel = AXIS_LABEL[ax] ? tx(AXIS_LABEL[ax]) : ax;
-    out += `<text x="${p.x.toFixed(1)}" y="${(p.y-4).toFixed(1)}" text-anchor="middle" font-family="Noto Sans KR" font-size="11" font-weight="600" fill="#002554">${axLabel}</text>`;
-    out += `<text x="${p.x.toFixed(1)}" y="${(p.y+8).toFixed(1)}" text-anchor="middle" font-family="Geist Mono" font-size="9.5" fill="#63666A">${vStr}</text>`;
-  }
-  const hasAny = state.axes.some((a) => axes[a] != null);
-  if (hasAny) {
-    const pts = state.axes.map((a,i)=>{const v=axes[a]||0; const f=Math.max(0,Math.min(5,v))/5; return pt(i,f);});
-    const ptsStr = pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-    out += `<polygon points="${ptsStr}" fill="rgba(0,173,29,0.12)" stroke="#00AD1D" stroke-width="2"/>`;
-    for (const p of pts) {
-      if (p.x === cx && p.y === cy) continue;
-      out += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="#00AD1D"/>`;
-    }
-  }
-  // 8 segments ranked — 1순위 segment의 색상 점선 outline.
-  const segArr = Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []);
-  if (segArr.length > 0) {
-    const seg = SEGMENTS.find((s) => s.id === segArr[0]);
-    if (seg) out += `<circle cx="${cx}" cy="${cy}" r="${R+7}" fill="none" stroke="${seg.color}" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.55"/>`;
-  }
-  out += `</svg>`;
-  wrap.innerHTML = out;
-
-  // Summary
-  const sum = document.getElementById('summary');
-  const all = state.axes.map((a) => ({ id: a, v: axes[a] })).filter((x) => x.v != null);
-  const avg = all.length ? all.reduce((s, x) => s + x.v, 0) / all.length : null;
-  const strong = all.length ? all.reduce((m, x) => x.v > m.v ? x : m) : null;
-  const weak   = all.length ? all.reduce((m, x) => x.v < m.v ? x : m) : null;
-  sum.innerHTML = `
-    <div class="metric"><div class="metric-label">${t('avg')}</div><div class="metric-value num">${avg != null ? avg.toFixed(2) : '–'}</div></div>
-    <div class="metric"><div class="metric-label">${t('strong')}</div><div class="metric-value num">${strong ? `${strong.id} · ${strong.v.toFixed(1)}` : '–'}</div></div>
-    <div class="metric"><div class="metric-label">${t('weak')}</div><div class="metric-value num">${weak ? `${weak.id} · ${weak.v.toFixed(1)}` : '–'}</div></div>
-  `;
-}
-
-const PAGE_SIZE = 3;
-let _currentPage = 0;
-
-// q.id가 'q_v2dctt_<block><n>_...' 패턴이면 첫 block 문자(a/b/c/d)를 페이지 key로 사용 → 4 Block 페이저.
-// 패턴 미일치 시 PAGE_SIZE chunk fallback (survey_v1 호환).
-function blockKeyOf(_q) { return null; }  // v1.2026rev — Block 그룹핑 미사용
-
-function getPages(){
-  // axis 질문(DW 6축)은 center 그리드. 나머지 question은 sort_order로 정렬 후 PAGE_SIZE chunk.
-  // 옵션 _meta.dependsOn에 의해 hidden 상태인 질문은 페이지 카운트에 포함 (조건 만족 시 노출).
-  const otherQs = state.questions
-    .filter((q) => !q.axis)
-    .sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
-
-  const pages = [];
-  for (let i = 0; i < otherQs.length; i += PAGE_SIZE) {
-    pages.push(otherQs.slice(i, i + PAGE_SIZE));
-  }
-  if (!pages.length) pages.push([]);
-  return pages;
-}
-
-function renderQA(){
-  const grid = document.getElementById('profileGrid');
-  const track = document.getElementById('pagerTrack');
-  if (grid) grid.innerHTML = '';
-  if (track) track.innerHTML = '';
-
-  if (state.loadError) {
-    track.innerHTML = `<div class="pager-page"><div class="toast err">${t('load_error_prefix')}: ${state.loadError}</div></div>`;
-    renderPageNav(1);
-    return;
-  }
-  if (!state.questions.length) {
-    track.innerHTML = `<div class="pager-page"><div class="loading">${t('loading')}</div></div>`;
-    renderPageNav(1);
-    return;
-  }
-
-  // CENTER · axis 질문 6개 (2×3)
-  const axisQs = state.questions
-    .filter((q) => q.axis)
-    .sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
-  for (const q of axisQs) grid.appendChild(renderQuestion(q));
-
-  // RIGHT · pages
-  const pages = getPages();
-  for (const pageQs of pages) {
-    const page = document.createElement('div');
-    page.className = 'pager-page';
-    for (const q of pageQs) page.appendChild(renderQuestion(q));
-    track.appendChild(page);
-  }
-
-  if (_currentPage >= pages.length) _currentPage = pages.length - 1;
-  gotoPage(_currentPage, false);
-  renderPageNav(pages.length);
-}
-
-function renderPageNav(total){
-  const dots = document.getElementById('pageDots');
-  const counter = document.getElementById('pageCounter');
-  if (!dots || !counter) return;
-  dots.innerHTML = '';
-  const pages = getPages();
-  for (let i = 0; i < total; i++) {
-    const d = document.createElement('span');
-    let cls = 'page-dot';
-    if (i === _currentPage) cls += ' active';
-    else if (pages[i] && pages[i].every((q) => !q.required || hasAnswer(q))) cls += ' done';
-    d.className = cls;
-    d.title = `Page ${i+1}/${total}`;
-    d.onclick = () => gotoPage(i, true);
-    dots.appendChild(d);
-  }
-  counter.textContent = `${_currentPage+1}/${total}`;
-
-  const prev = document.getElementById('btnPrev');
-  const next = document.getElementById('btnNext');
-  const submit = document.getElementById('btnSubmit');
-  const reset  = document.getElementById('btnReset');
-  if (prev) prev.disabled = _currentPage === 0;
-
-  const isLast = _currentPage === total - 1;
-  const submitVisible = reset && reset.style.display === '' ? false : isLast;
-  if (next) next.style.display = isLast ? 'none' : '';
-  if (submit) submit.style.display = isLast && !(reset && reset.style.display === '') ? '' : 'none';
-}
-
-function gotoPage(n, animate){
-  const track = document.getElementById('pagerTrack');
-  if (!track) return;
-  const pages = track.querySelectorAll('.pager-page');
-  if (n < 0) n = 0;
-  if (n >= pages.length) n = pages.length - 1;
-  _currentPage = n;
-  if (!animate) track.style.transition = 'none';
-  else track.style.transition = '';
-  track.style.transform = `translateX(${-n * 100}%)`;
-  if (!animate) { void track.offsetWidth; track.style.transition = ''; }
-  // Refresh nav
-  const total = pages.length;
-  renderPageNav(total);
-}
-
-function renderDealerCard(){
-  const card = document.getElementById('dealerCard');
-  if (!card) return;
-  if (!state.dealerId) {
-    card.className = 'dealer-card empty';
-    card.innerHTML = `<div class="dc-row"><span>No token</span></div>
-      <div class="dc-id">${t('no_token')}</div>
-      <div class="dc-meta">${t('no_token_hint')}</div>`;
-    return;
-  }
-  // JWT exp 추출 (옵션)
-  let expStr = '';
-  try {
-    const p = decodeJwt(state.token);
-    if (p?.exp) {
-      const d = new Date(p.exp * 1000);
-      expStr = d.toLocaleDateString('ko-KR');
-    }
-  } catch(_) {}
-  card.className = 'dealer-card';
-  card.innerHTML = `
-    <div class="dc-row"><span>Dealer</span><span>${state.event || ''}</span></div>
-    <div class="dc-id">${state.dealerId}</div>
-    <div class="dc-meta">
-      ${state.event ? `<b>Event</b> ${state.event}<br/>` : ''}
-      ${expStr ? `<b>Token exp</b> ${expStr}` : ''}
-    </div>
-  `;
-}
-
-function hasAnswer(q){
-  const v = state.answers[q.id];
-  if (q.type === 'consent') return v === true;
-  // 계층 (single 또는 multi_select with level 메타)
-  const isHier = (q.type === 'single_select' || q.type === 'multi_select')
-    && Array.isArray(q.options) && q.options.some((o) => typeof o.level === 'number');
-  if (isHier && q.type === 'multi_select') {
-    if (!Array.isArray(v) || v.length === 0) return false;
-    // is_other 선택돼 있으면 parent별 other_text 채워졌는지 검사
-    for (const val of v) {
-      const opt = q.options.find((o) => o.value === val);
-      if (opt?.is_other) {
-        const txt = state.answers[q.id + '__other_' + opt.parent_id];
-        if (!txt || !String(txt).trim()) return false;
-      }
-    }
-    return true;
-  }
-  if (isHier) {  // single_select hierarchical
-    if (!v || typeof v !== 'object' || !v.choice) return false;
-    const selOpt = q.options.find((o) => o.value === v.choice);
-    if (selOpt?.is_other && (!v.other_text || !String(v.other_text).trim())) return false;
-    return true;
-  }
-  if (q.type === 'multi_select') return Array.isArray(v) && v.length > 0;
-  return v !== undefined && v !== null && v !== '';
-}
-
-function renderQuestion(q){
-  const cur = state.answers[q.id];
-  const answered = hasAnswer(q);
-  const wrap = document.createElement('div');
-  wrap.className = 'qa' + (answered ? ' answered' : '');
-
-  const axisLabel = q.axis ? `<span class="qa-axis">${q.axis}</span>` : '';
-  const kindLabel = `<span class="qa-kind">${q.type}</span>`;
-  const title = `<div class="qa-title">${questionTitle(q)}${q.required ? `<span class="req">*</span>` : ''}</div>`;
-
-  // 조건부 follow-up — 옵션 첫 항목 _meta.dependsOn 표식이 있으면 UI에서 **항상 hidden**.
-  // 기타 텍스트 입력은 부모 multi_select의 is_other 옵션 선택 시 inline textarea로 받음.
-  // payload는 onSubmit에서 부모 question id + '_other' 키로 별 entry 추가해 DB에 매핑.
-  const depMeta = q.options?.[0]?._meta?.dependsOn;
-  if (depMeta && depMeta.question_id && depMeta.value) {
-    wrap.style.display = 'none';
-    wrap.dataset.hiddenByDep = '1';
-    return wrap;
-  }
-
-  // 042 q_v1d26_usage_hier — 계층 single_select. options에 level/parent_id 메타 있으면 펼침 UI.
-  const isHierarchical = q.type === 'single_select'
-    && Array.isArray(q.options)
-    && q.options.some((o) => typeof o.level === 'number');
-
-  let body = '';
-  if (isHierarchical) {
-    body = renderHierarchicalBody(q, cur);
-  } else if (q.type === 'single_select') {
-    const opts = q.options || [];
-    body = `<div class="opts">${opts.map((o, i) => `
-      <div class="opt${cur === o.value ? ' selected' : ''}" data-q="${q.id}" data-v="${escapeAttr(o.value)}" data-kind="single">
-        <span class="opt-num">${i+1}</span><span>${optionLabel(o)}</span>
-      </div>`).join('')}</div>`;
-  } else if (q.type === 'multi_select') {
-    const arr = Array.isArray(cur) ? cur : [];
-    const opts = q.options || [];
-    // ranked — 옵션 어느 한 곳에 rank_max 메타 있으면 ranked 모드 (042는 첫 옵션, 일반화)
-    const rankOpt = opts.find((o) => typeof o.rank_max === 'number' && o.rank_max > 0);
-    const rankMax = rankOpt?.rank_max;
-    const isRanked = !!rankMax;
-    // inline 기타 — 어느 옵션이라도 is_other 플래그 있으면 그 옵션 선택 시 같은 question 안에 textarea 노출.
-    const otherOpt = opts.find((o) => o.is_other === true);
-    const otherText = state.answers[q.id + '__other'] || '';
-    const otherSelected = otherOpt && arr.includes(otherOpt.value);
-
-    let optsHtml = '';
-    for (let i = 0; i < opts.length; i++) {
-      const o = opts[i];
-      const rankIdx = arr.indexOf(o.value);
-      const isSel = rankIdx >= 0;
-      const badge = isRanked
-        ? (isSel ? `${rankIdx + 1}` : '+')
-        : (isSel ? '✓' : `${i+1}`);
-      optsHtml += `<div class="opt${isSel ? ' selected' : ''}${isRanked && isSel ? ' rank-' + (rankIdx+1) : ''}" data-q="${q.id}" data-v="${escapeAttr(o.value)}" data-kind="${isRanked ? 'ranked' : 'multi'}" data-rank-max="${isRanked ? rankMax : ''}">
-        <span class="opt-num">${badge}</span><span>${optionLabel(o)}</span>
-      </div>`;
-      // 본 옵션이 is_other이고 선택된 상태면 바로 아래 inline textarea.
-      if (o.is_other === true && isSel) {
-        optsHtml += `<textarea class="txt-area multi-other" data-q="${q.id}" data-kind="multi-other" placeholder="${t('hier_other_placeholder')}">${escapeText(otherText)}</textarea>`;
-      }
-    }
-    body = `<div class="opts${isRanked ? ' ranked' : ''}" data-rank-max="${isRanked ? rankMax : ''}">${optsHtml}</div>`;
-  } else if (q.type === 'scale_1_5') {
-    body = `<div class="scale-grid s5">${[1,2,3,4,5].map((n) => `
-      <div class="scale-cell${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`).join('')}</div>`;
-  } else if (q.type === 'scale_1_10') {
-    // DW 6축 unique 점수 — 다른 axis가 이미 사용한 점수 셀은 disabled.
-    // 6 axis 각각 1~10 중 서로 다른 점수 부여 (한 점수가 한 axis에만).
-    const isDw = q.axis && state.axes.includes(q.axis);
-    const usedByOthers = isDw
-      ? new Set(state.axes
-          .filter((a) => a !== q.axis)
-          .map((a) => state.answers[`q_v1d26_dw_${a}`])
-          .filter((v) => typeof v === 'number'))
-      : new Set();
-    body = `<div class="scale-grid s10">${[1,2,3,4,5,6,7,8,9,10].map((n) => {
-      const tone = n <= 4 ? 'lo' : n <= 7 ? 'mid' : 'hi';
-      const disabled = usedByOthers.has(n);
-      const cls = `scale-cell ${tone}${cur === n ? ' selected' : ''}${disabled ? ' disabled' : ''}`;
-      const tip = disabled ? ` title="${t('unique_point_blocked').replace('{n}', n)}"` : '';
-      return `<div class="${cls}" data-q="${q.id}" data-v="${n}" data-kind="scale" data-disabled="${disabled ? '1' : ''}"${tip}>${n}</div>`;
-    }).join('')}</div>`;
-  } else if (q.type === 'nps') {
-    body = `<div class="scale-grid nps">${[0,1,2,3,4,5,6,7,8,9,10].map((n) => {
-      const tone = n <= 6 ? 'lo' : n <= 8 ? 'mid' : 'hi';
-      return `<div class="scale-cell ${tone}${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`;
-    }).join('')}</div>`;
-  } else if (q.type === 'slider') {
-    body = `<div class="scale-grid s5">${[1,2,3,4,5].map((n) => `
-      <div class="scale-cell${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`).join('')}</div>`;
-  } else if (q.type === 'number') {
-    body = `<input class="num-input" type="number" data-q="${q.id}" data-kind="number" value="${cur != null ? cur : ''}"/>`;
-  } else if (q.type === 'text_short') {
-    body = `<input class="txt-input" type="text" data-q="${q.id}" data-kind="text" value="${escapeAttr(cur || '')}"/>`;
-  } else if (q.type === 'text_long') {
-    body = `<textarea class="txt-area" data-q="${q.id}" data-kind="text">${escapeText(cur || '')}</textarea>`;
-  } else if (q.type === 'consent') {
-    wrap.className = 'consent';
-    wrap.innerHTML = `<input type="checkbox" ${cur === true ? 'checked' : ''} data-q="${q.id}" data-kind="consent"/><span>${questionTitle(q)}${q.required ? ` <span class="req">*</span>` : ''}</span>`;
-    bindOne(wrap);
-    return wrap;
-  }
-
-  wrap.innerHTML = `<div class="qa-top">${axisLabel}${kindLabel}</div>${title}${body}`;
-  bindOne(wrap);
-  return wrap;
-}
-
-function optionLabel(o){
-  const k = `label_${state.lang}`;
-  return o[k] || o.label_ru || o.label_en || o.label_ko || o.value || '';
-}
-
-// 042 계층 single_select — level 0(대분류 4) 클릭 → level 1(자식) 펼침. level 0 자체는 선택 불가(트리거 only).
-// 답변 형식: {choice: '2.3' | '2_other', other_text?: '...'}. is_other 옵션 선택 시 conditional textarea 노출.
-function renderHierarchicalBody(q, cur){
-  const opts = Array.isArray(q.options) ? q.options : [];
-  const isMulti = q.type === 'multi_select';
-  // multi_select: cur = array of values. single_select: cur = {choice, other_text}.
-  const selectedValues = isMulti
-    ? (Array.isArray(cur) ? cur : [])
-    : (cur && typeof cur === 'object' && cur.choice ? [cur.choice] : []);
-  const otherTextSingle = !isMulti && cur && typeof cur === 'object' ? (cur.other_text || '') : '';
-  // multi_select: 4 대분류별 other_text 분리 — state.answers[q.id + '__other_' + parentId]
-  const otherTextByParent = (parentId) => {
-    if (!isMulti) return otherTextSingle;
-    return state.answers[q.id + '__other_' + parentId] || '';
+  <script>
+  // ============================================================================
+  // i18n — top-level UI strings (V_50.07 미러). 설문 문항은 SURVEY에 별도.
+  // ============================================================================
+  const I18N = {
+    ru: {
+      product:'Опрос дилера',
+      step_target:'Информация о клиенте',
+      label_target_company:'Компания клиента *',
+      label_contact_name:'Контактное лицо',
+      label_contact_phone:'Телефон',
+      label_dealer_notes:'Заметки по встрече',
+      step_axis:'Часть 1 — Профиль компании',
+      step_market:'Часть 2 — Маркетинг',
+      step_final:'Часть 3 — NPS и согласие',
+      back:'Назад', next:'Далее', submit:'Готово',
+      result_h:'Готово — Playbook',
+      result_sub:'Сегмент определён · следуйте подсказке ниже',
+      net_online:'Online', net_offline:'Offline',
+      queue_label:'В очереди',
+      nps_q:'Готовы рекомендовать HD коллегам (0—10)',
+      required_hint:'Все обязательные поля',
+      enter_again:'Новый респондент',
+      sent_ok:'Отправлено',
+      saved_offline:'Сохранено локально (offline)',
+      prio:{p1:'P1 · Высш. приоритет', p2:'P2 · Срочно', p3:'P3 · Стандарт', p4:'P4 · Низк.', p5:'P5 · Только в CRM'},
+      pb_weapons:'Инструменты продаж', pb_pitch:'Пример речи', pb_models:'Модели', pb_next:'Следующий шаг',
+      pb_live:'live', pb_live_hint:'Свежий Playbook с сервера (R_10.07)',
+      consent_q1:'Подписка на дальнейшие обновления',
+      consent_q2:'Согласие на обработку данных (обязательно)',
+      help_btn:'Помощь',
+      hist_btn:'История', hist_back:'Назад к опросу', hist_title:'Мои консультации',
+      hist_empty:'Пока нет ответов от этого дилера.',
+      hist_loading:'Загрузка…', hist_err:'Не удалось загрузить историю',
+      hist_no_company:'(без компании)',
+      tut_skip:'Пропустить', tut_next:'Далее', tut_prev:'Назад', tut_done:'Начать',
+      tut_pages:[
+        {
+          t:'Добро пожаловать',
+          b:'Это форма интервью для клиентов на стенде. Каждый ответ автоматически сохраняется. Даже без интернета — данные останутся в очереди и уйдут позже.',
+          tip:'Индикатор «Online / Offline» в верхнем правом углу показывает связь. Бэйдж «В очереди» — сколько ответов ждёт отправки.',
+        },
+        {
+          t:'Один клиент — один ответ',
+          b:'На каждого посетителя нажимайте «Новый респондент» в конце предыдущего ответа. Название компании клиента обязательно; имя и телефон контактного лица помогут с последующим обращением.',
+          tip:'Среднее время заполнения ~5 минут. Можно прервать и продолжить — состояние сохраняется в браузере.',
+        },
+        {
+          t:'Три части опроса',
+          b:'1) Профиль компании (размер, отрасль, парк техники) · 2) Маркетинг (удовлетворённость, план закупки, факторы) · 3) NPS и согласие на обработку данных.',
+          tip:'Задавайте вопросы клиенту вслух и заполняйте поля сами. Точность профиля влияет на сегмент.',
+        },
+        {
+          t:'Playbook — что сказать клиенту',
+          b:'После отправки сразу появится Playbook: сегмент клиента, «инструменты продаж», пример речи, релевантные модели и следующий шаг. Используйте экран как шпаргалку прямо в разговоре.',
+          tip:'P1–P5 — приоритет последующей работы. Чем выше, тем быстрее головной офис свяжется с клиентом.',
+        },
+      ],
+    },
+    en: {
+      product:'Dealer Survey',
+      step_target:'Customer information',
+      label_target_company:'Customer company *',
+      label_contact_name:'Contact person',
+      label_contact_phone:'Phone',
+      label_dealer_notes:'Visit notes',
+      step_axis:'Part 1 — Company profile',
+      step_market:'Part 2 — Marketing',
+      step_final:'Part 3 — NPS & consent',
+      back:'Back', next:'Next', submit:'Submit',
+      result_h:'Done — Playbook',
+      result_sub:'Segment matched · use the guide below',
+      net_online:'Online', net_offline:'Offline',
+      queue_label:'Queue',
+      nps_q:'Willing to recommend HD to peers (0—10)',
+      required_hint:'All required',
+      enter_again:'New respondent',
+      sent_ok:'Sent',
+      saved_offline:'Saved locally (offline)',
+      prio:{p1:'P1 · Top priority', p2:'P2 · Urgent', p3:'P3 · Standard', p4:'P4 · Low', p5:'P5 · CRM only'},
+      pb_weapons:'Sales weapons', pb_pitch:'Pitch example', pb_models:'Related models', pb_next:'Next action',
+      pb_live:'live', pb_live_hint:'Fresh Playbook from server (R_10.07)',
+      consent_q1:'Subscribe to future updates',
+      consent_q2:'Data processing consent (required)',
+      help_btn:'Help',
+      hist_btn:'History', hist_back:'Back to survey', hist_title:'My consultations',
+      hist_empty:'No responses from this dealer yet.',
+      hist_loading:'Loading…', hist_err:'Failed to load history',
+      hist_no_company:'(no company)',
+      tut_skip:'Skip', tut_next:'Next', tut_prev:'Back', tut_done:'Start',
+      tut_pages:[
+        {
+          t:'Welcome',
+          b:'This is the booth interview form. Every answer auto-saves. Even with no internet, responses queue locally and send later.',
+          tip:'The "Online / Offline" badge top-right shows connectivity. "Queue" counts answers waiting to send.',
+        },
+        {
+          t:'One customer = one response',
+          b:'After each visitor, tap "New respondent" at the end. Customer company name is required; contact name and phone help with follow-up.',
+          tip:'Roughly 5 min per response. You can pause and resume — state is kept in the browser.',
+        },
+        {
+          t:'Three survey parts',
+          b:'1) Company profile (size, industry, fleet) · 2) Marketing (satisfaction, purchase plan, top factors) · 3) NPS and consent.',
+          tip:'Ask the customer out loud and fill the fields yourself. Profile accuracy drives the segment match.',
+        },
+        {
+          t:'Playbook — what to say',
+          b:'On submit, the Playbook appears: segment, sales weapons, pitch example, related models, and the next step. Use it as an on-screen script during the chat.',
+          tip:'P1–P5 is the follow-up priority. Higher priority = faster headquarters outreach.',
+        },
+      ],
+    },
+    ko: {
+      product:'딜러 설문',
+      step_target:'상담 대상 정보',
+      label_target_company:'상담 대상 회사 *',
+      label_contact_name:'담당자 이름',
+      label_contact_phone:'연락처',
+      label_dealer_notes:'상담 메모',
+      step_axis:'1단계 — 회사 프로필',
+      step_market:'2단계 — 마케팅',
+      step_final:'3단계 — NPS·동의',
+      back:'이전', next:'다음', submit:'제출',
+      result_h:'완료 — Playbook',
+      result_sub:'세그먼트 매칭 완료 · 아래 가이드 사용',
+      net_online:'Online', net_offline:'Offline',
+      queue_label:'큐',
+      nps_q:'HD를 동료에게 추천 (0~10)',
+      required_hint:'필수 항목',
+      enter_again:'새 응답자',
+      sent_ok:'송출 완료',
+      saved_offline:'오프라인 저장됨',
+      prio:{p1:'P1 · 최고 우선', p2:'P2 · 긴급', p3:'P3 · 표준', p4:'P4 · 낮음', p5:'P5 · CRM 갱신만'},
+      pb_weapons:'영업 무기', pb_pitch:'멘트 시안', pb_models:'관련 모델', pb_next:'다음 단계',
+      pb_live:'live', pb_live_hint:'서버에서 받은 최신 Playbook (R_10.07)',
+      consent_q1:'향후 업데이트 수신 동의',
+      consent_q2:'개인정보 처리 동의 (필수)',
+      help_btn:'도움말',
+      hist_btn:'이력', hist_back:'설문으로', hist_title:'내 상담 이력',
+      hist_empty:'아직 응답이 없습니다.',
+      hist_loading:'불러오는 중…', hist_err:'이력을 불러오지 못했습니다',
+      hist_no_company:'(회사 미입력)',
+      tut_skip:'건너뛰기', tut_next:'다음', tut_prev:'이전', tut_done:'시작',
+      tut_pages:[
+        {
+          t:'환영합니다',
+          b:'부스에서 만난 고객을 인터뷰하는 도구입니다. 모든 응답은 자동 저장되고, 인터넷이 끊겨도 큐에 쌓여 자동 송출됩니다.',
+          tip:'상단 우측 "Online / Offline" 표시가 연결 상태입니다. "큐" 배지는 송출 대기 중인 응답 수.',
+        },
+        {
+          t:'고객 1명 = 응답 1건',
+          b:'한 명 끝날 때마다 마지막 화면의 "새 응답자" 버튼을 누르세요. 회사명은 필수이며, 담당자 이름·전화는 후속 연락에 활용됩니다.',
+          tip:'평균 5분 소요. 중간에 멈춰도 브라우저에 상태가 남아 있어 이어서 가능.',
+        },
+        {
+          t:'설문은 3단계',
+          b:'1) 회사 프로필(규모·업종·보유 장비) · 2) 마케팅(만족도·구매 계획·중요 요소) · 3) NPS와 개인정보 동의.',
+          tip:'고객에게 직접 물어보면서 입력하세요. 프로필 정확도가 segment 매칭의 품질을 결정합니다.',
+        },
+        {
+          t:'Playbook — 즉시 활용',
+          b:'제출하면 segment·영업 무기·멘트 시안·관련 모델·다음 단계가 즉시 화면에 표시됩니다. 그 화면을 보면서 바로 고객에게 응답하세요.',
+          tip:'P1~P5는 본사 follow-up 우선순위. 등급이 높을수록 본사가 빠르게 연락합니다.',
+        },
+      ],
+    },
   };
 
-  // 펼침 상태 — single은 단일, multi는 array (여러 대분류 동시 펼침)
-  if (!state.hierExpand) state.hierExpand = {};
-  // 자동 펼침 — 선택한 값의 parent들을 펼침
-  for (const v of selectedValues) {
-    const sel = opts.find((o) => o.value === v);
-    if (sel && sel.parent_id) {
-      const cur = state.hierExpand[q.id];
-      if (isMulti) {
-        const arr = Array.isArray(cur) ? cur.slice() : (cur ? [cur] : []);
-        if (!arr.includes(sel.parent_id)) arr.push(sel.parent_id);
-        state.hierExpand[q.id] = arr;
-      } else if (!(q.id in state.hierExpand)) {
-        state.hierExpand[q.id] = sel.parent_id;
-      }
-    }
-  }
-  const expandedRaw = state.hierExpand[q.id];
-  const expandedSet = new Set(
-    Array.isArray(expandedRaw) ? expandedRaw : (expandedRaw ? [expandedRaw] : [])
-  );
+  // ============================================================================
+  // SURVEY — v1 dealer 시드 (DB 003_voice.sql 와 동기).
+  // R_10.05 segments + R_10.07 playbooks 데이터-드리븐.
+  // ============================================================================
+  const SURVEY = {
+    id:'survey_v1_dealer',
+    estimated_minutes:5,
+    steps: [
+      {
+        // 016 — 딜러가 상담 끝난 뒤 매번 새 응답으로 기록. 회사명 필수.
+        title_key:'step_target',
+        questions: [
+          {id:'_target_company', type:'text',     required:true,  label_key:'label_target_company'},
+          {id:'_contact_name',   type:'text',     required:false, label_key:'label_contact_name'},
+          {id:'_contact_phone',  type:'text',     required:false, label_key:'label_contact_phone', inputmode:'tel'},
+          {id:'_dealer_notes',   type:'textarea', required:false, label_key:'label_dealer_notes'},
+        ],
+      },
+      {
+        title_key:'step_axis',
+        questions: [
+          {id:'q_v1d_scale', axis:'scale', type:'single_select', required:true,
+            title:{ru:'Размер компании', en:'Company size', ko:'회사 규모'},
+            options:[
+              {value:'S', ru:'до 50', en:'≤50', ko:'~50인'},
+              {value:'M', ru:'51—200', en:'51—200', ko:'51~200'},
+              {value:'L', ru:'201—1000', en:'201—1000', ko:'201~1000'},
+              {value:'XL', ru:'1000+', en:'1000+', ko:'1000+'},
+            ]},
+          {id:'q_v1d_usage', axis:'usage', type:'single_select', required:true,
+            title:{ru:'Основное применение', en:'Primary usage', ko:'주요 용도'},
+            options:[
+              {value:'mining', ru:'Горнодобыча', en:'Mining', ko:'광업'},
+              {value:'construction_heavy', ru:'Крупное строит.', en:'Heavy construction', ko:'대형 건설'},
+              {value:'agriculture', ru:'С/х', en:'Agriculture', ko:'농업'},
+              {value:'forestry', ru:'Лесное хоз-во', en:'Forestry', ko:'임업'},
+              {value:'general_construction', ru:'Общ. строит.', en:'General constr.', ko:'일반 건설'},
+              {value:'rental', ru:'Аренда', en:'Rental', ko:'렌탈'},
+              {value:'other', ru:'Другое', en:'Other', ko:'기타'},
+            ]},
+          {id:'q_v1d_hours', axis:'annual_operating_hours', type:'single_select', required:true,
+            title:{ru:'Часы эксплуатации в год', en:'Annual operating hours', ko:'연간 가동 시간'},
+            options:[
+              {value:'low', ru:'<1000ч', en:'<1000h', ko:'<1000h'},
+              {value:'mid', ru:'1000—3000ч', en:'1000—3000h', ko:'1000~3000h'},
+              {value:'high', ru:'>3000ч', en:'>3000h', ko:'>3000h'},
+            ]},
+          {id:'q_v1d_deal_rub', axis:'annual_deal_rub', type:'single_select', required:true,
+            title:{ru:'Годовой объём сделок (₽)', en:'Annual deal volume (RUB)', ko:'연간 거래액 (₽)'},
+            options:[
+              {value:'small', ru:'<5 млн', en:'<5M', ko:'<5M'},
+              {value:'mid', ru:'5—50 млн', en:'5—50M', ko:'5~50M'},
+              {value:'large', ru:'>50 млн', en:'>50M', ko:'>50M'},
+            ]},
+          {id:'q_v1d_fleet', axis:'fleet_size', type:'single_select', required:true,
+            title:{ru:'Парк техники', en:'Fleet size', ko:'보유 장비'},
+            options:[
+              {value:'0', ru:'0', en:'0', ko:'0'},
+              {value:'1-3', ru:'1—3', en:'1—3', ko:'1~3'},
+              {value:'4-10', ru:'4—10', en:'4—10', ko:'4~10'},
+              {value:'11+', ru:'11+', en:'11+', ko:'11+'},
+            ]},
+          {id:'q_v1d_role', axis:'decision_role', type:'single_select', required:true,
+            title:{ru:'Ваша роль в решении', en:'Decision role', ko:'의사결정 역할'},
+            options:[
+              {value:'owner', ru:'Владелец', en:'Owner', ko:'오너'},
+              {value:'purchaser', ru:'Закупщик', en:'Purchaser', ko:'구매'},
+              {value:'influencer', ru:'Влияющий', en:'Influencer', ko:'영향자'},
+              {value:'user', ru:'Оператор', en:'User', ko:'사용자'},
+            ]},
+        ],
+      },
+      {
+        title_key:'step_market',
+        questions: [
+          {id:'q_v1d_sat', type:'scale_1_5', required:true,
+            title:{ru:'Удовлетворённость текущей техникой', en:'Satisfaction with current equipment', ko:'현재 장비 만족도'}},
+          {id:'q_v1d_plan', type:'single_select', required:true,
+            title:{ru:'План закупки в течение года', en:'1-year purchase plan', ko:'1년 내 구매 계획'},
+            options:[
+              {value:'yes', ru:'Да', en:'Yes', ko:'예'},
+              {value:'no',  ru:'Нет', en:'No', ko:'아니오'},
+              {value:'maybe', ru:'Возможно', en:'Maybe', ko:'미정'},
+            ]},
+          {id:'q_v1d_factors', type:'multi_select', required:true, max:3,
+            title:{ru:'Важнейшие факторы выбора (до 3)', en:'Top factors (up to 3)', ko:'구매 결정 요소 (3개)'},
+            options:[
+              {value:'price', ru:'Цена', en:'Price', ko:'가격'},
+              {value:'reliability', ru:'Надёжность', en:'Reliability', ko:'내구성'},
+              {value:'service', ru:'Сервис', en:'Service', ko:'서비스'},
+              {value:'parts', ru:'Запчасти', en:'Parts', ko:'부품'},
+              {value:'financing', ru:'Финансирование', en:'Financing', ko:'파이낸싱'},
+              {value:'residual', ru:'Остат. стоим.', en:'Resale', ko:'잔존가치'},
+            ]},
+          {id:'q_v1d_competitor', type:'single_select', required:true,
+            title:{ru:'Какой конкурент рассматривается', en:'Competitor considered', ko:'경쟁사 검토'},
+            options:[
+              {value:'caterpillar', ru:'Caterpillar', en:'Caterpillar', ko:'Caterpillar'},
+              {value:'komatsu', ru:'Komatsu', en:'Komatsu', ko:'Komatsu'},
+              {value:'volvo', ru:'Volvo', en:'Volvo', ko:'Volvo'},
+              {value:'other', ru:'Другое', en:'Other', ko:'기타'},
+              {value:'none', ru:'Никто', en:'None', ko:'없음'},
+            ]},
+          {id:'q_v1d_value', type:'slider', required:true,
+            title:{ru:'Цена ↔ Качество (1 цена / 5 качество)', en:'Price ↔ Quality (1 price / 5 quality)', ko:'가격 ↔ 품질 (1 가격 / 5 품질)'}},
+          {id:'q_v1d_service', type:'multi_select', required:false, max:4,
+            title:{ru:'Ожидания от сервиса', en:'Service expectations', ko:'서비스 기대'},
+            options:[
+              {value:'uptime', ru:'Без простоя', en:'Uptime', ko:'가동률'},
+              {value:'parts_speed', ru:'Скорость запч.', en:'Parts speed', ko:'부품 속도'},
+              {value:'24_7', ru:'24/7', en:'24/7', ko:'24/7'},
+              {value:'training', ru:'Обучение', en:'Training', ko:'교육'},
+            ]},
+        ],
+      },
+      {
+        title_key:'step_final',
+        questions: [
+          {id:'q_v1d_nps', type:'nps', required:true,
+            title:{ru:'Готовы рекомендовать HD коллегам (0—10)', en:'Recommend HD to peers (0—10)', ko:'HD를 동료에게 추천 (0~10)'}},
+          {id:'q_v1d_subscribe', type:'consent', required:false, label_key:'consent_q1'},
+          {id:'q_v1d_consent', type:'consent', required:true, label_key:'consent_q2'},
+        ],
+      },
+    ],
+  };
 
-  const level0 = opts.filter((o) => o.level === 0);
-  let html = `<div class="opts hier${isMulti ? ' multi' : ''}">`;
-  for (const top of level0) {
-    const isExp = expandedSet.has(top.value);
-    const arrow = isExp ? '▼' : '▶';
-    html += `<div class="opt hier-top${isExp ? ' expanded' : ''}" data-q="${q.id}" data-v="${escapeAttr(top.value)}" data-kind="hier-top">
-      <span class="opt-num">${arrow}</span><span>${optionLabel(top)}</span>
-    </div>`;
-    if (isExp) {
-      const children = opts.filter((o) => o.level === 1 && o.parent_id === top.value);
-      for (const c of children) {
-        const selected = selectedValues.includes(c.value);
-        const mark = isMulti
-          ? (selected ? '✓' : (c.is_other ? '✎' : '+'))
-          : (c.is_other ? '✎' : '•');
-        html += `<div class="opt hier-child${selected ? ' selected' : ''}" data-q="${q.id}" data-v="${escapeAttr(c.value)}" data-kind="hier-child"${c.is_other ? ' data-is-other="1"' : ''} data-parent="${escapeAttr(top.value)}">
-          <span class="opt-num">${mark}</span><span>${optionLabel(c)}</span>
-        </div>`;
-        if (c.is_other && selected) {
-          html += `<textarea class="txt-area hier-other" data-q="${q.id}" data-kind="hier-other" data-parent="${escapeAttr(top.value)}" placeholder="${t('hier_other_placeholder')}">${escapeText(otherTextByParent(top.value))}</textarea>`;
-        }
-      }
-    }
-  }
-  html += '</div>';
-  return html;
-}
-function escapeAttr(s){ return String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function escapeText(s){ return String(s).replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+  // ============================================================================
+  // R_10.05 — segment 매칭 (클라이언트 deterministic).
+  // 우선순위 순으로 평가 → 첫 매칭 적용.
+  // ============================================================================
+  const SEGMENT_RULES = [
+    {segment:'key_account',        match:(a) => a.annual_deal_rub === 'large'},
+    {segment:'mining',              match:(a) => a.usage === 'mining' && ['L','XL'].includes(a.scale)},
+    {segment:'construction_heavy',  match:(a) => a.usage === 'construction_heavy' && ['M','L','XL'].includes(a.scale)},
+    {segment:'forestry',            match:(a) => a.usage === 'forestry'},
+    {segment:'agriculture',         match:(a) => a.usage === 'agriculture'},
+    {segment:'general_construction',match:(a) => a.usage === 'general_construction'},
+    {segment:'rental',              match:(a) => a.usage === 'rental'},
+    {segment:'other',               match:() => true},
+  ];
 
-function bindOne(wrap){
-  wrap.querySelectorAll('.opt[data-kind="single"]').forEach((el) => {
-    el.onclick = () => { const q=el.dataset.q, v=el.dataset.v;
-      state.answers[q] = state.answers[q] === v ? null : v;
-      if (state.answers[q] === null) delete state.answers[q];
-      renderQA(); renderRadar(); refreshSubmit();
+  function classifySegment(axisData) {
+    for (const rule of SEGMENT_RULES) {
+      if (rule.match(axisData)) return { segment: rule.segment, confidence: 1.0, method: 'client_rule' };
+    }
+    return { segment: 'other', confidence: 0.5, method: 'client_rule' };
+  }
+
+  function priorityForResponse(axisData, npsValue) {
+    const weights = {
+      large:35, mid:20, small:10,
+      high:25, mid_h:15, low_h:5,
+      owner:20, purchaser:15, influencer:10, user:5,
     };
-  });
-  wrap.querySelectorAll('.opt[data-kind="multi"]').forEach((el) => {
-    el.onclick = () => { const q=el.dataset.q, v=el.dataset.v;
-      const cur = Array.isArray(state.answers[q]) ? state.answers[q].slice() : [];
-      const i = cur.indexOf(v); if (i>=0) cur.splice(i,1); else cur.push(v);
-      state.answers[q] = cur;
-      renderQA(); renderRadar(); refreshSubmit();
-    };
-  });
-  // ranked multi_select — 옵션 메타 rank_max 동적. 클릭 순서대로 1·N 순위 부여, N+1번째 클릭 차단.
-  wrap.querySelectorAll('.opt[data-kind="ranked"]').forEach((el) => {
-    el.onclick = () => {
-      const q = el.dataset.q, v = el.dataset.v;
-      const rankMax = Number(el.dataset.rankMax || 3);
-      const cur = Array.isArray(state.answers[q]) ? state.answers[q].slice() : [];
-      const idx = cur.indexOf(v);
-      if (idx >= 0) {
-        cur.splice(idx, 1);  // 선택 해제 — 뒷 순위 자동 한 칸씩 올라옴
-      } else {
-        if (cur.length >= rankMax) return;
-        cur.push(v);
+    let score = 0;
+    score += weights[axisData.annual_deal_rub] || 0;
+    if (axisData.annual_operating_hours === 'high') score += weights.high;
+    else if (axisData.annual_operating_hours === 'mid') score += weights.mid_h;
+    else if (axisData.annual_operating_hours === 'low') score += weights.low_h;
+    score += weights[axisData.decision_role] || 0;
+    if (typeof npsValue === 'number') score += Math.min(npsValue, 9);
+    if (score >= 70) return 'p1';
+    if (score >= 55) return 'p2';
+    if (score >= 40) return 'p3';
+    if (score >= 25) return 'p4';
+    return 'p5';
+  }
+
+  // ============================================================================
+  // R_10.07 — Playbook (각 segment + priority).
+  // ============================================================================
+  const PLAYBOOKS = {
+    mining: {
+      title:{ru:'Горнодобыча — крупные экскаваторы', en:'Mining — big excavators', ko:'광업 — 대형 굴착기'},
+      weapons:{
+        ru:['Долговечность · моточасы под нагрузкой','Долгосрочный пакет ТО','Локальные комплекты запчастей'],
+        en:['Durability · operating hours under load','Long-term maintenance package','Regional parts kits'],
+        ko:['내구성·고부하 가동시간','장기 유지보수 패키지','권역별 부품 키트'],
+      },
+      pitch:{
+        ru:'При 6000+ ч/год HD выгоднее на ~12% в 5-летнем TCO.',
+        en:'At 6000+h/year HD wins ~12% on 5-year TCO.',
+        ko:'연 6000h+에서 HD가 5년 TCO 기준 약 12% 우위입니다.',
+      },
+      models:['HD HX1000L', 'HD HX1400L'],
+      next:{ru:'Демонстрация в карьере · 7 дней', en:'On-site quarry demo · 7 days', ko:'7일 내 광산 데모'},
+    },
+    key_account: {
+      title:{ru:'Ключевой клиент — визит из HQ', en:'Key account — HQ visit', ko:'키 어카운트 — 본사 동행'},
+      weapons:{
+        ru:['Прямой контакт KAM HQ','Скидка пакета 50+ ед.','Условия финансирования из HQ'],
+        en:['Direct KAM contact from HQ','Bulk discount 50+ units','HQ financing terms'],
+        ko:['본사 KAM 직접 연결','50대+ 패키지 할인','본사 파이낸싱 조건'],
+      },
+      pitch:{
+        ru:'При заказе 50+ единиц HD HQ направит KAM лично.',
+        en:'On 50+ unit orders HD HQ sends KAM in person.',
+        ko:'50대 이상 발주 시 HD 본사 KAM이 직접 방문.',
+      },
+      models:['HD HX series', 'HD HW series'],
+      next:{ru:'Встреча с KAM в 72 ч', en:'KAM meeting in 72h', ko:'72시간 내 KAM 미팅'},
+    },
+    construction_heavy: {
+      title:{ru:'Крупное строит. — пакет + финансирование', en:'Heavy construction — package + financing', ko:'대형 건설 — 패키지+파이낸싱'},
+      weapons:{
+        ru:['Пакет экскаватор + погрузчик','Лизинг 36 мес.','Сервис 24/7'],
+        en:['Excavator + loader package','36-month leasing','24/7 service'],
+        ko:['굴착기+휠로더 패키지','36개월 리스','24/7 서비스'],
+      },
+      pitch:{
+        ru:'Пакет даёт 8% скидки + 30 дней сервиса бесплатно.',
+        en:'Package gives 8% discount + 30 days free service.',
+        ko:'패키지로 8% 할인 + 30일 무료 서비스.',
+      },
+      models:['HD HX380L', 'HD HL955'],
+      next:{ru:'Расчёт TCO + лизинг — 5 дней', en:'TCO+lease quote in 5 days', ko:'TCO+리스 견적 5일 내'},
+    },
+    agriculture: {
+      title:{ru:'С/х — сезонная аренда', en:'Agri — seasonal rental', ko:'농업 — 시즌·렌탈'},
+      weapons:{ru:['Сезонная аренда','Малотоннажные модели'], en:['Seasonal rental','Compact models'], ko:['시즌 렌탈','소형 모델']},
+      pitch:{ru:'Сезонная аренда покрывает 90% операций без капвложений.', en:'Seasonal rental covers 90% ops with no CAPEX.', ko:'시즌 렌탈로 CAPEX 없이 90% 작업 커버.'},
+      models:['HD HX55N', 'HD HX85'],
+      next:{ru:'Календарь аренды', en:'Rental calendar', ko:'렌탈 캘린더 제안'},
+    },
+    forestry: {
+      title:{ru:'Лесное хоз-во — пакет защиты', en:'Forestry — protection package', ko:'임업 — 산림 패키지'},
+      weapons:{ru:['Защита кабины','Forestry guards','Цепной комплект'], en:['Cab guarding','Forestry guards','Chain kit'], ko:['캐빈 가드','산림 가드','체인 키트']},
+      pitch:{ru:'Forestry-пакет добавляет 30% к сроку службы.', en:'Forestry pack adds 30% lifespan.', ko:'산림 패키지로 수명 30% 연장.'},
+      models:['HD HX300L Forestry'],
+      next:{ru:'Демо в лесу — 14 дней', en:'On-site forest demo · 14d', ko:'산림 데모 14일 내'},
+    },
+    general_construction: {
+      title:{ru:'Общ. строит. — средний класс', en:'General constr. — mid-range', ko:'일반 건설 — 중급'},
+      weapons:{ru:['Универсальные модели','Сервис в регионе'], en:['Versatile models','Regional service'], ko:['범용 모델','지역 서비스']},
+      pitch:{ru:'Один экскаватор покрывает 70% задач.', en:'One excavator handles 70% of work.', ko:'한 대로 70% 작업 커버.'},
+      models:['HD HX140L', 'HD HX220L'],
+      next:{ru:'Тест-драйв 1 неделя', en:'1-week test drive', ko:'1주 시승'},
+    },
+    rental: {
+      title:{ru:'Аренда — пакет ТО', en:'Rental — maintenance pack', ko:'렌탈 — 유지보수 패키지'},
+      weapons:{ru:['ТО на 1500 ч','Подмена при простое'], en:['1500h maintenance','Standby unit'], ko:['1500h 유지보수','대체기']},
+      pitch:{ru:'ТО-пакет снижает простой на 40%.', en:'Maintenance pack cuts downtime 40%.', ko:'유지보수 패키지로 가동 정지 40% 감소.'},
+      models:['HD HX series rental'],
+      next:{ru:'Контракт ТО — 5 дней', en:'Maintenance contract · 5d', ko:'유지보수 계약 5일 내'},
+    },
+    other: {
+      title:{ru:'Доп. диагностика', en:'Further qualification', ko:'추가 진단'},
+      weapons:{ru:['Уточнить 6 axis','Каталог общего назначения'], en:['Clarify 6 axis','General catalog'], ko:['6 axis 보완 질문','일반 카탈로그']},
+      pitch:{ru:'Уточняющие вопросы помогут подобрать сегмент.', en:'Follow-up Qs will refine the segment.', ko:'후속 질문으로 segment 변별.'},
+      models:['HD general portfolio'],
+      next:{ru:'Follow-up в 24 ч', en:'Follow-up in 24h', ko:'24h 내 follow-up'},
+    },
+  };
+
+  // ============================================================================
+  // 상태
+  // ============================================================================
+  const state = {
+    lang:'ru',
+    step:0,                    // 0,1,2  → result 4
+    answers:{},                // {q_id: value}
+    showResult:false,
+    showHistory:false,         // 헤더 이력 토글 시 true → 설문 대신 history 패널
+    history:null,              // { loading, error, rows }
+    companies:[],              // target_company datalist suggestions (최근 사용 순 distinct)
+    result:null,
+    // Phase E — 서버 발급 Playbook. drainQueue 후 fetchServerPlaybook이 채움.
+    // null이면 inline PLAYBOOKS fallback (오프라인·콜드스타트 부스 정상 운영).
+    pendingIdemKey:null,       // 가장 최근 큐잉된 idempotency_key (drain 후 응답과 매칭)
+    serverPlaybook:null,       // adaptServerPlaybook(body.playbook) 결과 — renderResult가 우선 사용
+    serverPlaybookSource:null, // 'fetch' | null. UI에 'live R_10.07' 표시
+    queueCount:0,
+    online: navigator.onLine,
+    token: null,
+    dealerId: null,
+    event: null,
+  };
+
+  // ============================================================================
+  // QR/URL — Bearer token 파싱 + 저장
+  // ============================================================================
+  (function bootIdentity(){
+    const usp = new URLSearchParams(location.search);
+    const tok = usp.get('token');
+    if (tok) {
+      try { localStorage.setItem('hd_dealer_token', tok); } catch(_) {}
+      // dealer_id, event는 JWT 페이로드에서 추출
+      const payload = decodeJwtPayload(tok);
+      if (payload) {
+        if (payload.sub)   try { localStorage.setItem('hd_dealer_id', payload.sub); } catch(_){}
+        if (payload.event) try { localStorage.setItem('hd_event',     payload.event); } catch(_){}
       }
-      state.answers[q] = cur;
-      renderQA(); renderRadar(); refreshSubmit();
-    };
-  });
-  wrap.querySelectorAll('.scale-cell[data-kind="scale"]').forEach((el) => {
-    el.onclick = () => {
-      if (el.dataset.disabled === '1') return;  // unique 점수 가드 (render 측)
-      const q = el.dataset.q, v = Number(el.dataset.v);
-      // 추가 가드 — 클릭 시 한 번 더 검증. DW 6축에서 다른 axis가 이미 v 점수 사용 시 차단.
-      const qObj = state.questions.find((qq) => qq.id === q);
-      if (qObj?.axis && state.axes.includes(qObj.axis)) {
-        const used = state.axes
-          .filter((a) => a !== qObj.axis)
-          .map((a) => state.answers[`q_v1d26_dw_${a}`])
-          .includes(v);
-        if (used) {
-          alert(t('unique_point_blocked').replace('{n}', v));
-          return;
+      // URL 정리 (token 노출 방지)
+      history.replaceState({}, '', location.pathname);
+    }
+    // 데모 모드 — fake token/dealer. 토큰 없어도 폼 활성화.
+    state.token    = 'demo-token';
+    state.dealerId = localStorage.getItem('hd_dealer_id') || 'demo_dealer';
+    state.event    = localStorage.getItem('hd_event') || 'demo_event';
+  })();
+
+  function decodeJwtPayload(tok){
+    try{
+      const parts = tok.split('.');
+      if (parts.length < 2) return null;
+      const json = atob(parts[1].replace(/-/g,'+').replace(/_/g,'/'));
+      return JSON.parse(json);
+    }catch(_){ return null; }
+  }
+
+  // ============================================================================
+  // IndexedDB 큐
+  // ============================================================================
+  const DB_NAME='hd_voice_dealer', DB_VER=1, STORE='responses_queue';
+  function openDb(){
+    return new Promise((res, rej) => {
+      const req = indexedDB.open(DB_NAME, DB_VER);
+      req.onupgradeneeded = (e) => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE)) {
+          const s = db.createObjectStore(STORE, { keyPath:'id' });
+          s.createIndex('status', 'status');
         }
-      }
-      state.answers[q] = state.answers[q] === v ? null : v;
-      if (state.answers[q] === null) delete state.answers[q];
-      renderQA(); renderRadar(); refreshSubmit();
-    };
-  });
-  wrap.querySelectorAll('input[data-kind="number"]').forEach((el) => {
-    el.oninput = () => { const v = el.value === '' ? null : Number(el.value); state.answers[el.dataset.q] = v; refreshSubmit(); };
-  });
-  // 계층 level 0 클릭 — 펼침 토글 (single은 단일 대분류, multi는 여러 대분류 동시 펼침 가능)
-  wrap.querySelectorAll('.opt[data-kind="hier-top"]').forEach((el) => {
-    el.onclick = () => {
-      const qid = el.dataset.q, v = el.dataset.v;
-      const qObj = state.questions.find((q) => q.id === qid);
-      const isMulti = qObj?.type === 'multi_select';
-      if (!state.hierExpand) state.hierExpand = {};
-      if (isMulti) {
-        const cur = state.hierExpand[qid];
-        const arr = Array.isArray(cur) ? cur.slice() : (cur ? [cur] : []);
-        const idx = arr.indexOf(v);
-        if (idx >= 0) arr.splice(idx, 1); else arr.push(v);
-        state.hierExpand[qid] = arr;
-      } else {
-        state.hierExpand[qid] = state.hierExpand[qid] === v ? null : v;
-      }
-      renderQA(); refreshSubmit();
-    };
-  });
-  // 계층 level 1 자식 클릭 — single: choice 저장 / multi: array 토글
-  wrap.querySelectorAll('.opt[data-kind="hier-child"]').forEach((el) => {
-    el.onclick = () => {
-      const qid = el.dataset.q, v = el.dataset.v;
-      const qObj = state.questions.find((q) => q.id === qid);
-      const isMulti = qObj?.type === 'multi_select';
-      if (isMulti) {
-        const arr = Array.isArray(state.answers[qid]) ? state.answers[qid].slice() : [];
-        const idx = arr.indexOf(v);
-        if (idx >= 0) arr.splice(idx, 1); else arr.push(v);
-        if (arr.length === 0) delete state.answers[qid]; else state.answers[qid] = arr;
-      } else {
-        const prev = state.answers[qid] && typeof state.answers[qid] === 'object' ? state.answers[qid] : {};
-        if (prev.choice === v) {
-          delete state.answers[qid];
+      };
+      req.onsuccess = () => res(req.result);
+      req.onerror = () => rej(req.error);
+    });
+  }
+  async function queueAdd(rec){
+    const db = await openDb();
+    rec.id = rec.id || crypto.randomUUID();
+    rec.status = 'pending';
+    rec.attempts = 0;
+    rec.enqueued_at = new Date().toISOString();
+    await new Promise((res, rej) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      tx.objectStore(STORE).add(rec);
+      tx.oncomplete = res;
+      tx.onerror = () => rej(tx.error);
+    });
+    return rec.id;
+  }
+  async function queueListPending(){
+    const db = await openDb();
+    return new Promise((res) => {
+      const out=[];
+      const tx = db.transaction(STORE, 'readonly');
+      const idx = tx.objectStore(STORE).index('status');
+      const cur = idx.openCursor(IDBKeyRange.only('pending'));
+      cur.onsuccess = (e) => { const c = e.target.result; if (c) { out.push(c.value); c.continue(); } else res(out); };
+      cur.onerror = () => res(out);
+    });
+  }
+  async function queueUpdate(id, patch){
+    const db = await openDb();
+    return new Promise((res) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      const st = tx.objectStore(STORE);
+      const get = st.get(id);
+      get.onsuccess = () => { const r = get.result; if (r){ Object.assign(r, patch); st.put(r); } res(); };
+      get.onerror = () => res();
+    });
+  }
+  async function queueCount(){
+    const db = await openDb();
+    return new Promise((res) => {
+      const tx = db.transaction(STORE, 'readonly');
+      const idx = tx.objectStore(STORE).index('status');
+      const r = idx.count(IDBKeyRange.only('pending'));
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => res(0);
+    });
+  }
+
+  // ============================================================================
+  // 송출 — POST {API_BASE}/responses-receive
+  // ============================================================================
+  // 데모 모드 — DB 미연결. API_BASE 무관, fetch 안 함.
+  const API_BASE = '';
+
+  async function postOne(rec){
+    console.log('[DEMO] response payload (not sent):', rec.payload);
+    alert('데모 모드 — DB로 전송되지 않습니다. 콘솔에서 payload 확인 가능.');
+    return { id: 'demo-' + rec.id, lead_id: null };
+  }
+
+  async function drainQueue(){
+    if (!state.online) return;
+    const items = await queueListPending();
+    for (const it of items) {
+      try {
+        await queueUpdate(it.id, { status:'sending', attempts: (it.attempts||0)+1 });
+        const body = await postOne(it);
+        await queueUpdate(it.id, { status:'done', completed_at: new Date().toISOString() });
+
+        // Phase E — 현재 결과 화면이 이 idempotency_key의 응답이면 server Playbook으로 업그레이드.
+        // 다른 응답이 큐에 있는 경우는 skip (state.result는 가장 최근 한 건만 표시).
+        if (
+          state.showResult &&
+          body && body.lead_id &&
+          state.pendingIdemKey === (it.idempotency_key || it.id)
+        ) {
+          tryUpgradePlaybook(body.lead_id).catch(() => {});
+        }
+      } catch (e) {
+        if (e && e.terminal) {
+          await queueUpdate(it.id, { status:'failed', last_error: String(e.message || e) });
         } else {
-          state.answers[qid] = { choice: v, other_text: el.dataset.isOther === '1' ? (prev.other_text || '') : null };
+          await queueUpdate(it.id, { status:'pending', last_error: String(e.message || e) });
+          break; // 다음 주기 재시도
         }
       }
-      renderQA(); refreshSubmit();
-    };
-  });
-  // 계층 inline "기타" 텍스트 — multi는 parent별 분리 키, single은 단일 other_text
-  wrap.querySelectorAll('textarea[data-kind="hier-other"]').forEach((el) => {
-    el.oninput = () => {
-      const qid = el.dataset.q;
-      const parent = el.dataset.parent;
-      const qObj = state.questions.find((q) => q.id === qid);
-      const isMulti = qObj?.type === 'multi_select';
-      if (isMulti && parent) {
-        state.answers[qid + '__other_' + parent] = el.value;
-      } else {
-        const prev = state.answers[qid] && typeof state.answers[qid] === 'object' ? state.answers[qid] : { choice: null };
-        state.answers[qid] = { ...prev, other_text: el.value };
-      }
-      refreshSubmit();
-    };
-  });
-  // multi_select inline "기타" 텍스트 — answer는 array 그대로, 텍스트는 state.answers[q+'__other']
-  wrap.querySelectorAll('textarea[data-kind="multi-other"]').forEach((el) => {
-    el.oninput = () => {
-      const q = el.dataset.q;
-      state.answers[q + '__other'] = el.value;
-      refreshSubmit();
-    };
-  });
-  wrap.querySelectorAll('input[data-kind="text"],textarea[data-kind="text"]').forEach((el) => {
-    el.oninput = () => { state.answers[el.dataset.q] = el.value; refreshSubmit(); };
-  });
-  wrap.querySelectorAll('input[type="checkbox"][data-kind="consent"]').forEach((el) => {
-    el.onchange = () => { state.answers[el.dataset.q] = el.checked; refreshSubmit(); renderQA(); };
-  });
-}
-
-function refreshSubmit(){
-  const btn = document.getElementById('btnSubmit');
-  const reqQs = state.questions.filter((q) => q.required);
-  const allOk = reqQs.every((q) => hasAnswer(q));
-  // 042 — target_company는 정식 question(q_v1d26_target_company)이 required + dealer card input이 fallback.
-  const hasCompany = !!(state.answers['q_v1d26_target_company'] || state.target_company?.trim());
-  btn.disabled = !(allOk && hasCompany);
-  btn.textContent = t('submit');
-  // Re-render page dots in case answers state changed (done indicators)
-  const track = document.getElementById('pagerTrack');
-  if (track) renderPageNav(track.querySelectorAll('.pager-page').length);
-}
-
-/* ============================================================================
-   Submit
-   ============================================================================ */
-async function onSubmit(){
-  const axes = computeAxes();
-  const preference_axes = {};
-  for (const a of state.axes) {
-    if (axes[a] != null) preference_axes[a] = Math.round(axes[a] * 100) / 100;
+    }
+    refreshQueueBadge();
   }
+  setInterval(drainQueue, 30 * 1000);
 
-  // NPS / future_subscription / consent_data 추출 — 의미 추정
-  const npsQ = state.questions.find((q) => q.type === 'nps');
-  const subQ = state.questions.find((q) => q.type === 'consent' && /subscri|подписк|수신/i.test(questionTitle(q)));
-  const dataQ = state.questions.find((q) => q.type === 'consent' && (q.required === true || /process|обработ|처리/i.test(questionTitle(q))));
-
-  // 042 — META 키 폐기. target_company·contact_*는 정식 question 답변에서 추출.
-  const ansFor = (qid) => {
-    const v = state.answers[qid];
-    return (typeof v === 'string' && v.trim()) ? v.trim() : null;
-  };
-
-  const answersArr = state.questions.map((q) => ({ question_id: q.id, answer: state.answers[q.id] ?? null }));
-
-  // multi_select inline "기타" 텍스트 → 별도 answer entry로 송출.
-  for (const q of state.questions) {
-    if (q.type !== 'multi_select') continue;
-    const opts = q.options || [];
-    const arr = Array.isArray(state.answers[q.id]) ? state.answers[q.id] : [];
-    const isHierMulti = opts.some((o) => typeof o.level === 'number');
-    if (isHierMulti) {
-      // 계층 multi — parent별 _other 옵션 4개 (1_other ~ 4_other). 각각 textarea 별도.
-      for (const opt of opts) {
-        if (!opt.is_other) continue;
-        if (!arr.includes(opt.value)) continue;
-        const txt = (state.answers[q.id + '__other_' + opt.parent_id] || '').trim();
-        if (!txt) continue;
-        // answer 본문(array)에 이미 '1_other' 등이 포함됨. 텍스트는 question_id에 parent 접미사로 송출.
-        // FK 회피 — q_v1d26_usage_hier_other_text 같은 합성 id는 DB에 없으므로 hidden answer 채널 활용:
-        // 일반 q.id의 array에 "1_other:테스트" 같은 형태로 inline string으로 추가.
-        const idx = arr.indexOf(opt.value);
-        if (idx >= 0) arr[idx] = `${opt.value}:${txt}`;
-      }
-      if (arr.length) answersArr.find((a) => a.question_id === q.id).answer = arr;
-    } else {
-      // 평면 multi — 단일 _other 옵션 + state.answers[q+'__other'] 텍스트
-      const otherOpt = opts.find((o) => o.is_other === true);
-      if (!otherOpt) continue;
-      if (!arr.includes(otherOpt.value)) continue;
-      const txt = (state.answers[q.id + '__other'] || '').trim();
-      if (!txt) continue;
-      // 042 follow-up question id 패턴: q_v1d26_factors → q_v1d26_factors_other 등 (DB row 있음, FK 안전)
-      answersArr.push({ question_id: q.id + '_other', answer: txt });
+  // ============================================================================
+  // Phase E — server Playbook fetch (R_10.07 hot reload 부스 종착).
+  // 서버는 lead_id에 해당하는 active dealer_outputs 반환.
+  // 실패 시 inline PLAYBOOKS fallback — 부스 끊김 방지.
+  // ============================================================================
+  async function tryUpgradePlaybook(leadId){
+    if (!API_BASE || !state.token || !leadId) return;
+    try {
+      const res = await fetch(`${API_BASE}/dealer-playbook?lead_id=${encodeURIComponent(leadId)}`, {
+        headers: { 'Authorization': `Bearer ${state.token}` },
+      });
+      if (!res.ok) return;
+      const body = await res.json();
+      const pb = body && body.playbook;
+      if (!pb) return;
+      state.serverPlaybook = adaptServerPlaybook(pb);
+      state.serverPlaybookSource = 'fetch';
+      if (state.showResult) render();
+    } catch (_e) {
+      // silent — inline fallback 그대로 사용
     }
   }
 
-  const payload = {
-    survey_id: state.survey.id,
-    respondent_type: 'dealer',
-    dealer_id: state.dealerId,
-    event: state.event,
-    language: state.lang,
-    nps: npsQ ? (state.answers[npsQ.id] ?? null) : null,
-    future_subscription: subQ ? state.answers[subQ.id] === true : null,
-    consent_data_collection: dataQ ? state.answers[dataQ.id] === true : null,
-    segment: null, segment_method: null, segment_confidence: null, axis_data: null,
-    captured_at: new Date().toISOString(),
-    answers: answersArr,
-    preference_axes,
-    dealer_hypothesis_segment: Array.isArray(state.segment) ? (state.segment[0] ?? null) : (state.segment ?? null),
-    dealer_hypothesis_segments: Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []),
-    target_company: ansFor('q_v1d26_target_company') ?? (state.target_company?.trim() || null),
-    contact_name:   ansFor('q_v1d26_contact_name')   ?? (state.contact_name?.trim()  || null),
-    contact_phone:  ansFor('q_v1d26_contact_phone')  ?? (state.contact_phone?.trim() || null),
-    notes:          state.notes?.trim() || null,
-  };
+  // 서버 shape → renderResult가 기대하는 inline shape로 변환.
+  // 서버: { title (string ko/ru 중 하나), weapons:{ko,ru,items}, pitch:{ko,ru} (배열), models, next_action:{ko,ru} }
+  // 인라인: { title:{ru,en,ko}, weapons:{ru,en,ko}, pitch:{ru,en,ko} (단일 문장), models, next:{ru,en,ko} }
+  function adaptServerPlaybook(pb){
+    const titleStr = typeof pb.title === 'string' ? pb.title : '';
+    const w = pb.weapons || {};
+    const p = pb.pitch || {};
+    const na = pb.next_action || {};
+    const ru = (k) => (Array.isArray(w[k]) ? w[k] : []);
+    const firstSentence = (arr) => (Array.isArray(arr) && arr.length > 0 ? String(arr[0]) : '');
+    return {
+      title:   { ru: titleStr, en: titleStr, ko: titleStr },
+      weapons: {
+        ru: ru('ru'),
+        en: (Array.isArray(w.en) && w.en.length ? w.en : ru('ru')),
+        ko: ru('ko'),
+      },
+      pitch:   {
+        ru: firstSentence(p.ru),
+        en: firstSentence(p.en) || firstSentence(p.ru),
+        ko: firstSentence(p.ko),
+      },
+      models:  Array.isArray(pb.models) ? pb.models : [],
+      next:    {
+        ru: typeof na.ru === 'string' ? na.ru : '',
+        en: typeof na.en === 'string' ? na.en : (typeof na.ru === 'string' ? na.ru : ''),
+        ko: typeof na.ko === 'string' ? na.ko : '',
+      },
+    };
+  }
 
-  const id = crypto.randomUUID();
-  const rec = { id, payload, idempotency_key: `${id}_v1rev` };
-  setToast(null);
+  async function refreshQueueBadge(){
+    state.queueCount = await queueCount().catch(() => 0);
+    const el = document.getElementById('queueBadge');
+    if (el) el.textContent = `${t('queue_label')} ${state.queueCount}`;
+  }
+
+  // ============================================================================
+  // 렌더
+  // ============================================================================
+  const root = document.getElementById('root');
+  const langSel = document.getElementById('langSel');
+  langSel.value = state.lang;
+  langSel.addEventListener('change', () => { state.lang = langSel.value; document.documentElement.lang = state.lang; render(); });
+
+  function t(key){
+    const dict = I18N[state.lang] || I18N.ru;
+    return dict[key] || key;
+  }
+  function tx(obj){
+    if (!obj) return '';
+    return obj[state.lang] || obj.ru || obj.en || obj.ko || '';
+  }
+
+  function setNet(){
+    state.online = navigator.onLine;
+    const dot = document.getElementById('netDot');
+    const lbl = document.getElementById('netLabel');
+    dot.classList.toggle('off', !state.online);
+    lbl.textContent = state.online ? t('net_online') : t('net_offline');
+    if (state.online) drainQueue();
+  }
+  window.addEventListener('online', setNet);
+  window.addEventListener('offline', setNet);
+
+  function isAnsweredQ(q){
+    const v = state.answers[q.id];
+    if (!q.required) return true;
+    if (q.type === 'consent') return !!v;
+    if (q.type === 'multi_select') return Array.isArray(v) && v.length > 0;
+    if (q.type === 'text' || q.type === 'textarea') return typeof v === 'string' && v.trim().length > 0;
+    return v !== undefined && v !== null && v !== '';
+  }
+  function isStepValid(){
+    const step = SURVEY.steps[state.step];
+    return step.questions.every(isAnsweredQ);
+  }
+
+  function render(){
+    document.getElementById('surveyTitle').textContent = t('product');
+    refreshQueueBadge();
+    setNet();
+
+    if (state.showHistory) return renderHistory();
+    if (state.showResult) return renderResult();
+    const step = SURVEY.steps[state.step];
+    const pct = ((state.step + 1) / SURVEY.steps.length) * 100;
+    root.innerHTML = `
+      <div class="progress"><i style="width:${pct}%"></i></div>
+      <div class="card">
+        <h2 class="step-h">${t(step.title_key)}</h2>
+        <p class="step-sub ghost">${t('required_hint')}</p>
+        ${step.questions.map(renderQuestion).join('')}
+      </div>
+      <div class="nav">
+        <button class="btn" id="navBack" ${state.step === 0 ? 'disabled' : ''}>${t('back')}</button>
+        <button class="btn primary full" id="navNext" ${isStepValid() ? '' : 'disabled'}>
+          ${state.step === SURVEY.steps.length - 1 ? t('submit') : t('next')}
+        </button>
+      </div>
+    `;
+    bindQuestionHandlers();
+    document.getElementById('navBack').onclick = () => { if (state.step > 0) { state.step--; render(); } };
+    document.getElementById('navNext').onclick = () => onAdvance();
+  }
+
+  function renderQuestion(q){
+    const title = tx(q.title) || (q.label_key ? t(q.label_key) : q.id);
+    const v = state.answers[q.id];
+    let inner = '';
+    if (q.type === 'single_select') {
+      inner = `<div class="opts">${q.options.map((o) => `
+        <span class="opt ${v === o.value ? 'sel' : ''}" data-q="${q.id}" data-v="${o.value}" data-type="single">${tx(o)}</span>
+      `).join('')}</div>`;
+    } else if (q.type === 'multi_select') {
+      const arr = Array.isArray(v) ? v : [];
+      inner = `<div class="opts">${q.options.map((o) => `
+        <span class="opt ${arr.includes(o.value) ? 'sel' : ''}" data-q="${q.id}" data-v="${o.value}" data-type="multi" data-max="${q.max ?? 999}">${tx(o)}</span>
+      `).join('')}</div>`;
+    } else if (q.type === 'scale_1_5') {
+      inner = `<div class="opts scale">${[1,2,3,4,5].map((n) => `
+        <span class="opt ${v === n ? 'sel' : ''}" data-q="${q.id}" data-v="${n}" data-type="single-num">${n}</span>
+      `).join('')}</div>`;
+    } else if (q.type === 'nps') {
+      const vN = typeof v === 'number' ? v : null;
+      inner = `<div class="nps">${[0,1,2,3,4,5,6,7,8,9,10].map((n) => `
+        <span class="opt ${n<=6?'lo':n<=8?'mid':'hi'} ${vN === n ? 'sel' : ''}" data-q="${q.id}" data-v="${n}" data-type="single-num">${n}</span>
+      `).join('')}</div>`;
+    } else if (q.type === 'slider') {
+      const cur = typeof v === 'number' ? v : 3;
+      inner = `
+        <input type="range" min="1" max="5" step="1" value="${cur}" data-q="${q.id}" data-type="slider" />
+        <div class="slider-vals"><span>1</span><span>5</span></div>
+      `;
+    } else if (q.type === 'text') {
+      const cur = typeof v === 'string' ? v : '';
+      const im = q.inputmode ? ` inputmode="${q.inputmode}"` : '';
+      const label = q.label_key ? t(q.label_key) : title;
+      // _target_company 는 딜러 본인 과거 회사명 datalist 자동완성 (B 작업).
+      const listAttr = q.id === '_target_company' ? ' list="target-company-list"' : '';
+      inner = `<input type="text" data-q="${q.id}" data-type="text"${im}${listAttr} value="${escapeAttr(cur)}" autocomplete="off" style="width:100%;height:42px;padding:0 12px;border:1px solid var(--hd-steel-200);border-radius:8px;font:inherit;color:var(--hd-ink);" />`;
+      return `<div class="q"><div class="q-title">${label}${q.required ? '' : ' <span class="q-meta">(optional)</span>'}</div>${inner}</div>`;
+    } else if (q.type === 'textarea') {
+      const cur = typeof v === 'string' ? v : '';
+      const label = q.label_key ? t(q.label_key) : title;
+      inner = `<textarea data-q="${q.id}" data-type="textarea" rows="3" style="width:100%;padding:10px 12px;border:1px solid var(--hd-steel-200);border-radius:8px;font:inherit;color:var(--hd-ink);resize:vertical;">${escapeText(cur)}</textarea>`;
+      return `<div class="q"><div class="q-title">${label}${q.required ? '' : ' <span class="q-meta">(optional)</span>'}</div>${inner}</div>`;
+    } else if (q.type === 'consent') {
+      const label = q.label_key ? t(q.label_key) : title;
+      inner = `
+        <label class="consent">
+          <input type="checkbox" ${v ? 'checked' : ''} data-q="${q.id}" data-type="consent" />
+          <span>${label}</span>
+        </label>
+      `;
+      return `<div class="q">${inner}</div>`;
+    }
+    return `<div class="q"><div class="q-title">${title}${q.required ? '' : ' <span class="q-meta">(optional)</span>'}</div>${inner}</div>`;
+  }
+
+  function escapeAttr(s){ return String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function escapeText(s){ return String(s).replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+  function bindQuestionHandlers(){
+    root.querySelectorAll('.opt').forEach((el) => {
+      el.addEventListener('click', (ev) => {
+        const q = el.dataset.q, type = el.dataset.type;
+        const raw = el.dataset.v;
+        if (type === 'single') state.answers[q] = raw;
+        else if (type === 'single-num') state.answers[q] = Number(raw);
+        else if (type === 'multi') {
+          const max = Number(el.dataset.max || 999);
+          const cur = Array.isArray(state.answers[q]) ? state.answers[q].slice() : [];
+          const idx = cur.indexOf(raw);
+          if (idx >= 0) cur.splice(idx, 1);
+          else if (cur.length < max) cur.push(raw);
+          state.answers[q] = cur;
+        }
+        render();
+      });
+    });
+    root.querySelectorAll('input[type=range]').forEach((el) => {
+      el.addEventListener('input', () => { state.answers[el.dataset.q] = Number(el.value); });
+      el.addEventListener('change', () => render());
+    });
+    root.querySelectorAll('input[type=checkbox]').forEach((el) => {
+      el.addEventListener('change', () => {
+        state.answers[el.dataset.q] = el.checked;
+        render();
+      });
+    });
+    root.querySelectorAll('input[type=text][data-type=text], textarea[data-type=textarea]').forEach((el) => {
+      el.addEventListener('input', () => {
+        state.answers[el.dataset.q] = el.value;
+        // 입력 중에도 다음 버튼 활성/비활성 재계산 — 다만 전체 render 는 포커스 잃으므로 nav만 토글
+        const nav = document.getElementById('navNext');
+        if (nav) nav.disabled = !isStepValid();
+      });
+    });
+  }
+
+  function onAdvance(){
+    if (!isStepValid()) return;
+    if (state.step < SURVEY.steps.length - 1) {
+      state.step++;
+      render();
+      return;
+    }
+    finalizeAndShowResult().catch((e) => alert('Error: ' + (e?.message || e)));
+  }
+
+  async function finalizeAndShowResult(){
+    const axis = collectAxis(state.answers);
+    const seg = classifySegment(axis);
+    const npsVal = state.answers['q_v1d_nps'];
+    const prio = priorityForResponse(axis, npsVal);
+    state.result = { axis, segment: seg.segment, segment_confidence: seg.confidence, priority: prio, npsVal };
+
+    // _ 접두 키는 메타데이터 — 응답 row 컬럼으로, answers[]에는 제외
+    const META_KEYS = ['_target_company', '_contact_name', '_contact_phone', '_dealer_notes'];
+    const filteredAnswers = Object.entries(state.answers)
+      .filter(([qid]) => !META_KEYS.includes(qid))
+      .map(([qid, val]) => ({ question_id: qid, answer: val }));
+
+    const payload = {
+      survey_id: SURVEY.id,
+      respondent_type: 'dealer',
+      dealer_id: state.dealerId,
+      event: state.event,
+      language: state.lang,
+      nps: typeof npsVal === 'number' ? npsVal : null,
+      future_subscription: state.answers['q_v1d_subscribe'] === true,
+      consent_data_collection: state.answers['q_v1d_consent'] === true,
+      segment: seg.segment,
+      segment_method: seg.method,
+      segment_confidence: seg.confidence,
+      axis_data: axis,
+      captured_at: new Date().toISOString(),
+      answers: filteredAnswers,
+      // 016 — 상담 대상 정보
+      target_company: (state.answers['_target_company'] || '').trim(),
+      contact_name:   (state.answers['_contact_name']   || '').trim() || null,
+      contact_phone:  (state.answers['_contact_phone']  || '').trim() || null,
+      notes:          (state.answers['_dealer_notes']   || '').trim() || null,
+    };
+
+    const id = crypto.randomUUID();
+    await queueAdd({ idempotency_key: id, payload });
+
+    // Phase E — drain 후 응답을 이 result 화면과 매칭하기 위한 키. 새 응답마다 리셋.
+    state.pendingIdemKey = id;
+    state.serverPlaybook = null;
+    state.serverPlaybookSource = null;
+
+    // 방금 입력한 회사명을 즉시 suggestions 최상단에 반영 (서버 round-trip 없이도 동작)
+    const justCompany = payload.target_company;
+    if (justCompany) {
+      const next = [justCompany, ...state.companies.filter((c) => c !== justCompany)].slice(0, 20);
+      state.companies = next;
+      populateCompanyDatalist();
+    }
+
+    state.showResult = true;
+    render();
+    drainQueue();
+    // 서버 송출이 끝나면 history도 같이 신선해지므로 silent refetch (오프라인이면 noop)
+    if (state.online) fetchHistory({ silent:true }).catch(() => {});
+  }
+
+  function collectAxis(a){
+    return {
+      scale: a['q_v1d_scale'],
+      usage: a['q_v1d_usage'],
+      annual_operating_hours: a['q_v1d_hours'],
+      annual_deal_rub: a['q_v1d_deal_rub'],
+      fleet_size: a['q_v1d_fleet'],
+      decision_role: a['q_v1d_role'],
+    };
+  }
+
+  function renderResult(){
+    const r = state.result;
+    // Phase E — server fetched playbook (R_10.07 hot reload) 우선, 없으면 inline fallback.
+    const pb = state.serverPlaybook ?? (PLAYBOOKS[r.segment] || PLAYBOOKS.other);
+    const liveBadge = state.serverPlaybookSource === 'fetch'
+      ? `<span class="pb-live" title="${escapeAttr(t('pb_live_hint'))}">${escapeText(t('pb_live'))}</span>`
+      : '';
+    const prioLbl = t('prio')[r.priority] || r.priority.toUpperCase();
+    const target = state.answers['_target_company'] || '';
+    root.innerHTML = `
+      <div class="card pb">
+        <span class="prio ${r.priority}">${prioLbl}</span>
+        <span class="seg">${r.segment.toUpperCase()}</span>
+        ${liveBadge}
+        <h2>${tx(pb.title)}</h2>
+        ${target ? `<p style="margin:6px 0 0;font-weight:600;color:var(--hd-discovery)">${escapeText(target)}</p>` : ''}
+        <p class="ghost">${t('result_sub')}</p>
+
+        <h3>${t('pb_weapons')}</h3>
+        <ul>${(pb.weapons[state.lang] || pb.weapons.ru).map((w) => `<li>${w}</li>`).join('')}</ul>
+
+        <h3>${t('pb_pitch')}</h3>
+        <div class="pitch">${tx(pb.pitch)}</div>
+
+        <h3>${t('pb_models')}</h3>
+        <ul>${pb.models.map((m) => `<li>${m}</li>`).join('')}</ul>
+
+        <h3>${t('pb_next')}</h3>
+        <ul><li>${tx(pb.next)}</li></ul>
+      </div>
+
+      <div class="ghost" style="text-align:center;padding:8px;">
+        ${state.online ? `✓ ${t('sent_ok')}` : `⏳ ${t('saved_offline')}`}
+      </div>
+
+      <div class="nav">
+        <button class="btn primary full" id="navReset">${t('enter_again')}</button>
+      </div>
+    `;
+    document.getElementById('navReset').onclick = () => {
+      state.step = 0; state.answers = {}; state.showResult = false; state.result = null;
+      state.pendingIdemKey = null; state.serverPlaybook = null; state.serverPlaybookSource = null;
+      render();
+    };
+  }
+
+  // ============================================================================
+  // 내 상담 이력 — Bearer JWT 로 dealer-consultations Edge 호출.
+  // ============================================================================
+  async function fetchHistory(opts){
+    const silent = !!(opts && opts.silent);
+    if (!API_BASE || !state.token) {
+      if (!silent) { state.history = { loading:false, error:'auth', rows:[] }; render(); }
+      return;
+    }
+    if (!silent) {
+      state.history = { loading:true, error:null, rows:[] };
+      render();
+    }
+    try {
+      const res = await fetch(`${API_BASE}/dealer-consultations?limit=50`, {
+        headers: { 'Authorization': `Bearer ${state.token}` },
+      });
+      if (!res.ok) throw new Error(`http_${res.status}`);
+      const body = await res.json();
+      const rows = Array.isArray(body.data) ? body.data : [];
+      state.history = { loading:false, error:null, rows };
+      // suggestions: target_company 최근 순 distinct, 빈/공백 제외, 20개.
+      const seen = new Set();
+      const list = [];
+      for (const r of rows) {
+        const v = (r && typeof r.target_company === 'string') ? r.target_company.trim() : '';
+        if (!v || seen.has(v)) continue;
+        seen.add(v);
+        list.push(v);
+        if (list.length >= 20) break;
+      }
+      state.companies = list;
+      populateCompanyDatalist();
+    } catch (e) {
+      if (!silent) state.history = { loading:false, error: String(e?.message || e), rows:[] };
+    }
+    if (!silent) render();
+  }
+
+  function populateCompanyDatalist(){
+    const dl = document.getElementById('target-company-list');
+    if (!dl) return;
+    dl.innerHTML = state.companies.map((c) => `<option value="${escapeAttr(c)}"></option>`).join('');
+  }
+
+  function openHistory(){
+    state.showHistory = true;
+    document.getElementById('histBtn').classList.add('on');
+    fetchHistory({ silent:false });
+  }
+  function closeHistory(){
+    state.showHistory = false;
+    document.getElementById('histBtn').classList.remove('on');
+    render();
+  }
+
+  function renderHistory(){
+    const h = state.history || { loading:true, error:null, rows:[] };
+    const rows = h.rows || [];
+    const inner = h.loading ? `<div class="hist-empty">${escapeText(t('hist_loading'))}</div>`
+      : h.error ? `<div class="hist-empty" style="color:var(--hd-red)">${escapeText(t('hist_err'))}</div>`
+      : rows.length === 0 ? `<div class="hist-empty">${escapeText(t('hist_empty'))}</div>`
+      : `<div class="hist-list">${rows.map(renderHistRow).join('')}</div>`;
+    root.innerHTML = `
+      <div class="card">
+        <h2 class="step-h">${escapeText(t('hist_title'))}</h2>
+        <p class="step-sub ghost">${escapeText(state.dealerId || '')} · ${escapeText(state.event || '')}</p>
+        ${inner}
+      </div>
+      <div class="nav">
+        <button class="btn primary full" id="histBack">${escapeText(t('hist_back'))}</button>
+      </div>
+    `;
+    document.getElementById('histBack').onclick = closeHistory;
+  }
+
+  function renderHistRow(r){
+    const co = (r.target_company && String(r.target_company).trim()) ? escapeText(r.target_company) : `<span class="ghost">${escapeText(t('hist_no_company'))}</span>`;
+    const when = r.captured_at ? escapeText(String(r.captured_at).slice(0, 16).replace('T', ' ')) : '';
+    const seg = r.segment ? `<span class="seg">${escapeText(r.segment)}</span>` : '';
+    const npsCls = typeof r.nps === 'number' ? (r.nps <= 6 ? 'lo' : r.nps <= 8 ? 'mid' : 'hi') : '';
+    const nps = typeof r.nps === 'number' ? `<span class="nps ${npsCls}">NPS ${r.nps}</span>` : '';
+    const contact = [r.contact_name, r.contact_phone].filter(Boolean).map(escapeText).join(' · ');
+    const notes = r.notes ? `<div class="notes">${escapeText(r.notes)}</div>` : '';
+    return `
+      <div class="hist-row">
+        <div class="top">
+          <span class="co">${co}</span>
+          <span class="when">${when}</span>
+        </div>
+        <div class="meta">${seg}${nps}${contact ? ` · ${contact}` : ''}</div>
+        ${notes}
+      </div>
+    `;
+  }
+
+  document.getElementById('histBtn').onclick = () => {
+    if (state.showHistory) closeHistory();
+    else openHistory();
+  };
+  // 헤더 이력 라벨 i18n 갱신
+  function updateHistBtnLabel(){
+    const el = document.getElementById('histBtnLabel');
+    if (el) el.textContent = t('hist_btn');
+  }
+  langSel.addEventListener('change', updateHistBtnLabel);
+
+  // ============================================================================
+  // 튜토리얼 — 첫 접속 시 자동 표시, 헤더 ? 버튼으로 재호출. 페이지 4장 ru/en/ko.
+  // ============================================================================
+  const TUT_SEEN_KEY = 'hd_dealer_tutorial_seen_v1';
+  const tutState = { open:false, page:0 };
+
+  function tutPages(){
+    const pages = (I18N[state.lang] && I18N[state.lang].tut_pages) || I18N.ru.tut_pages;
+    return pages || [];
+  }
+  function openTutorial(){
+    tutState.open = true; tutState.page = 0;
+    renderTutorial();
+  }
+  function closeTutorial(markSeen){
+    tutState.open = false;
+    if (markSeen) { try { localStorage.setItem(TUT_SEEN_KEY, '1'); } catch(_){} }
+    const ov = document.getElementById('tutOverlay');
+    if (ov) { ov.classList.add('hidden'); ov.innerHTML = ''; }
+  }
+  function renderTutorial(){
+    if (!tutState.open) return;
+    const pages = tutPages();
+    if (pages.length === 0) { closeTutorial(true); return; }
+    const idx = Math.max(0, Math.min(tutState.page, pages.length - 1));
+    const p = pages[idx];
+    const isLast = idx === pages.length - 1;
+    const dots = pages.map((_, i) => `<i class="${i === idx ? 'on' : ''}"></i>`).join('');
+    const ov = document.getElementById('tutOverlay');
+    ov.classList.remove('hidden');
+    ov.innerHTML = `
+      <div class="tut-modal" role="document">
+        <div class="tut-step-num">${idx + 1} / ${pages.length}</div>
+        <h2 id="tutTitle" class="tut-t">${escapeText(p.t)}</h2>
+        <p class="tut-b">${escapeText(p.b)}</p>
+        <div class="tut-tip">${escapeText(p.tip)}</div>
+        <div class="tut-dots">${dots}</div>
+        <div class="tut-nav">
+          <button class="tut-skip" id="tutSkip">${t('tut_skip')}</button>
+          <span class="tut-spacer"></span>
+          ${idx > 0 ? `<button class="btn" id="tutPrev">${t('tut_prev')}</button>` : ''}
+          <button class="btn primary" id="tutNext">${isLast ? t('tut_done') : t('tut_next')}</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('tutSkip').onclick = () => closeTutorial(true);
+    const prev = document.getElementById('tutPrev');
+    if (prev) prev.onclick = () => { tutState.page = Math.max(0, tutState.page - 1); renderTutorial(); };
+    document.getElementById('tutNext').onclick = () => {
+      if (isLast) closeTutorial(true);
+      else { tutState.page += 1; renderTutorial(); }
+    };
+    // ESC 닫기
+    ov.onkeydown = (ev) => { if (ev.key === 'Escape') closeTutorial(true); };
+  }
+
+  document.getElementById('helpBtn').onclick = openTutorial;
+  // 언어 변경 시 열려 있으면 내용 갱신
+  langSel.addEventListener('change', () => { if (tutState.open) renderTutorial(); });
+
+  // 시작
+  updateHistBtnLabel();
+  render();
+  drainQueue();
+  // 백그라운드 prefetch: target_company 자동완성 시드 (실패해도 noop)
+  fetchHistory({ silent:true }).catch(() => {});
+  // 첫 접속이면 튜토리얼 자동 노출 — token 진입 직후에도 1회만.
   try {
-    if (state.online) {
-      await postOne(rec);
-      setToast(t('ok_sent'), 'ok');
-    } else {
-      await queueAdd(rec);
-      setToast(t('ok_offline'), 'warn');
-    }
-    document.getElementById('btnSubmit').style.display = 'none';
-    document.getElementById('btnReset').style.display = '';
-    refreshQueue();
-    // After submit, page nav shows reset button on last page
-    const track = document.getElementById('pagerTrack');
-    if (track) renderPageNav(track.querySelectorAll('.pager-page').length);
-  } catch (e) {
-    await queueAdd(rec);
-    setToast(String(e).slice(0, 200), 'err');
-  }
-}
-
-function setToast(msg, kind){
-  const slot = document.getElementById('toastSlot'); slot.innerHTML = '';
-  if (!msg) return;
-  const d = document.createElement('div'); d.className = `toast ${kind || ''}`; d.textContent = msg;
-  slot.appendChild(d);
-}
-
-function resetState(){
-  state.segment = []; state.answers = {};
-  state.target_company = ''; state.contact_name = ''; state.contact_phone = ''; state.notes = '';
-  ['inp_company','inp_contact','inp_phone','inp_notes'].forEach((id) => { const el = document.getElementById(id); if (el) el.value = ''; });
-  document.getElementById('btnReset').style.display = 'none';
-  setToast(null);
-  _currentPage = 0;
-  renderSegments(); renderRadar(); renderQA(); refreshSubmit();
-}
-
-/* ============================================================================
-   i18n / Inputs / Net
-   ============================================================================ */
-function applyI18N(){
-  document.documentElement.lang = state.lang;
-  const set=(id,k)=>{const el=document.getElementById(id); if(el) el.textContent=t(k);};
-  set('lbl_dealer_profile','dealer_profile');
-  set('lbl_hypothesis','hypothesis'); set('lbl_hypothesis_help','hypothesis_help');
-  set('lbl_summary_head','summary_head'); set('lbl_profile_head','profile_head');
-  set('lbl_target_head','target_head'); set('lbl_company','company'); set('lbl_contact','contact');
-  set('lbl_phone','phone'); set('lbl_notes','notes'); set('lbl_radar_head','radar_head');
-  set('lbl_interview','interview');
-  set('btnPrev','prev'); set('btnNext','next');
-  set('btnSubmit','submit'); set('btnReset','reset');
-  const crumb = document.getElementById('surveyCrumb');
-  if (crumb) crumb.textContent = state.survey ? `${t('survey_id')}: ${state.survey.id}` : t('loading');
-  document.getElementById('netLabel').textContent = state.online ? t('net_on') : t('net_off');
-  document.getElementById('tokenStatus').textContent = state.dealerId ? `dealer:${state.dealerId.slice(0,12)}` : 'no token';
-  refreshQueue();
-  renderDealerCard(); renderSegments(); renderRadar(); renderQA(); refreshSubmit();
-}
-
-function bindInputs(){
-  const wire=(id,prop)=>{const el=document.getElementById(id); el.value=state[prop]||''; el.addEventListener('input',()=>{state[prop]=el.value; refreshSubmit();});};
-  wire('inp_company','target_company'); wire('inp_contact','contact_name'); wire('inp_phone','contact_phone'); wire('inp_notes','notes');
-  document.getElementById('langSel').addEventListener('change',(e)=>{state.lang=e.target.value; applyI18N();});
-}
-
-function setNet(){
-  state.online = navigator.onLine;
-  const dot=document.getElementById('netDot'); if(dot) dot.classList.toggle('off', !state.online);
-  const lbl=document.getElementById('netLabel'); if(lbl) lbl.textContent = state.online ? t('net_on') : t('net_off');
-  if (state.online) drainQueue();
-}
-window.addEventListener('online',setNet); window.addEventListener('offline',setNet);
-
-document.addEventListener('DOMContentLoaded', () => {
-  bindInputs();
-  document.getElementById('btnSubmit').onclick = onSubmit;
-  document.getElementById('btnReset').onclick  = resetState;
-  document.getElementById('btnPrev').onclick   = () => gotoPage(_currentPage - 1, true);
-  document.getElementById('btnNext').onclick   = () => gotoPage(_currentPage + 1, true);
-  applyI18N(); setNet(); drainQueue();
-  loadSurvey();
-});
-</script>
-
+    if (!localStorage.getItem(TUT_SEEN_KEY)) openTutorial();
+  } catch(_){}
+  </script>
 </body>
 </html>
