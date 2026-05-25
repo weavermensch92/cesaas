@@ -71,9 +71,20 @@ export interface LeadQualityYaml extends RuleMeta {
 // § 4. R_10.05 Classification
 // ============================================================================
 
+// CTT Moscow 2026 dealer survey_v2_dealer_ctt 의 8 segment.
+// legacy 6개(construction_heavy / agriculture / forestry / general_construction / rental / other)는
+// 기존 leads.segment row 호환을 위해 한시 보존. Phase 6 백필 후 별도 PR로 제거.
 export type Segment =
-  | 'mining'
+  // CTT v2 — 8 segment
+  | 'individual'
+  | 'fleet_rental'
   | 'key_account'
+  | 'mining'
+  | 'infrastructure'
+  | 'agri_plantation'
+  | 'quarry'
+  | 'gov_public'
+  // legacy v1 — 한시 보존
   | 'construction_heavy'
   | 'agriculture'
   | 'forestry'
@@ -157,6 +168,14 @@ export interface PromptTemplatesYaml extends RuleMeta {
 // § 6. R_10.07 DealerOutput
 // ============================================================================
 
+export interface AxisOverride {
+  // R_10.07 v2 — Top-2 axis pair별 가산 weapons / pitch.
+  // key는 알파벳 정렬한 두 axis '+' join (예: 'durability+fuel', 'price+service').
+  weapons?: string[];
+  pitch_examples_ko?: string[];
+  pitch_examples_ru?: string[];
+}
+
 export interface PlaybookEntry {
   id: string;
   description: string;
@@ -171,6 +190,8 @@ export interface PlaybookEntry {
   talking_points_ru?: string[];
   pitch_examples_ko?: string[];
   pitch_examples_ru?: string[];
+  // R_10.07 v2 — Top-2 axis pair → override
+  axis_overrides?: Record<string, AxisOverride>;
 }
 
 export interface PriorityTemplate {
@@ -226,12 +247,33 @@ export interface VoiceResponse {
   nps?: number;
   future_subscription?: boolean;
   axis?: {
+    // legacy v1
     scale?: 'S' | 'M' | 'L' | 'XL';
     usage?: string;
     annual_operating_hours?: 'low' | 'mid' | 'high';
-    annual_deal_rub?: number;
-    fleet_size?: number;
+    annual_deal_rub?: number | string;
     decision_role?: string;
+    // CTT v2 — survey_v2_dealer_ctt 18문항
+    work_env?: string;
+    fleet_size?: 'S' | 'M' | 'L' | 'XL' | number;
+    annual_budget?: 'XS' | 'S' | 'M' | 'L' | 'XL';
+    annual_days?: 'lt_100' | '100_200' | '200_300' | 'gte_300';
+    role?: 'individual' | 'committee' | 'executive' | 'hq_approval';
+    daily_hours?: 'lt_4' | '4_8' | '8_12' | 'gte_12';
+    severity?: number;
+    service_sat?: number;
+    self_report_ranks?: string[];     // ['service','fuel','durability'] 순위 보존
+    pain_points?: string[];
+    current_brands?: string[];
+    purchase_mode?: 'cash' | 'lease' | 'financing' | 'rental_first';
+    plan_12m?: 'none' | 'considering' | 'within_12m' | 'within_6m' | 'within_3m';
+    equip_types?: string[];
+    booth_interest?: string[];
+    channel?: 'whatsapp' | 'telegram' | 'email' | 'phone' | 'none';
+    heatmap_scores?: Partial<Record<
+      'price' | 'fuel' | 'durability' | 'service' | 'reference' | 'versatility',
+      number
+    >>;
   };
   [extra: string]: unknown;
 }
