@@ -17,7 +17,7 @@ Copy-Item config.example.js config.js
 
 ## 책임 경계 (S_Sensor § 4)
 
-- ✓ URL 매칭 (crm_definitions.json — data-driven)
+- ✓ URL 매칭 (백엔드 GET /crm-definitions 동적 fetch · 번들 crm_definitions.json은 cold-start fallback)
 - ✓ WebP 캡쳐 (quality 0.85 → 500KB 초과 시 0.7·0.5 fallback)
 - ✓ 메타 부착 (url·viewport·dpr·spa_enter_time)
 - ✓ 16KB 청크 분할 + HMAC + 8회 재시도
@@ -30,9 +30,10 @@ Copy-Item config.example.js config.js
 | 파일 | 책임 |
 |---|---|
 | `manifest.json` | MV3 + 최소 permissions |
-| `crm_definitions.json` | CRM 매트릭스 (S_40.02 — data-driven) |
-| `content.js` | URL 매칭·SPA 라우팅 hook·debounced trigger |
-| `background.js` | service worker — captureVisibleTab·queue·drain |
+| `crm_definitions.json` | CRM 매트릭스 — **번들 fallback 전용**. 운영 시점 규칙은 백엔드 fetch. |
+| `content.js` | URL 매칭(background에서 받음)·SPA 라우팅 hook·debounced trigger |
+| `background.js` | service worker — captureVisibleTab·queue·drain·CRM 규칙 주기 갱신 |
+| `lib/crm_rules.js` | GET /crm-definitions HMAC fetch + chrome.storage.local 캐시 |
 | `popup.html` / `popup.js` | 큐 상태·재시도·로그 |
 | `lib/capture.js` | 메타 조립·quality fallback |
 | `lib/chunk.js` | 16KB chunking |
@@ -43,10 +44,11 @@ Copy-Item config.example.js config.js
 
 ## API 컨트랙트
 
-이 Extension은 한국 백엔드의 두 엔드포인트와 대화 (`C_03_API_패턴`):
+이 Extension은 한국 백엔드의 세 엔드포인트와 대화 (`C_03_API_패턴`):
 
 - `POST /v1/captures/chunks` — 청크 1건 송신. body JSON.
 - `POST /v1/captures/finalize` — 합성·hash 검증.
+- `GET  /v1/crm-definitions`  — CRM 매트릭스 동적 fetch (15분 주기 + startup).
 
 HMAC 헤더: `Authorization: HMAC {key_id}:{sig}` · `X-Timestamp` · `X-Nonce`. 청크별 `Idempotency-Key: {capture_id}-chunk-{i}`.
 

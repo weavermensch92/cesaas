@@ -2,6 +2,7 @@
 // /sensor/crm — CRM 매트릭스 등록·수정 (crm_definitions).
 //
 // 흐름:
+//   0) (옵션) "URL → AI 추론" — admin-crm-suggest Edge Function (web_search) → 전 필드 prefill + 인용 출처 노출
 //   1) "도메인 마법사" — hosts·capture_paths 입력 → host_pattern·match_patterns 자동 계산
 //   2) 자동값을 "고급" 영역에서 검토·수정 가능
 //   3) screen_patterns JSON 입력 (예시 prefilled)
@@ -16,6 +17,12 @@ import { getSupabase } from '@/lib/supabase';
 import type { MeProfile } from '@/lib/api';
 
 const LANG: Lang = 'ko';
+
+const FUNCTIONS_BASE =
+  process.env['NEXT_PUBLIC_API_BASE'] ??
+  (process.env['NEXT_PUBLIC_SUPABASE_URL']
+    ? `${process.env['NEXT_PUBLIC_SUPABASE_URL']}/functions/v1`
+    : '');
 
 interface ScreenPattern {
   screen: string;
@@ -73,6 +80,12 @@ function View({ email, me }: { email: string; me: MeProfile }) {
 
   const [screenPatternsText, setScreenPatternsText] = useState(EXAMPLE_SCREEN_PATTERNS);
 
+  // AI 추론 — URL 한 줄 → 전 필드 prefill
+  const [suggestUrl, setSuggestUrl] = useState('');
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestCitations, setSuggestCitations] = useState<Array<{ url: string; title?: string }>>([]);
+  const [suggestNote, setSuggestNote] = useState<string | null>(null);
+
   // 인증 fetch
   const authedFetch = useCallback(async (init: RequestInit = {}) => {
     const { data } = await getSupabase().auth.getSession();
@@ -80,6 +93,48 @@ function View({ email, me }: { email: string; me: MeProfile }) {
     if (!token) throw new Error('not signed in');
     return { ...init, headers: { ...(init.headers || {}), Authorization: `Bearer ${token}` } };
   }, []);
+
+  async function runAiSuggest() {
+    const url = suggestUrl.trim();
+    if (!url) { setErr('URL을 입력하세요'); return; }
+    setSuggesting(true); setErr(null); setMsg(null); setSuggestCitations([]); setSuggestNote(null);
+    try {
+      if (!FUNCTIONS_BASE) throw new Error('NEXT_PUBLIC_API_BASE 또는 NEXT_PUBLIC_SUPABASE_URL 미설정');
+      const init = await authedFetch();
+      const r = await fetch(`${FUNCTIONS_BASE}/admin-crm-suggest`, {
+        ...init,
+        method: 'POST',
+        headers: { ...init.headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      if (!r.ok) throw new Error(`${r.status}: ${await r.text()}`);
+      const d = await r.json();
+      const s = d.suggestion as {
+        id: string; name: string; description: string | null;
+        host_pattern: string; match_patterns: string[]; capture_paths: string[];
+        screen_patterns: ScreenPattern[];
+        confidence?: number | null; confidence_note?: string | null;
+      };
+      setId(s.id);
+      setName(s.name);
+      setDescription(s.description || '');
+      setHostPattern(s.host_pattern);
+      setMatchPatternsText((s.match_patterns || []).join('\n'));
+      setPathsText((s.capture_paths && s.capture_paths.length ? s.capture_paths : ['/']).join('\n'));
+      setScreenPatternsText(JSON.stringify(s.screen_patterns || [], null, 2));
+      setStatus('beta');           // 사람이 검수하도록 beta 기본
+      setAutoSync(false);          // AI 추론값 보존
+      setHostsText('');            // 마법사 입력은 비움 (자동 sync 꺼져있어 영향 없음)
+      const cs = Array.isArray(d.citations) ? d.citations : [];
+      setSuggestCitations(cs);
+      const confStr = typeof s.confidence === 'number' ? ` · confidence ${s.confidence.toFixed(2)}` : '';
+      const note = s.confidence_note ? ` · ${s.confidence_note}` : '';
+      setSuggestNote(`prompt ${d.prompt_version || '?'} · model ${d.model || '?'}${confStr}${note}`);
+      setMsg(`AI 추론 적용 완료 — 검수 후 저장하세요 (status=beta 권장)`);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally { setSuggesting(false); }
+  }
 
   const refresh = useCallback(async () => {
     if (!admin) return;
@@ -220,6 +275,40 @@ function View({ email, me }: { email: string; me: MeProfile }) {
             새 CRM을 등록하면 다음 발급 ZIP부터 매니페스트 <code>host_permissions</code>와 <code>crm_definitions.json</code>에 자동 포함됩니다.
             기존 사용자가 Extension을 재설치해야 적용됨에 유의.
           </p>
+
+          {/* Row 0 — URL → AI 추론 */}
+          <fieldset style={{ border: 'var(--hd-border)', borderRadius: 'var(--hd-radius)', padding: 12, marginBottom: 14 }}>
+            <legend className="hd-eyebrow" style={{ padding: '0 6px' }}>URL → AI 추론 (web search)</legend>
+            <p className="hd-meta" style={{ marginTop: 0, marginBottom: 8 }}>
+              CRM 한 URL만 입력하면 web_search로 공식 URL 구조를 조사하여 ID·name·host_pattern·match_patterns·capture_paths·screen_patterns 전부를 채웁니다.
+              결과는 <code>status=beta</code>로 prefill — 사람이 검수 후 저장하세요.
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                type="url" value={suggestUrl} onChange={(e) => setSuggestUrl(e.target.value)}
+                placeholder="https://amocrm.example.com/leads/detail/12345"
+                style={{ ...inputStyle, flex: 1, fontFamily: 'var(--hd-mono, monospace)' }}
+              />
+              <button type="button" className="hd-btn primary" onClick={runAiSuggest} disabled={suggesting || !suggestUrl.trim()}>
+                {suggesting ? '추론 중…' : 'AI 추론'}
+              </button>
+            </div>
+            {suggestNote && (
+              <p className="hd-meta" style={{ marginTop: 8 }}>{suggestNote}</p>
+            )}
+            {suggestCitations.length > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <span className="hd-eyebrow">참고 출처 ({suggestCitations.length})</span>
+                <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
+                  {suggestCitations.slice(0, 10).map((c, i) => (
+                    <li key={i} style={{ fontSize: 12 }}>
+                      <a href={c.url} target="_blank" rel="noreferrer">{c.title || c.url}</a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </fieldset>
 
           <form onSubmit={submit} style={{ display: 'grid', gap: 14 }}>
             {/* Row 1 — 기본 메타 */}
