@@ -300,6 +300,16 @@ const BLOCK_LABELS = {
 const CTT_AXIS_RANK_QID = 'q_v2dctt_b1_axis_ranks';
 const CTT_AXIS_RANK_MAX = 3;
 
+// 6 DW axis 라벨 다국어 — radar SVG 라벨 + 헥사 패널 공통.
+const AXIS_LABEL = {
+  price:       { ru:'Цена',       en:'Price',       ko:'가격'     },
+  fuel:        { ru:'Топливо',    en:'Fuel',        ko:'연료'     },
+  durability:  { ru:'Надёжность', en:'Durability',  ko:'내구성'   },
+  service:     { ru:'Сервис',     en:'Service',     ko:'서비스'   },
+  reference:   { ru:'Референсы',  en:'Reference',   ko:'레퍼런스' },
+  versatility: { ru:'Универс.',   en:'Versatility', ko:'다목적'   },
+};
+
 const I18N = {
   ru:{ dealer_profile:'Профиль дилера',
        hypothesis:'гипотеза', hypothesis_help:'Дилер выбирает гипотетический сегмент. Сервер автоматически переклассифицирует — измеряется точность гипотезы.',
@@ -424,7 +434,8 @@ async function drainQueue(){
 async function loadSurvey(){
   if (!API_BASE) { state.loadError = t('api_base_missing'); renderQA(); return; }
   try {
-    const r = await fetch(`${API_BASE}/surveys-get?audience=dealer`);
+    // 명시 survey_id로 v2(CTT) 고정 — v1·v1.2026rev와 다중 active 환경에서 안전.
+    const r = await fetch(`${API_BASE}/surveys-get?audience=dealer&survey_id=survey_v2_dealer_ctt`);
     if (!r.ok) throw new Error(`${r.status}: ${await r.text()}`);
     const d = await r.json();
     state.survey = d.survey;
@@ -518,7 +529,8 @@ function renderRadar(){
     const ax = state.axes[i];
     const v = axes[ax];
     const vStr = v != null ? v.toFixed(1) : '–';
-    out += `<text x="${p.x.toFixed(1)}" y="${(p.y-4).toFixed(1)}" text-anchor="middle" font-family="Noto Sans KR" font-size="11" font-weight="600" fill="#002554">${ax}</text>`;
+    const axLabel = AXIS_LABEL[ax] ? tx(AXIS_LABEL[ax]) : ax;
+    out += `<text x="${p.x.toFixed(1)}" y="${(p.y-4).toFixed(1)}" text-anchor="middle" font-family="Noto Sans KR" font-size="11" font-weight="600" fill="#002554">${axLabel}</text>`;
     out += `<text x="${p.x.toFixed(1)}" y="${(p.y+8).toFixed(1)}" text-anchor="middle" font-family="Geist Mono" font-size="9.5" fill="#63666A">${vStr}</text>`;
   }
   const hasAny = state.axes.some((a) => axes[a] != null);

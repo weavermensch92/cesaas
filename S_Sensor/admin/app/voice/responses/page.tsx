@@ -1,5 +1,6 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { Lang } from '@hd/design/i18n';
 import { makeT } from '@hd/design/i18n';
 import { AuthGate } from '../../components/AuthGate';
@@ -26,6 +27,7 @@ export default function VoiceResponsesPage() {
 }
 
 function View({ email }: { email: string }) {
+  const router = useRouter();
   const t = makeT(LANG);
   const [filters, setFilters] = useState<VoiceListFilters>({ limit: 50 });
   const [rows, setRows] = useState<VoiceResponseRow[]>([]);
@@ -179,7 +181,18 @@ function View({ email }: { email: string }) {
             </thead>
             <tbody>
               {rows.map((r) => (
-                <tr key={r.id}>
+                <tr
+                  key={r.id}
+                  tabIndex={0}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => router.push(`/voice/responses/${r.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      router.push(`/voice/responses/${r.id}`);
+                    }
+                  }}
+                >
                   <td className="hd-num">{r.captured_at.slice(11, 19)} · {r.captured_at.slice(0, 10)}</td>
                   <td><RespBadge value={r.respondent_type} /></td>
                   <td>{r.target_company ?? <span className="hd-meta">–</span>}</td>

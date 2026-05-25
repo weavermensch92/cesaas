@@ -267,6 +267,54 @@ export async function getVoiceAggregates(filters: { from?: string; to?: string; 
   });
 }
 
+// 042~044 — 응답 detail (단건 + 답변 + 번역).
+export interface VoiceResponseDetail {
+  response: {
+    id: string;
+    created_at: string;
+    captured_at: string;
+    respondent_type: 'dealer' | 'visitor';
+    dealer_id: string | null;
+    device_id: string | null;
+    survey_id: string;
+    language: string;
+    segment: string | null;
+    segment_method: string | null;
+    segment_confidence: number | null;
+    nps: number | null;
+    future_subscription: boolean | null;
+    consent_data_collection: boolean | null;
+    contact_name: string | null;
+    contact_phone: string | null;
+    contact_email: string | null;
+    contact_opted_in: boolean | null;
+    target_company: string | null;
+    notes: string | null;
+    event: string | null;
+    axis_data: Record<string, unknown> | null;
+    preference_axes: Record<string, number> | null;
+    translations_status: 'none' | 'pending' | 'partial' | 'done' | null;
+    lead_id: string | null;
+  };
+  answers: Array<{
+    question_id: string;
+    type: string;
+    axis: string | null;
+    sort_order: number;
+    title: { ko: string | null; en: string | null; ru: string };
+    options: unknown;
+    answer: unknown;
+    translations: { ko: string; en: string; ru: string } | null;
+    translation_status: 'pending' | 'processing' | 'done' | 'skipped' | 'failed' | null;
+    translation_model: string | null;
+    translation_at: string | null;
+  }>;
+}
+
+export async function getVoiceResponseDetail(id: string): Promise<VoiceResponseDetail> {
+  return request('GET', '/voice-response-detail', { id });
+}
+
 // CTT 2026 — 8 segment × 6 axis 히트맵.
 export type HeatmapTier = 'primary' | 'secondary' | 'base' | 'none';
 export type HeatmapAxis = 'price' | 'fuel' | 'durability' | 'service' | 'reference' | 'versatility';
