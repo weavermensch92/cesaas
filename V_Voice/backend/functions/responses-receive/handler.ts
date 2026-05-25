@@ -11,12 +11,17 @@ import { requestLogger } from 'shared/logger.ts';
 import { classifyServerSide, type AxisData } from 'shared/segments.ts';
 import { scoreLead } from 'shared/lead_scoring.ts';
 import { loadRule } from 'shared/rules.ts';
+import { computeHeatmap, extractAxisDataV2 } from 'shared/heatmap_mapping.ts';
 import {
   computeDw,
+  DW_AXES,
+  type DWAxis,
   type DWExtraction,
   type DWInput,
   type WeightMatrix,
 } from '@hd/core/decision_weight';
+
+const CTT_DEALER_SURVEY_ID = 'survey_v2_dealer_ctt';
 
 export const ROUTE = '/responses-receive';
 
@@ -112,12 +117,20 @@ export async function handle(req: Request): Promise<Response> {
       }
     }
 
-    // 4) 서버측 segment 재계산
+    // 4) survey_v2_dealer_ctt — 서버가 axis_data 합성 (클라이언트 답변만으로).
+    //    클라이언트가 axis_data를 보냈으면 그 값과 merge (서버 합성이 base, 클라 값이 override).
+    let axisData: AxisData | null = payload.axis_data;
+    if (payload.survey_id === CTT_DEALER_SURVEY_ID) {
+      const synthesized = extractAxisDataV2(payload.answers, payload.survey_id);
+      axisData = { ...synthesized, ...(payload.axis_data ?? {}) };
+    }
+
+    // 4.1) 서버측 segment 재계산
     let segment      = payload.segment ?? null;
     let segmentMethod = payload.segment_method ?? null;
     let segmentConf  = payload.segment_confidence ?? null;
-    if (payload.axis_data) {
-      const serverSide = await classifyServerSide(payload.axis_data);
+    if (axisData) {
+      const serverSide = await classifyServerSide(axisData);
       if (!segment) {
         segment = serverSide.segment;
         segmentMethod = serverSide.method;
@@ -131,6 +144,27 @@ export async function handle(req: Request): Promise<Response> {
         segmentConf = Math.min(serverSide.confidence, 0.8);
       } else {
         segmentConf = Math.max(segmentConf ?? 0, serverSide.confidence);
+      }
+    }
+
+    // 4.2) survey_v2_dealer_ctt — 8 segment × 6 axis 히트맵 산출 → axis_data.heatmap_scores 첨부.
+    //      preference_axes는 클라 값 우선, 없으면 heatmap_scores 0~100 → 1~5 정규화.
+    if (payload.survey_id === CTT_DEALER_SURVEY_ID && axisData && segment) {
+      try {
+        const heatmap = await computeHeatmap(segment, axisData);
+        axisData = { ...axisData, heatmap_scores: heatmap.scores };
+        if (!payload.preference_axes) {
+          const synthesizedAxes = {} as Record<DWAxis, number>;
+          for (const axis of DW_AXES) {
+            const s = heatmap.scores[axis];
+            synthesizedAxes[axis] = Math.max(1, Math.min(5, Math.round(s / 20) + 1));
+          }
+          payload.preference_axes = synthesizedAxes;
+        }
+      } catch (e) {
+        log.warn('heatmap synth failed — proceed without heatmap_scores', {
+          reason: e instanceof Error ? e.message : String(e),
+        });
       }
     }
 
@@ -189,7 +223,7 @@ export async function handle(req: Request): Promise<Response> {
       p_segment: segment,
       p_segment_method: segmentMethod,
       p_segment_conf: segmentConf,
-      p_axis_data: payload.axis_data ?? null,
+      p_axis_data: axisData ?? null,
       p_answers: payload.answers,
       p_captured_at: payload.captured_at,
       p_contact_name:     payload.respondent_type === 'dealer'
