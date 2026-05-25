@@ -103,6 +103,13 @@ input,textarea,select{font:inherit;color:inherit;}
 .opt.selected{border-color:var(--hd-heritage);background:var(--hd-accent-50);color:var(--hd-ink);font-weight:500;}
 .opt-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:var(--hd-border);border-radius:999px;font-family:var(--hd-mono);font-size:11px;font-weight:600;background:var(--hd-paper);color:var(--hd-gray);flex-shrink:0;}
 .opt.selected .opt-num{background:var(--hd-heritage);color:var(--hd-paper);border-color:var(--hd-heritage);}
+/* B-Q1 ranked — 1·2·3 순위 색상 */
+.opts.ranked .opt.rank-1 .opt-num{background:#16A34A;border-color:#16A34A;color:#fff;}
+.opts.ranked .opt.rank-2 .opt-num{background:#0EA5E9;border-color:#0EA5E9;color:#fff;}
+.opts.ranked .opt.rank-3 .opt-num{background:#F59E0B;border-color:#F59E0B;color:#fff;}
+.opts.ranked .opt.rank-1{border-color:#16A34A;}
+.opts.ranked .opt.rank-2{border-color:#0EA5E9;}
+.opts.ranked .opt.rank-3{border-color:#F59E0B;}
 
 .scale-grid{display:grid;gap:4px;}
 .scale-grid.s5{grid-template-columns:repeat(5,1fr);}
@@ -269,18 +276,29 @@ input,textarea,select{font:inherit;color:inherit;}
 
 <script>
 /* ============================================================================
-   SEGMENTS · R_10.05 8 segment (서버 시드와 동기)
+   SEGMENTS · R_10.05 v2 — CTT Moscow 2026 8 segment (037 시드와 동기)
    ============================================================================ */
 const SEGMENTS = [
-  { id:'mining',                color:'#F87171', i18n:{ru:'Горнодобыча',  en:'Mining',          ko:'광업'      }},
-  { id:'key_account',           color:'#8B5CF6', i18n:{ru:'Ключ. клиент', en:'Key Account',     ko:'키 어카운트'}},
-  { id:'construction_heavy',    color:'#F97316', i18n:{ru:'Крупное стр.', en:'Heavy constr.',   ko:'대형 건설'  }},
-  { id:'agriculture',           color:'#EAB308', i18n:{ru:'С/х',           en:'Agriculture',     ko:'농업'      }},
-  { id:'forestry',              color:'#14B8A6', i18n:{ru:'Лесн. хоз-во',  en:'Forestry',        ko:'임업'      }},
-  { id:'general_construction',  color:'#38BDF8', i18n:{ru:'Общ. стр.',     en:'General constr.', ko:'일반 건설'  }},
-  { id:'rental',                color:'#1E293B', i18n:{ru:'Аренда',        en:'Rental',          ko:'렌탈'      }},
-  { id:'other',                 color:'#EC4899', i18n:{ru:'Прочее',        en:'Other',           ko:'기타'      }},
+  { id:'individual',      color:'#F59E0B', i18n:{ru:'Индивидуал.',   en:'Individual',    ko:'개인 사업자'}},
+  { id:'fleet_rental',    color:'#1E293B', i18n:{ru:'Парк/аренда',   en:'Fleet/Rental',  ko:'플릿·렌탈' }},
+  { id:'key_account',     color:'#8B5CF6', i18n:{ru:'Ключ. клиент',  en:'Key Account',   ko:'키 어카운트'}},
+  { id:'mining',          color:'#F87171', i18n:{ru:'Горнодобыча',   en:'Mining',        ko:'광업'      }},
+  { id:'infrastructure',  color:'#F97316', i18n:{ru:'Инфраструкт.',  en:'Infrastructure',ko:'인프라'    }},
+  { id:'agri_plantation', color:'#EAB308', i18n:{ru:'С/х · план.',   en:'Agri/Plant.',   ko:'농업·플랜.'}},
+  { id:'quarry',          color:'#14B8A6', i18n:{ru:'Карьер',        en:'Quarry',        ko:'채석장'    }},
+  { id:'gov_public',      color:'#38BDF8', i18n:{ru:'Гос. сектор',   en:'Gov/Public',    ko:'정부·공공' }},
 ];
+
+// CTT survey_v2_dealer_ctt의 question id prefix → Block 라벨.
+const BLOCK_LABELS = {
+  a: { ru:'A · Сегмент',    en:'A · Segment',    ko:'A · 세그먼트',   color:'#16A34A' },
+  b: { ru:'B · Критерии',   en:'B · Criteria',   ko:'B · 가중치',     color:'#0EA5E9' },
+  c: { ru:'C · Покупка',    en:'C · Purchase',   ko:'C · 구매 의향',  color:'#F59E0B' },
+  d: { ru:'D · Контакт',    en:'D · Contact',    ko:'D · 연락',       color:'#64748B' },
+};
+
+const CTT_AXIS_RANK_QID = 'q_v2dctt_b1_axis_ranks';
+const CTT_AXIS_RANK_MAX = 3;
 
 const I18N = {
   ru:{ dealer_profile:'Профиль дилера',
@@ -536,10 +554,26 @@ function renderRadar(){
 const PAGE_SIZE = 3;
 let _currentPage = 0;
 
+// q.id가 'q_v2dctt_<block><n>_...' 패턴이면 첫 block 문자(a/b/c/d)를 페이지 key로 사용 → 4 Block 페이저.
+// 패턴 미일치 시 PAGE_SIZE chunk fallback (survey_v1 호환).
+function blockKeyOf(q) {
+  const m = /^q_v2dctt_([abcd])\d/i.exec(q.id || '');
+  return m ? m[1].toLowerCase() : null;
+}
+
 function getPages(){
   const otherQs = state.questions
     .filter((q) => !q.axis)
     .sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+
+  // CTT v2 — Block A/B/C/D 그룹핑
+  if (otherQs.length && otherQs.every(blockKeyOf)) {
+    const grouped = { a:[], b:[], c:[], d:[] };
+    for (const q of otherQs) grouped[blockKeyOf(q)].push(q);
+    return ['a','b','c','d'].map((k) => grouped[k]).filter((arr) => arr.length);
+  }
+
+  // legacy — PAGE_SIZE chunk
   const pages = [];
   for (let i = 0; i < otherQs.length; i += PAGE_SIZE) {
     pages.push(otherQs.slice(i, i + PAGE_SIZE));
@@ -597,11 +631,26 @@ function renderPageNav(total){
     if (i === _currentPage) cls += ' active';
     else if (pages[i] && pages[i].every((q) => !q.required || hasAnswer(q))) cls += ' done';
     d.className = cls;
-    d.title = `Page ${i+1}/${total}`;
+    // CTT v2 — Block prefix로 dot 색상·tooltip.
+    const blockKey = pages[i] && pages[i][0] ? blockKeyOf(pages[i][0]) : null;
+    const block = blockKey ? BLOCK_LABELS[blockKey] : null;
+    if (block) {
+      d.style.borderColor = block.color;
+      if (cls.includes('active') || cls.includes('done')) d.style.background = block.color;
+      d.title = `${tx(block)} (${i+1}/${total})`;
+    } else {
+      d.title = `Page ${i+1}/${total}`;
+    }
     d.onclick = () => gotoPage(i, true);
     dots.appendChild(d);
   }
-  counter.textContent = `${_currentPage+1}/${total}`;
+  // Counter — Block 라벨 + page count.
+  const curBlockKey = pages[_currentPage] && pages[_currentPage][0]
+    ? blockKeyOf(pages[_currentPage][0]) : null;
+  const curBlock = curBlockKey ? BLOCK_LABELS[curBlockKey] : null;
+  counter.textContent = curBlock
+    ? `${tx(curBlock)} · ${_currentPage+1}/${total}`
+    : `${_currentPage+1}/${total}`;
 
   const prev = document.getElementById('btnPrev');
   const next = document.getElementById('btnNext');
@@ -688,10 +737,18 @@ function renderQuestion(q){
   } else if (q.type === 'multi_select') {
     const arr = Array.isArray(cur) ? cur : [];
     const opts = q.options || [];
-    body = `<div class="opts">${opts.map((o, i) => `
-      <div class="opt${arr.includes(o.value) ? ' selected' : ''}" data-q="${q.id}" data-v="${escapeAttr(o.value)}" data-kind="multi">
-        <span class="opt-num">${arr.includes(o.value) ? '✓' : i+1}</span><span>${optionLabel(o)}</span>
-      </div>`).join('')}</div>`;
+    // B-Q1 axis_ranks — 클릭 순서대로 1·2·3 순위 표시, 4번째 클릭 차단.
+    const isRanked = q.id === CTT_AXIS_RANK_QID;
+    body = `<div class="opts${isRanked ? ' ranked' : ''}">${opts.map((o, i) => {
+      const rankIdx = arr.indexOf(o.value);  // 0/1/2 = 1·2·3순위
+      const isSel = rankIdx >= 0;
+      const badge = isRanked
+        ? (isSel ? `${rankIdx + 1}` : '+')
+        : (isSel ? '✓' : `${i+1}`);
+      return `<div class="opt${isSel ? ' selected' : ''}${isRanked && isSel ? ' rank-' + (rankIdx+1) : ''}" data-q="${q.id}" data-v="${escapeAttr(o.value)}" data-kind="${isRanked ? 'ranked' : 'multi'}">
+        <span class="opt-num">${badge}</span><span>${optionLabel(o)}</span>
+      </div>`;
+    }).join('')}</div>`;
   } else if (q.type === 'scale_1_5') {
     body = `<div class="scale-grid s5">${[1,2,3,4,5].map((n) => `
       <div class="scale-cell${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`).join('')}</div>`;
@@ -745,6 +802,23 @@ function bindOne(wrap){
     el.onclick = () => { const q=el.dataset.q, v=el.dataset.v;
       const cur = Array.isArray(state.answers[q]) ? state.answers[q].slice() : [];
       const i = cur.indexOf(v); if (i>=0) cur.splice(i,1); else cur.push(v);
+      state.answers[q] = cur;
+      renderQA(); renderRadar(); refreshSubmit();
+    };
+  });
+  // B-Q1 ranked — 클릭 순서대로 1·2·3 순위 부여. 4번째 클릭 차단(이미 3개 선택된 상태에서 새 옵션 추가 무시).
+  wrap.querySelectorAll('.opt[data-kind="ranked"]').forEach((el) => {
+    el.onclick = () => {
+      const q = el.dataset.q, v = el.dataset.v;
+      const cur = Array.isArray(state.answers[q]) ? state.answers[q].slice() : [];
+      const idx = cur.indexOf(v);
+      if (idx >= 0) {
+        // 선택 해제 — 뒷 순위가 자동으로 한 칸씩 올라옴
+        cur.splice(idx, 1);
+      } else {
+        if (cur.length >= CTT_AXIS_RANK_MAX) return;  // max 3
+        cur.push(v);
+      }
       state.answers[q] = cur;
       renderQA(); renderRadar(); refreshSubmit();
     };
