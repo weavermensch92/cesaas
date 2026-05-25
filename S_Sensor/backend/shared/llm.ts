@@ -55,6 +55,16 @@ export interface CallResult {
   };
 }
 
+export interface CitationRef {
+  url: string;
+  title?: string;
+  cited_text?: string;
+}
+
+export interface SearchCallResult extends CallResult {
+  citations: CitationRef[];
+}
+
 interface AnthropicErrLike { status?: number; message?: string }
 
 function isRetryable(err: unknown): boolean {
@@ -164,6 +174,153 @@ export async function callRule(
   }
   const out = await call(tpl, opts, ruleId, promptKey, tpl.version ?? null);
   return { ...out, ruleVersion: version, promptVersion: tpl.version ?? null };
+}
+
+// ─── web_search 도구 사용 호출 ────────────────────────────────────────────
+// callRule 과 동일한 R_10.06 템플릿 로드 흐름을 따르되, Anthropic web_search 도구를 활성화.
+// 호출부: admin-crm-suggest 등 외부 사실 조사가 필요한 경로.
+export async function callRuleWithSearch(
+  ruleId: string,
+  promptKey: string,
+  opts: CallOptions & { maxWebUses?: number; userVars?: Record<string, string> } = {},
+): Promise<SearchCallResult> {
+  const { body, version } = await loadRule<Record<string, unknown>>(ruleId);
+  const templates = (body as { templates?: Record<string, PromptTemplate> }).templates;
+  const tpl = (templates?.[promptKey] ?? (body as Record<string, PromptTemplate>)[promptKey]) as
+    | PromptTemplate
+    | undefined;
+  if (!tpl || typeof tpl.system !== 'string' || typeof tpl.user !== 'string') {
+    throw new ApiError('internal_error', `prompt template missing: ${ruleId}#${promptKey}`);
+  }
+
+  // {key} placeholder 치환
+  let userText = opts.userText ?? tpl.user;
+  if (opts.userVars) {
+    for (const [k, v] of Object.entries(opts.userVars)) {
+      userText = userText.split(`{${k}}`).join(v);
+    }
+  }
+
+  const model = opts.model ?? envOptional('ANTHROPIC_MODEL_PRIMARY', DEFAULT_MODEL);
+  const maxTokens = opts.maxTokens ?? (typeof tpl.max_tokens === 'number' ? tpl.max_tokens : 3000);
+  const fnName = getFunctionName(opts);
+  const maxUses = opts.maxWebUses ?? 5;
+  const startedAt = Date.now();
+
+  let attempt = 0;
+  let backoff = 1000;
+  while (true) {
+    try {
+      const c = await client();
+      // deno-lint-ignore no-explicit-any
+      const res: any = await (c as any).messages.create({
+        model,
+        max_tokens: maxTokens,
+        system: tpl.system,
+        tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: maxUses }],
+        messages: [{ role: 'user', content: [{ type: 'text', text: userText }] }],
+      });
+
+      const blocks: unknown[] = Array.isArray(res.content) ? res.content : [];
+      const textParts: string[] = [];
+      const citations: CitationRef[] = [];
+      for (const b of blocks) {
+        if (!b || typeof b !== 'object') continue;
+        // deno-lint-ignore no-explicit-any
+        const blk = b as any;
+        if (blk.type === 'text' && typeof blk.text === 'string') {
+          textParts.push(blk.text);
+          if (Array.isArray(blk.citations)) {
+            for (const ct of blk.citations) {
+              if (ct && typeof ct.url === 'string') {
+                citations.push({ url: ct.url, title: ct.title, cited_text: ct.cited_text });
+              }
+            }
+          }
+        }
+        if (blk.type === 'web_search_tool_result' && Array.isArray(blk.content)) {
+          for (const r of blk.content) {
+            if (r && typeof r.url === 'string') {
+              citations.push({ url: r.url, title: r.title });
+            }
+          }
+        }
+      }
+      const text = textParts.join('\n').trim();
+
+      // deno-lint-ignore no-explicit-any
+      const u = res.usage as any;
+      const inputTokens = u?.input_tokens ?? 0;
+      const outputTokens = u?.output_tokens ?? 0;
+      const cacheReadTokens = u?.cache_read_input_tokens ?? 0;
+      const cacheCreationTokens = u?.cache_creation_input_tokens ?? 0;
+
+      void recordUsage({
+        functionName: fnName,
+        model: res.model,
+        inputTokens,
+        outputTokens,
+        cacheReadTokens,
+        cacheCreationTokens,
+        ruleId,
+        promptKey,
+        requestId: opts.requestId,
+        latencyMs: Date.now() - startedAt,
+      });
+
+      return {
+        text,
+        model: res.model,
+        ruleVersion: version,
+        promptVersion: (tpl.version as string | undefined) ?? null,
+        usage: {
+          input_tokens: inputTokens,
+          output_tokens: outputTokens,
+          cache_read_input_tokens: cacheReadTokens,
+          cache_creation_input_tokens: cacheCreationTokens,
+        },
+        citations: dedupCitations(citations),
+      };
+    } catch (err) {
+      attempt += 1;
+      if (!isRetryable(err) || attempt >= MAX_RETRIES) {
+        const status = (err as AnthropicErrLike).status;
+        const reason = err instanceof Error ? err.message : String(err);
+        log('error', 'LLM web-search call failed (terminal)', { attempt, status, ...opts.context });
+        void recordUsage({
+          functionName: fnName,
+          model,
+          inputTokens: 0,
+          outputTokens: 0,
+          ruleId,
+          promptKey,
+          requestId: opts.requestId,
+          latencyMs: Date.now() - startedAt,
+          error: `status=${status ?? 'n/a'} ${reason}`.slice(0, 500),
+        });
+        if (status === 429) throw new ApiError('llm_rate_limited', 'Anthropic rate limit', { attempt });
+        if (status === 401 || status === 403) {
+          cachedKey = null;
+          cachedClient = null;
+        }
+        throw new ApiError('llm_failed', 'Anthropic web-search call failed', { attempt, reason });
+      }
+      log('warn', 'LLM web-search retry', { attempt, backoff_ms: backoff, ...opts.context });
+      await sleep(backoff);
+      backoff = Math.min(backoff * 2, BACKOFF_CAP_MS);
+    }
+  }
+}
+
+function dedupCitations(list: CitationRef[]): CitationRef[] {
+  const seen = new Set<string>();
+  const out: CitationRef[] = [];
+  for (const c of list) {
+    if (seen.has(c.url)) continue;
+    seen.add(c.url);
+    out.push(c);
+  }
+  return out;
 }
 
 async function call(
