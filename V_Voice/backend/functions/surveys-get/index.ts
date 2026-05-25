@@ -20,18 +20,23 @@ Deno.serve(async (req: Request) => {
     if (req.method !== 'GET') throw new ApiError('bad_request', 'GET only');
     const url = new URL(req.url);
     const audience = url.searchParams.get('audience');
+    const explicitId = url.searchParams.get('survey_id');   // 명시 survey_id (v1·v2 HTML이 fix 가능 — 다중 active 환경에서 안전)
     if (audience !== 'dealer' && audience !== 'visitor') {
       throw new ApiError('validation_failed', "audience must be 'dealer' or 'visitor'");
     }
 
-    // 활성 survey 1건 (최신)
-    const { data: surveys, error: sErr } = await db()
+    // 활성 survey 1건 — explicit survey_id 우선, 없으면 updated_at desc 최신
+    let sQuery = db()
       .from('surveys')
       .select('id, title, description, target_audience, language_default, languages_available, estimated_minutes, status, created_at, updated_at')
       .eq('target_audience', audience)
-      .eq('status', 'active')
-      .order('updated_at', { ascending: false })
-      .limit(1);
+      .eq('status', 'active');
+    if (explicitId) {
+      sQuery = sQuery.eq('id', explicitId);
+    } else {
+      sQuery = sQuery.order('updated_at', { ascending: false });
+    }
+    const { data: surveys, error: sErr } = await sQuery.limit(1);
     if (sErr) throw new ApiError('internal_error', 'survey query failed', { db: sErr.message });
     const survey = surveys?.[0];
     if (!survey) throw new ApiError('not_found', `no active survey for ${audience}`);

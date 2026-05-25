@@ -22,6 +22,60 @@ import {
 } from '@hd/core/decision_weight';
 
 const CTT_DEALER_SURVEY_ID = 'survey_v2_dealer_ctt';
+const V1_DEALER_2026REV_SURVEY_ID = 'survey_v1_dealer_2026rev';
+
+// 042 usage_hier value(level 1) → R_10.05 v2 work_env value 매핑.
+// 대분류 prefix(1.x/2.x/3.x/4.x)로 결정 — level 1 세부값은 R_10.05 v2 segment로 통합 정규화.
+//   1.x (건설 현장 전반) → infrastructure (대형 건설)
+//   2.x (광물 채굴) → mining
+//   3.x (건축 자재 생산) → infrastructure (건설 인프라 인접)
+//   4.x (부품·소모품·서비스) → fleet_rental (부품·서비스 사업 proxy)
+function usageHierToWorkEnv(value: string | null | undefined): string | null {
+  if (typeof value !== 'string' || !value) return null;
+  if (value.startsWith('1')) return 'infrastructure';
+  if (value.startsWith('2')) return 'mining';
+  if (value.startsWith('3')) return 'infrastructure';
+  if (value.startsWith('4')) return 'fleet_rental';
+  return null;
+}
+
+// 042 답변 배열에서 axisData v1.2026rev 합성 — usage_hier·DW 6축·기타 신호.
+function extractAxisDataV1_2026rev(answers: Array<{ question_id: string; answer: unknown }>): AxisData {
+  const find = (qid: string): unknown => answers.find((a) => a.question_id === qid)?.answer;
+  const usageRaw = find('q_v1d26_usage_hier');
+  let usageValue: string | null = null;
+  if (typeof usageRaw === 'string') usageValue = usageRaw;
+  else if (usageRaw && typeof usageRaw === 'object' && 'choice' in (usageRaw as Record<string, unknown>)) {
+    const c = (usageRaw as { choice?: unknown }).choice;
+    usageValue = typeof c === 'string' ? c : null;
+  }
+  const workEnv = usageHierToWorkEnv(usageValue);
+  const fleetMap: Record<string, string> = { '0': 'S', '1_10': 'S', '10_50': 'M', '50_100': 'L', 'gt_100': 'XL' };
+  const fleet = typeof find('q_v1d26_fleet5') === 'string'
+    ? fleetMap[find('q_v1d26_fleet5') as string] ?? null
+    : null;
+  return {
+    work_env: workEnv,
+    fleet_size: fleet,
+  };
+}
+
+// 042 DW 6축 unique 10 검증 — count(value==10) ≤ 1.
+const V1_2026REV_DW_QIDS = [
+  'q_v1d26_dw_price', 'q_v1d26_dw_fuel', 'q_v1d26_dw_durability',
+  'q_v1d26_dw_service', 'q_v1d26_dw_reference', 'q_v1d26_dw_versatility',
+];
+function validateUniqueTen(answers: Array<{ question_id: string; answer: unknown }>): void {
+  let count10 = 0;
+  for (const a of answers) {
+    if (!V1_2026REV_DW_QIDS.includes(a.question_id)) continue;
+    const v = typeof a.answer === 'number' ? a.answer : null;
+    if (v === 10) count10 += 1;
+  }
+  if (count10 > 1) {
+    throw new ApiError('validation_failed', 'DW 6축 중 10점은 한 axis에만 허용됩니다', { count_10: count10 });
+  }
+}
 
 export const ROUTE = '/responses-receive';
 
@@ -117,11 +171,16 @@ export async function handle(req: Request): Promise<Response> {
       }
     }
 
-    // 4) survey_v2_dealer_ctt — 서버가 axis_data 합성 (클라이언트 답변만으로).
+    // 4) survey_v2_dealer_ctt / survey_v1_dealer_2026rev — 서버가 axis_data 합성.
     //    클라이언트가 axis_data를 보냈으면 그 값과 merge (서버 합성이 base, 클라 값이 override).
     let axisData: AxisData | null = payload.axis_data;
     if (payload.survey_id === CTT_DEALER_SURVEY_ID) {
       const synthesized = extractAxisDataV2(payload.answers, payload.survey_id);
+      axisData = { ...synthesized, ...(payload.axis_data ?? {}) };
+    } else if (payload.survey_id === V1_DEALER_2026REV_SURVEY_ID) {
+      // DW unique 10 사전 검증 (클라이언트 가드 우회 케이스 차단)
+      validateUniqueTen(payload.answers);
+      const synthesized = extractAxisDataV1_2026rev(payload.answers);
       axisData = { ...synthesized, ...(payload.axis_data ?? {}) };
     }
 
@@ -251,6 +310,10 @@ export async function handle(req: Request): Promise<Response> {
       }
       throw new ApiError('internal_error', 'save_response failed', { db: error.message });
     }
+
+    // 7) 자유 텍스트 응답을 번역 큐로 enqueue (043 RPC) — best-effort, 실패해도 응답 저장 OK.
+    //    type=text_short/text_long 또는 answer가 {choice, other_text} 구조에서 other_text가 비어있지 않은 경우.
+    void enqueueTranslations(data as string, payload, log);
 
     // Phase D.3 — Edge에서 lib 기반 scoring (trigger의 PERFORM 제거 후)
     // Phase F.4 — lead_id를 응답 body에 포함 (Dealer가 dealer-playbook 호출 위해 필요).
@@ -421,4 +484,50 @@ function parseDwRawAnswers(raw: unknown): DWInput | null {
     q7_prime: q7 as DWInput['q7_prime'],
     q8_prime: q8,
   };
+}
+
+// 043 enqueue_response_translation — text_short/text_long 답변 + {choice, other_text} 구조의 other_text 식별.
+// best-effort. log.warn으로 끝.
+async function enqueueTranslations(
+  responseId: string,
+  payload: ResponsePayload,
+  log: ReturnType<typeof requestLogger>,
+): Promise<void> {
+  try {
+    const lang = payload.language ?? 'ru';
+    // text_short / text_long 답변
+    for (const a of payload.answers) {
+      const text = extractFreeText(a.answer);
+      if (text) {
+        const { error } = await db().rpc('enqueue_response_translation', {
+          p_response_id: responseId,
+          p_question_id: a.question_id,
+          p_answer_text: text,
+          p_source_lang: lang,
+        });
+        if (error) log.warn('enqueue_translation failed', { qid: a.question_id, db: error.message });
+      }
+    }
+  } catch (e) {
+    log.warn('enqueueTranslations path failed (non-fatal)', { reason: e instanceof Error ? e.message : String(e) });
+  }
+}
+
+// 자유 텍스트 추출:
+//   - 문자열 그대로 (text_short/text_long 답변)
+//   - {choice, other_text} 또는 {text} 구조에서 텍스트 필드
+//   - 빈 문자열은 null 반환 (큐 skip)
+function extractFreeText(answer: unknown): string | null {
+  if (typeof answer === 'string') {
+    const t = answer.trim();
+    return t.length > 0 ? t : null;
+  }
+  if (answer && typeof answer === 'object') {
+    const o = answer as Record<string, unknown>;
+    const candidate = (typeof o.other_text === 'string' && o.other_text.trim().length > 0)
+      ? o.other_text
+      : (typeof o.text === 'string' && o.text.trim().length > 0 ? o.text : null);
+    return candidate ? (candidate as string).trim() : null;
+  }
+  return null;
 }
