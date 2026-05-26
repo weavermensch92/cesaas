@@ -1,0 +1,1228 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#002554" />
+  <title>HD건설기계 — Dealer v2 Mobile</title>
+  <style>
+    /* ============================================================================
+       v2mobile — V_Voice/dealer/v1rev (production) JS 로직 + 모바일 단일 스크롤.
+       핵심: html/body height 강제 X, 내부 컨테이너 overflow:auto + 100vh 금지.
+       모든 질문을 한 페이지에 stack → 네이티브 body 스크롤.
+       ============================================================================ */
+    :root {
+      --hd-eco:#00E600; --hd-heritage:#00AD1D; --hd-prosperity:#008233; --hd-dark-green:#024638;
+      --hd-discovery:#003087; --hd-trust:#002554;
+      --hd-gray:#63666A; --hd-paper:#fff; --hd-bg:#f6f8f6;
+      --hd-steel-200:#d6dadf; --hd-steel-300:#b8bcc2; --hd-steel-100:#e9edf0; --hd-steel-50:#f3f5f7;
+      --hd-amber:#b45309; --hd-red:#b91c1c;
+      --hd-radius:8px; --hd-radius-lg:12px;
+      --hd-font:'Noto Sans KR','Malgun Gothic',-apple-system,Segoe UI,Arial,sans-serif;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bot: env(safe-area-inset-bottom, 0px);
+      --header-h: 52px;
+      --footer-h: 72px;
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+    html,body{margin:0;padding:0;background:var(--hd-bg);font-family:var(--hd-font);color:#1d1d1f;-webkit-font-smoothing:antialiased;}
+    body{min-height:100dvh;}
+    a{color:var(--hd-discovery);}
+
+    /* ---- Sticky header ---- */
+    .topbar{
+      position:sticky; top:0; z-index:30;
+      background:var(--hd-trust); color:#fff;
+      padding:calc(var(--safe-top) + 8px) 12px 8px;
+      display:flex; align-items:center; gap:8px;
+      box-shadow:0 1px 0 rgba(0,0,0,0.04);
+    }
+    .topbar .mark{width:26px;height:26px;border-radius:6px;background:var(--hd-heritage);display:grid;place-items:center;color:#002554;font-weight:900;font-size:14px;}
+    .topbar h1{margin:0;font:700 14px/1.1 var(--hd-font);letter-spacing:-0.01em;}
+    .topbar .sub{font-size:11px;color:rgba(255,255,255,0.62);display:block;margin-top:1px;}
+    .topbar .spacer{flex:1;}
+    .topbar select{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:6px;padding:5px 8px;font:inherit;font-size:12px;}
+    .topbar .badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#fff;background:rgba(255,255,255,0.1);padding:3px 8px;border-radius:999px;}
+    .topbar .dot{width:7px;height:7px;border-radius:50%;background:#34d399;}
+    .topbar .dot.off{background:#fbbf24;}
+    .topbar .dot.err{background:var(--hd-red);}
+
+    /* ---- Sticky progress + meta strip ---- */
+    .meta-strip{
+      position:sticky; top:calc(var(--safe-top) + 42px); z-index:29;
+      background:var(--hd-bg); padding:8px 12px 4px;
+      display:flex; align-items:center; gap:10px;
+      border-bottom:1px solid var(--hd-steel-100);
+    }
+    .meta-strip .crumb{font-size:11px;color:var(--hd-gray);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .meta-strip .pill{font-size:10px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--hd-steel-100);color:var(--hd-trust);}
+    .meta-strip .pill.live{background:var(--hd-prosperity);color:#fff;}
+    .progress{height:3px;background:var(--hd-steel-100);position:sticky;top:calc(var(--safe-top) + 72px);z-index:28;}
+    .progress > i{display:block;height:100%;background:var(--hd-heritage);transition:width 0.25s ease-out;width:0%;}
+
+    /* ---- Main scrollable area = body 자체 ---- */
+    main{
+      padding:14px 12px calc(var(--footer-h) + var(--safe-bot) + 28px);
+      max-width:720px; margin:0 auto;
+    }
+
+    .loading, .err-banner{
+      padding:24px 16px; text-align:center; color:var(--hd-gray); font-size:14px;
+      background:var(--hd-paper); border:1px solid var(--hd-steel-200); border-radius:var(--hd-radius);
+    }
+    .err-banner{color:var(--hd-red); border-color:#fecaca; background:#fef2f2;}
+    .err-banner code{background:rgba(0,0,0,0.06);padding:1px 5px;border-radius:3px;font-size:12px;}
+
+    /* ---- Section header (between question groups) ---- */
+    .sec-h{font:600 13px var(--hd-font); color:var(--hd-discovery); text-transform:uppercase; letter-spacing:0.06em; margin:18px 4px 8px;}
+    .sec-h:first-of-type{margin-top:6px;}
+
+    /* ---- Question card ---- */
+    .qa{
+      background:var(--hd-paper);
+      border:1px solid var(--hd-steel-200);
+      border-radius:var(--hd-radius-lg);
+      padding:14px;
+      margin-bottom:10px;
+    }
+    .qa.answered{border-color:var(--hd-heritage); box-shadow:inset 3px 0 0 var(--hd-heritage);}
+    .qa-top{display:flex; gap:6px; margin-bottom:6px; flex-wrap:wrap;}
+    .qa-axis, .qa-kind{font-size:10px; font-weight:600; padding:2px 7px; border-radius:999px; letter-spacing:0.04em;}
+    .qa-axis{background:var(--hd-steel-50); color:var(--hd-discovery); text-transform:uppercase;}
+    .qa-kind{background:#fff; border:1px solid var(--hd-steel-200); color:var(--hd-gray); text-transform:lowercase;}
+    .qa-title{font-weight:600; font-size:15px; line-height:1.4; margin-bottom:10px; color:#1d1d1f;}
+    .req{color:var(--hd-red); margin-left:4px;}
+
+    /* ---- Option button (single/multi/hier/ranked) ---- */
+    .opts{display:flex; flex-direction:column; gap:8px;}
+    .opts.cols-2{display:grid; grid-template-columns:repeat(2,1fr);}
+    .opt{
+      display:flex; align-items:center; gap:10px;
+      padding:13px 14px; min-height:52px;
+      border:1px solid var(--hd-steel-300); background:#fff;
+      border-radius:var(--hd-radius); cursor:pointer;
+      font-size:14px; line-height:1.3; color:#1d1d1f;
+      transition:transform 0.08s, background 0.12s, border-color 0.12s;
+      user-select:none;
+    }
+    .opt:active{transform:scale(0.98);}
+    .opt.selected{border-color:var(--hd-heritage); background:#e8f7eb; color:var(--hd-trust); font-weight:600; box-shadow:inset 0 0 0 1px var(--hd-heritage);}
+    .opt-num{
+      flex-shrink:0; width:26px; height:26px; border-radius:50%;
+      background:var(--hd-steel-100); color:var(--hd-gray);
+      display:inline-grid; place-items:center; font-size:12px; font-weight:700;
+    }
+    .opt.selected .opt-num{background:var(--hd-heritage); color:#fff;}
+    /* ranked — 첫 N 클릭 순서대로 1,2,3... 부여 */
+    .opt.rank-1 .opt-num{background:var(--hd-prosperity);}
+    .opt.rank-2 .opt-num{background:var(--hd-discovery);}
+    .opt.rank-3 .opt-num{background:var(--hd-amber);}
+
+    /* hier (level 0 toggle) */
+    .opt.hier-top{background:var(--hd-steel-50); font-weight:600;}
+    .opt.hier-top.expanded{background:#fff; border-color:var(--hd-trust);}
+    .opt.hier-child{margin-left:18px; background:#fff;}
+    .hier-chev{display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; font-size:13px; color:var(--hd-gray); flex-shrink:0; cursor:pointer;}
+    .hier-chev:hover{background:var(--hd-steel-100);}
+
+    /* ---- Scale grids (scale_1_5, scale_1_10, nps) ---- */
+    .scale-grid{display:grid; gap:6px;}
+    .scale-grid.s5{grid-template-columns:repeat(5, 1fr);}
+    .scale-grid.s10{grid-template-columns:repeat(5, 1fr); }
+    .scale-grid.nps{grid-template-columns:repeat(6, 1fr);}
+    @media (min-width:520px){
+      .scale-grid.s10{grid-template-columns:repeat(10, 1fr);}
+      .scale-grid.nps{grid-template-columns:repeat(11, 1fr);}
+    }
+    .scale-cell{
+      display:flex; align-items:center; justify-content:center;
+      min-height:48px; border:1px solid var(--hd-steel-300); background:#fff;
+      border-radius:var(--hd-radius); cursor:pointer;
+      font-weight:700; font-size:14px; font-variant-numeric:tabular-nums;
+      user-select:none;
+    }
+    .scale-cell.lo{color:var(--hd-red);}
+    .scale-cell.mid{color:var(--hd-amber);}
+    .scale-cell.hi{color:var(--hd-prosperity);}
+    .scale-cell.selected{color:#fff !important; background:var(--hd-prosperity); border-color:var(--hd-prosperity);}
+    .scale-cell.disabled{opacity:0.3; pointer-events:none;}
+
+    /* ---- Inputs ---- */
+    input.txt-input, input.num-input, textarea.txt-area{
+      -webkit-appearance:none; appearance:none; width:100%;
+      padding:12px 14px;
+      font:400 16px var(--hd-font);  /* 16px → iOS 자동 줌 방지 */
+      border:1px solid var(--hd-steel-300); border-radius:var(--hd-radius);
+      background:#fff; color:#1d1d1f;
+    }
+    textarea.txt-area{min-height:80px; resize:vertical;}
+    textarea.hier-other, textarea.multi-other{
+      margin-top:6px; min-height:60px;
+    }
+    input:focus, textarea:focus{outline:2px solid var(--hd-heritage); outline-offset:-1px; border-color:var(--hd-heritage);}
+
+    /* consent — checkbox row */
+    .qa.consent{display:flex; align-items:center; gap:12px; padding:14px;}
+    .qa.consent input{width:22px; height:22px; flex-shrink:0;}
+    .qa.consent span{font-size:14px; line-height:1.4;}
+
+    /* ---- Footer (sticky submit) ---- */
+    .footer{
+      position:fixed; left:0; right:0; bottom:0; z-index:40;
+      background:#fff; border-top:1px solid var(--hd-steel-200);
+      padding:10px 12px calc(10px + var(--safe-bot));
+      display:flex; gap:8px;
+    }
+    .btn{
+      padding:14px 18px; border-radius:var(--hd-radius);
+      border:1px solid var(--hd-steel-300); background:#fff;
+      color:#1d1d1f; font:600 15px var(--hd-font); cursor:pointer;
+      min-height:48px;
+    }
+    .btn:active{transform:scale(0.98);}
+    .btn:disabled{opacity:0.5; cursor:not-allowed;}
+    .btn.primary{background:var(--hd-prosperity); color:#fff; border-color:var(--hd-prosperity);}
+    .btn.primary:disabled{background:var(--hd-steel-300); border-color:var(--hd-steel-300); color:#fff;}
+    .btn.flex1{flex:1;}
+
+    /* ---- Toast ---- */
+    .toast{
+      position:fixed; left:12px; right:12px;
+      bottom:calc(var(--footer-h) + var(--safe-bot) + 10px);
+      padding:11px 14px; border-radius:var(--hd-radius);
+      font-size:13px; line-height:1.4;
+      box-shadow:0 4px 16px rgba(0,0,0,0.18);
+      z-index:35;
+    }
+    .toast.ok{background:var(--hd-prosperity);color:#fff;}
+    .toast.warn{background:var(--hd-amber);color:#fff;}
+    .toast.err{background:var(--hd-red);color:#fff;}
+
+    /* ---- Result panel ---- */
+    .result{
+      background:#fff; border:1px solid var(--hd-heritage);
+      border-radius:var(--hd-radius-lg); padding:18px; margin-top:14px;
+    }
+    .result h2{font-size:18px;font-weight:700;color:var(--hd-prosperity);margin:0 0 6px;}
+    .result .axes-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:10px;}
+    .result .axes-summary > div{background:var(--hd-steel-50);border-radius:var(--hd-radius);padding:8px 10px;font-size:12px;}
+    .result .axes-summary b{display:block;color:var(--hd-discovery);}
+
+    /* ---- LEFT-pane mirror: target inputs + segment chips ---- */
+    .target-fields{background:var(--hd-paper);border:1px solid var(--hd-steel-200);border-radius:var(--hd-radius-lg);padding:14px;margin-bottom:10px;}
+    .target-fields label{display:block;font-size:11px;font-weight:600;color:var(--hd-discovery);text-transform:uppercase;letter-spacing:0.04em;margin:8px 0 4px;}
+    .target-fields label:first-child{margin-top:0;}
+
+    .seg-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+    .seg{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:8px 12px;min-height:38px;
+      border:1px solid var(--hd-steel-300);background:#fff;
+      border-radius:999px;cursor:pointer;
+      font-size:13px;color:#1d1d1f;user-select:none;
+    }
+    .seg:active{transform:scale(0.97);}
+    .seg-dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+    .seg.active{border-color:var(--hd-heritage);background:#e8f7eb;font-weight:600;color:var(--hd-trust);}
+    .seg-rank{
+      display:inline-grid;place-items:center;
+      width:18px;height:18px;border-radius:50%;
+      background:var(--hd-heritage);color:#fff;font-size:11px;font-weight:700;
+    }
+    .seg.rank-1 .seg-rank{background:var(--hd-prosperity);}
+    .seg.rank-2 .seg-rank{background:var(--hd-discovery);}
+    .seg.rank-3 .seg-rank{background:var(--hd-amber);}
+    .seg-hint{font-size:11px;color:var(--hd-gray);margin-top:6px;line-height:1.4;}
+
+    .dealer-card{background:var(--hd-steel-50);border-radius:var(--hd-radius);padding:10px 12px;font-size:12px;color:var(--hd-gray);margin-bottom:10px;}
+    .dealer-card.empty{background:#fef2f2;color:var(--hd-red);border:1px solid #fecaca;}
+    .dealer-card b{color:var(--hd-trust);}
+    .dealer-card .dc-id{font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--hd-trust);margin-top:2px;}
+
+    /* ---- Radar modal (6축 헥사 그래프) ---- */
+    .radar-btn{
+      background:rgba(0,173,29,0.15); color:#fff;
+      border:1px solid rgba(0,173,29,0.5); border-radius:999px;
+      padding:5px 11px; font:600 11px var(--hd-font);
+      cursor:pointer; display:inline-flex; align-items:center; gap:5px;
+      letter-spacing:0.02em;
+    }
+    .radar-btn:active{transform:scale(0.97);}
+    .radar-modal{
+      position:fixed; inset:0; z-index:80;
+      background:rgba(0,37,84,0.62);
+      display:none; align-items:center; justify-content:center;
+      padding:16px; padding-top:calc(var(--safe-top) + 16px);
+      padding-bottom:calc(var(--safe-bot) + 16px);
+      backdrop-filter:blur(2px);
+      -webkit-backdrop-filter:blur(2px);
+    }
+    .radar-modal.open{display:flex;}
+    .radar-modal-inner{
+      background:#fff; border-radius:var(--hd-radius-lg);
+      padding:18px; width:100%; max-width:420px;
+      box-shadow:0 16px 40px rgba(0,0,0,0.32);
+      max-height:100%; overflow-y:auto;
+      animation:radarPop 0.18s ease-out;
+    }
+    @keyframes radarPop{from{opacity:0;transform:scale(0.94);}to{opacity:1;transform:scale(1);}}
+    .radar-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+    .radar-modal-head h3{margin:0;font:700 16px var(--hd-font);color:var(--hd-trust);}
+    .radar-modal-close{
+      background:none;border:0;font-size:22px;line-height:1;color:var(--hd-gray);
+      cursor:pointer;padding:4px 8px;border-radius:6px;
+    }
+    .radar-modal-close:hover{background:var(--hd-steel-50);}
+    .radar-wrap{display:flex;align-items:center;justify-content:center;}
+    .radar-wrap svg{max-width:100%;height:auto;}
+    .radar-empty{padding:60px 16px;color:var(--hd-gray);font-size:13px;text-align:center;}
+    .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;}
+    .summary .metric{background:var(--hd-steel-50);border-radius:var(--hd-radius);padding:10px;text-align:center;}
+    .summary .metric-label{font-size:10px;color:var(--hd-gray);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;}
+    .summary .metric-value{margin-top:4px;font-size:13px;color:var(--hd-trust);font-weight:700;}
+    .summary .metric-value.num{font-family:'Geist Mono',ui-monospace,monospace;}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <span class="mark">H</span>
+    <div>
+      <h1>HD건설기계</h1>
+      <span class="sub">Dealer v2 Mobile</span>
+    </div>
+    <span class="spacer"></span>
+    <span class="badge"><span id="netDot" class="dot"></span><span id="netLabel">Online</span></span>
+    <span class="badge" id="queuePill">Queue 0</span>
+    <select id="langSel" aria-label="lang">
+      <option value="ru">RU</option><option value="en">EN</option><option value="ko">KO</option>
+    </select>
+  </header>
+
+  <div class="meta-strip">
+    <span class="crumb" id="surveyCrumb">Loading…</span>
+    <button class="radar-btn" id="radarBtn" type="button" aria-label="show 6-axis radar">📊 <span id="radarBtnLabel">6축</span></button>
+    <span class="pill" id="apiPill">no api</span>
+    <span class="pill" id="tokenPill">no token</span>
+  </div>
+  <div class="progress"><i id="progressBar"></i></div>
+
+  <main id="root">
+    <div class="loading">Loading survey…</div>
+  </main>
+
+  <footer class="footer">
+    <button class="btn flex1" id="btnReset" type="button" style="display:none;">Новое</button>
+    <button class="btn primary flex1" id="btnSubmit" type="button" disabled>Сохранить + CRM Sync</button>
+  </footer>
+
+  <div id="toastSlot"></div>
+
+  <!-- 6축 radar modal — 배경 클릭으로 닫힘 -->
+  <div class="radar-modal" id="radarModal" role="dialog" aria-modal="true" aria-labelledby="radarModalH">
+    <div class="radar-modal-inner" id="radarModalInner">
+      <div class="radar-modal-head">
+        <h3 id="radarModalH">6 DW</h3>
+        <button class="radar-modal-close" id="radarClose" type="button" aria-label="close">×</button>
+      </div>
+      <div class="radar-wrap" id="radarWrap"><span class="radar-empty">…</span></div>
+      <div class="summary" id="radarSummary"></div>
+    </div>
+  </div>
+
+<script>
+/* ============================================================================
+   v1rev production logic — fetch survey, render, submit, queue
+   변경: 레이아웃은 모바일 단일 스크롤, 라디아·사이드바·페이저 제거
+   ============================================================================ */
+
+const I18N = {
+  ru:{ target_head:'Информация о клиенте', company:'Компания клиента *', contact:'Контактное лицо', phone:'Телефон', notes:'Заметки',
+       net_on:'Online', net_off:'Offline', queue:'Очередь',
+       submit:'Сохранить + CRM Sync', reset:'Новое интервью',
+       ok_sent:'Сохранено + отправлено', ok_offline:'Сохранено локально (offline)',
+       loading:'Загрузка опроса…', survey_id:'Опрос',
+       no_token:'Требуется вход', no_token_hint:'Откройте URL с <code>?token=...</code>',
+       hier_other_placeholder:'Уточните…',
+       load_error_prefix:'Ошибка загрузки опроса',
+       api_base_missing:'API_BASE не настроен. URL?api_base=…',
+       unique_point_blocked:'Балл {n} уже на другой оси.',
+       sec_profile:'Профиль дилера', sec_target:'Информация о клиенте', sec_axis:'6 осей DW · уникальный балл', sec_market:'Маркетинг и сервис', sec_final:'NPS и согласие',
+       hypothesis:'Гипотеза — 8 сегментов', hypothesis_hint:'Выберите до 3 — 1-й = основная гипотеза. Сервер автоматически реклассифицирует.' },
+  en:{ target_head:'Customer information', company:'Customer company *', contact:'Contact', phone:'Phone', notes:'Notes',
+       net_on:'Online', net_off:'Offline', queue:'Queue',
+       submit:'Save + CRM Sync', reset:'New interview',
+       ok_sent:'Saved + sent', ok_offline:'Saved locally (offline)',
+       loading:'Loading survey…', survey_id:'Survey',
+       no_token:'Login required', no_token_hint:'Open URL with <code>?token=...</code>',
+       hier_other_placeholder:'Please specify…',
+       load_error_prefix:'Failed to load survey',
+       api_base_missing:'API_BASE not configured. URL?api_base=…',
+       unique_point_blocked:'Score {n} already used on another axis.',
+       sec_profile:'Dealer profile', sec_target:'Customer information', sec_axis:'6 DW axes · unique score', sec_market:'Marketing & service', sec_final:'NPS & consent',
+       hypothesis:'Hypothesis — 8 segments', hypothesis_hint:'Pick up to 3 — 1st = primary hypothesis. Server re-classifies independently.' },
+  ko:{ target_head:'상담 대상 정보', company:'회사명 *', contact:'담당자', phone:'연락처', notes:'메모',
+       net_on:'Online', net_off:'Offline', queue:'큐',
+       submit:'저장 + CRM Sync', reset:'새 상담',
+       ok_sent:'저장 + 송출 완료', ok_offline:'오프라인 저장됨',
+       loading:'설문 로딩 중…', survey_id:'설문',
+       no_token:'로그인 필요', no_token_hint:'URL에 <code>?token=...</code>로 진입하세요',
+       hier_other_placeholder:'직접 입력…',
+       load_error_prefix:'설문 로드 실패',
+       api_base_missing:'API_BASE 미설정. URL에 ?api_base=…',
+       unique_point_blocked:'{n}점은 이미 다른 축에 부여됨.',
+       sec_profile:'딜러 프로필', sec_target:'상담 대상 정보', sec_axis:'6 DW 축 · 고유 점수', sec_market:'마케팅·서비스', sec_final:'NPS·동의',
+       hypothesis:'가설 — 8 segment', hypothesis_hint:'최대 3개 · 1순위 = 주요 가설. 서버는 별도 자동 재분류.' },
+};
+
+/* 6 DW axis 다국어 라벨 — radar 표시용 (v1rev AXIS_LABEL 미러) */
+const AXIS_LABEL = {
+  price:       { ru:'Цена',       en:'Price',       ko:'가격'     },
+  fuel:        { ru:'Топливо',    en:'Fuel',        ko:'연료'     },
+  durability:  { ru:'Надёжность', en:'Durability',  ko:'내구성'   },
+  service:     { ru:'Сервис',     en:'Service',     ko:'서비스'   },
+  reference:   { ru:'Референсы',  en:'Reference',   ko:'레퍼런스' },
+  versatility: { ru:'Универс.',   en:'Versatility', ko:'다목적'   },
+};
+
+/* SEGMENTS — v1rev 미러 (R_10.05 v2 CTT Moscow 2026). 좌측 sidebar hypothesis chips로 노출 */
+const SEGMENTS = [
+  { id:'individual',      color:'#F59E0B', i18n:{ru:'Индивидуал.',   en:'Individual',    ko:'개인 사업자'}},
+  { id:'fleet_rental',    color:'#1E293B', i18n:{ru:'Парк/аренда',   en:'Fleet/Rental',  ko:'플릿·렌탈' }},
+  { id:'key_account',     color:'#8B5CF6', i18n:{ru:'Ключ. клиент',  en:'Key Account',   ko:'키 어카운트'}},
+  { id:'mining',          color:'#F87171', i18n:{ru:'Горнодобыча',   en:'Mining',        ko:'광업'      }},
+  { id:'infrastructure',  color:'#F97316', i18n:{ru:'Инфраструкт.',  en:'Infrastructure',ko:'인프라'    }},
+  { id:'agri_plantation', color:'#EAB308', i18n:{ru:'С/х · план.',   en:'Agri/Plant.',   ko:'농업·플랜.'}},
+  { id:'quarry',          color:'#14B8A6', i18n:{ru:'Карьер',        en:'Quarry',        ko:'채석장'    }},
+  { id:'gov_public',      color:'#38BDF8', i18n:{ru:'Гос. сектор',   en:'Gov/Public',    ko:'정부·공공' }},
+];
+const SEGMENT_RANK_MAX = 3;
+
+const state = {
+  lang:'ru', answers:{},
+  target_company:'', contact_name:'', contact_phone:'', notes:'',
+  segment:[],   // 0~3 entries — ranked hypothesis (LEFT pane mirror)
+  token:null, dealerId:null, event:null,
+  online:navigator.onLine, queueCount:0,
+  survey:null, questions:[], axes:[],
+  loadError:null,
+  hierExpand:{},
+};
+function tx(o){ return (o && (o[state.lang] || o.ru || o.en || o.ko)) || ''; }
+function t(k){ return (I18N[state.lang] || I18N.ru)[k] || k; }
+function questionTitle(q){ const k=`title_${state.lang}`; return q[k] || q.title_ru || q.title_en || q.title_ko || q.id; }
+function escapeAttr(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeText(s){ return String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function optionLabel(o){ const k=`label_${state.lang}`; return o[k] || o.label_ru || o.label_en || o.label_ko || o.value || ''; }
+
+/* JWT */
+(function(){
+  const usp = new URLSearchParams(location.search);
+  const tok = usp.get('token');
+  if (tok) {
+    try { localStorage.setItem('hd_dealer_token', tok); } catch(_){}
+    const p = decodeJwt(tok);
+    if (p) {
+      if (p.sub)   try { localStorage.setItem('hd_dealer_id', p.sub); } catch(_){}
+      if (p.event) try { localStorage.setItem('hd_event', p.event); } catch(_){}
+    }
+    history.replaceState({}, '', location.pathname + (usp.get('api_base') ? `?api_base=${encodeURIComponent(usp.get('api_base'))}` : ''));
+  }
+  state.token    = localStorage.getItem('hd_dealer_token');
+  state.dealerId = localStorage.getItem('hd_dealer_id');
+  state.event    = localStorage.getItem('hd_event');
+})();
+function decodeJwt(tok){ try{ const p=tok.split('.'); return JSON.parse(atob(p[1].replace(/-/g,'+').replace(/_/g,'/')));} catch(_){return null;} }
+
+/* IndexedDB queue — dealer/index.html(desktop)과 동일 DB명.
+   1200px breakpoint 넘나들 때(예: 태블릿 회전) 큐 공유 → 한쪽에서 저장 → 다른 쪽에서 drain. */
+const DB_NAME='hd_voice_dealer_v2', STORE='queue';
+function openDb(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,1); r.onupgradeneeded=(e)=>{const db=e.target.result; if(!db.objectStoreNames.contains(STORE)){const s=db.createObjectStore(STORE,{keyPath:'id'}); s.createIndex('status','status');}}; r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);});}
+async function queueAdd(rec){const db=await openDb(); rec.status='pending'; rec.attempts=0; rec.enqueued_at=new Date().toISOString(); await new Promise((res,rej)=>{const tx_=db.transaction(STORE,'readwrite'); tx_.objectStore(STORE).add(rec); tx_.oncomplete=res; tx_.onerror=()=>rej(tx_.error);}); return rec.id;}
+async function queueCountFn(){const db=await openDb(); return new Promise((res)=>{const tx_=db.transaction(STORE,'readonly'); const r=tx_.objectStore(STORE).index('status').count(IDBKeyRange.only('pending')); r.onsuccess=()=>res(r.result); r.onerror=()=>res(0);});}
+async function queueListPending(){const db=await openDb(); return new Promise((res)=>{const out=[]; const tx_=db.transaction(STORE,'readonly'); const cur=tx_.objectStore(STORE).index('status').openCursor(IDBKeyRange.only('pending')); cur.onsuccess=(e)=>{const c=e.target.result; if(c){out.push(c.value);c.continue();}else res(out);}; cur.onerror=()=>res(out);});}
+async function queueUpdate(id,patch){const db=await openDb(); return new Promise((res)=>{const tx_=db.transaction(STORE,'readwrite'); const st=tx_.objectStore(STORE); const get=st.get(id); get.onsuccess=()=>{const r=get.result; if(r){Object.assign(r,patch); st.put(r);} res();}; get.onerror=()=>res();});}
+async function refreshQueue(){state.queueCount = await queueCountFn(); const el=document.getElementById('queuePill'); if (el) el.textContent = `${t('queue')} ${state.queueCount}`;}
+
+/* API_BASE */
+const _urlParams = new URLSearchParams(window.location.search);
+const _apiBaseFromUrl = _urlParams.get('api_base');
+if (_apiBaseFromUrl) { try { localStorage.setItem('hd_api_base', _apiBaseFromUrl); } catch {} }
+const API_BASE = (
+  _apiBaseFromUrl
+    || window.HD_API_BASE
+    || (() => { try { return localStorage.getItem('hd_api_base'); } catch { return ''; } })()
+    || ''
+).replace(/\/$/,'');
+
+async function postOne(rec){
+  if (!API_BASE) throw new Error(t('api_base_missing'));
+  const res = await fetch(`${API_BASE}/responses-receive`, {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      ...(state.token ? {'Authorization': `Bearer ${state.token}`} : {}),
+      'Idempotency-Key': rec.idempotency_key || rec.id,
+    },
+    body: JSON.stringify(rec.payload),
+  });
+  if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+  return res.json();
+}
+async function drainQueue(){
+  if (!state.online) return;
+  const p = await queueListPending();
+  for (const rec of p) {
+    try { await postOne(rec); await queueUpdate(rec.id,{status:'sent',sent_at:new Date().toISOString()}); }
+    catch (e) { await queueUpdate(rec.id,{status:'pending',attempts:(rec.attempts||0)+1,last_error:String(e).slice(0,300)}); }
+  }
+  refreshQueue();
+}
+
+async function loadSurvey(){
+  if (!API_BASE) {
+    state.loadError = t('api_base_missing');
+    render();
+    return;
+  }
+  try {
+    const r = await fetch(`${API_BASE}/surveys-get?audience=dealer&survey_id=survey_v1_dealer_2026rev`);
+    if (!r.ok) throw new Error(`${r.status}: ${await r.text()}`);
+    const d = await r.json();
+    state.survey = d.survey;
+    state.questions = (d.questions || []).slice().sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+    state.axes = [...new Set(state.questions.map((q) => q.axis).filter(Boolean))];
+    state.loadError = null;
+    document.getElementById('surveyCrumb').textContent = `${t('survey_id')}: ${state.survey.id} · ${state.questions.length}q`;
+    document.getElementById('apiPill').classList.add('live');
+    document.getElementById('apiPill').textContent = 'api ✓';
+    render();
+  } catch (e) {
+    state.loadError = String(e);
+    render();
+  }
+}
+
+/* ============================================================================
+   Scoring (v1rev mirror)
+   ============================================================================ */
+function scoreOf(q, ans){
+  if (ans == null || ans === '') return null;
+  if (q.type === 'scale_1_5' && typeof ans === 'number') return Math.max(1, Math.min(5, ans));
+  if (q.type === 'scale_1_10' && typeof ans === 'number') return Math.max(1, Math.min(5, ans / 2));
+  if (q.type === 'nps' && typeof ans === 'number') return Math.max(0, Math.min(5, ans / 2));
+  if (q.type === 'slider' && typeof ans === 'number') return Math.max(1, Math.min(5, ans));
+  if (q.type === 'number' && typeof ans === 'number') return null;
+  if (q.type === 'single_select') {
+    const opts = q.options || [];
+    const idx = opts.findIndex((o) => o.value === ans);
+    if (idx < 0) return null;
+    return ((idx + 1) / opts.length) * 5;
+  }
+  if (q.type === 'multi_select' && Array.isArray(ans)) return Math.min(5, Math.max(1, ans.length));
+  if (q.type === 'consent') return ans === true ? 5 : 0;
+  return null;
+}
+function computeAxes(){
+  const out = {};
+  for (const ax of state.axes) {
+    const qs = state.questions.filter((q) => q.axis === ax);
+    const vals = qs.map((q) => scoreOf(q, state.answers[q.id])).filter((v) => v != null);
+    out[ax] = vals.length ? vals.reduce((s,v) => s+v, 0) / vals.length : null;
+  }
+  return out;
+}
+
+/* ============================================================================
+   Question rendering (v1rev mirror with mobile-first markup)
+   ============================================================================ */
+function hasAnswer(q){
+  const v = state.answers[q.id];
+  if (q.type === 'consent') return v === true;
+  const isHier = (q.type === 'single_select' || q.type === 'multi_select')
+    && Array.isArray(q.options) && q.options.some((o) => typeof o.level === 'number');
+  if (isHier && q.type === 'multi_select') {
+    if (!Array.isArray(v) || v.length === 0) return false;
+    for (const val of v) {
+      const opt = q.options.find((o) => o.value === val);
+      if (opt?.is_other) {
+        const txt = state.answers[q.id + '__other_' + opt.parent_id];
+        if (!txt || !String(txt).trim()) return false;
+      }
+    }
+    return true;
+  }
+  if (isHier) {
+    if (!v || typeof v !== 'object' || !v.choice) return false;
+    const selOpt = q.options.find((o) => o.value === v.choice);
+    if (selOpt?.is_other && (!v.other_text || !String(v.other_text).trim())) return false;
+    return true;
+  }
+  if (q.type === 'multi_select') return Array.isArray(v) && v.length > 0;
+  return v !== undefined && v !== null && v !== '';
+}
+
+function renderQuestion(q){
+  const cur = state.answers[q.id];
+  const answered = hasAnswer(q);
+  const wrap = document.createElement('div');
+  wrap.className = 'qa' + (answered ? ' answered' : '');
+
+  // Hide follow-up (depends on parent's "other" selection)
+  const depMeta = q.options?.[0]?._meta?.dependsOn;
+  if (depMeta && depMeta.question_id && depMeta.value) {
+    wrap.style.display = 'none';
+    wrap.dataset.hiddenByDep = '1';
+    return wrap;
+  }
+
+  const axisLabel = q.axis ? `<span class="qa-axis">${q.axis}</span>` : '';
+  const kindLabel = `<span class="qa-kind">${q.type}</span>`;
+  const title = `<div class="qa-title">${escapeText(questionTitle(q))}${q.required ? `<span class="req">*</span>` : ''}</div>`;
+
+  const isHierarchical = q.type === 'single_select' && Array.isArray(q.options) && q.options.some((o) => typeof o.level === 'number');
+  const isHierMulti = q.type === 'multi_select' && Array.isArray(q.options) && q.options.some((o) => typeof o.level === 'number');
+
+  let body = '';
+  if (isHierarchical || isHierMulti) {
+    body = renderHierarchicalBody(q, cur);
+  } else if (q.type === 'single_select') {
+    const opts = q.options || [];
+    body = `<div class="opts">${opts.map((o, i) => `
+      <div class="opt${cur === o.value ? ' selected' : ''}" data-q="${q.id}" data-v="${escapeAttr(o.value)}" data-kind="single">
+        <span class="opt-num">${i+1}</span><span>${escapeText(optionLabel(o))}</span>
+      </div>`).join('')}</div>`;
+  } else if (q.type === 'multi_select') {
+    const arr = Array.isArray(cur) ? cur : [];
+    const opts = q.options || [];
+    const rankOpt = opts.find((o) => typeof o.rank_max === 'number' && o.rank_max > 0);
+    const rankMax = rankOpt?.rank_max;
+    const isRanked = !!rankMax;
+    const otherOpt = opts.find((o) => o.is_other === true);
+    const otherText = state.answers[q.id + '__other'] || '';
+
+    let optsHtml = '';
+    for (let i = 0; i < opts.length; i++) {
+      const o = opts[i];
+      const rankIdx = arr.indexOf(o.value);
+      const isSel = rankIdx >= 0;
+      const badge = isRanked
+        ? (isSel ? `${rankIdx + 1}` : '+')
+        : (isSel ? '✓' : `${i+1}`);
+      optsHtml += `<div class="opt${isSel ? ' selected' : ''}${isRanked && isSel ? ' rank-' + (rankIdx+1) : ''}" data-q="${q.id}" data-v="${escapeAttr(o.value)}" data-kind="${isRanked ? 'ranked' : 'multi'}" data-rank-max="${isRanked ? rankMax : ''}">
+        <span class="opt-num">${badge}</span><span>${escapeText(optionLabel(o))}</span>
+      </div>`;
+      if (o.is_other === true && isSel) {
+        optsHtml += `<textarea class="txt-area multi-other" data-q="${q.id}" data-kind="multi-other" placeholder="${t('hier_other_placeholder')}">${escapeText(otherText)}</textarea>`;
+      }
+    }
+    body = `<div class="opts${isRanked ? ' ranked' : ''}" data-rank-max="${isRanked ? rankMax : ''}">${optsHtml}</div>`;
+  } else if (q.type === 'scale_1_5') {
+    body = `<div class="scale-grid s5">${[1,2,3,4,5].map((n) => `
+      <div class="scale-cell${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`).join('')}</div>`;
+  } else if (q.type === 'scale_1_10') {
+    const isDw = q.axis && state.axes.includes(q.axis);
+    const usedByOthers = isDw
+      ? new Set(state.axes
+          .filter((a) => a !== q.axis)
+          .map((a) => state.answers[`q_v1d26_dw_${a}`])
+          .filter((v) => typeof v === 'number'))
+      : new Set();
+    body = `<div class="scale-grid s10">${[1,2,3,4,5,6,7,8,9,10].map((n) => {
+      const tone = n <= 4 ? 'lo' : n <= 7 ? 'mid' : 'hi';
+      const disabled = usedByOthers.has(n);
+      const cls = `scale-cell ${tone}${cur === n ? ' selected' : ''}${disabled ? ' disabled' : ''}`;
+      const tip = disabled ? ` title="${t('unique_point_blocked').replace('{n}', n)}"` : '';
+      return `<div class="${cls}" data-q="${q.id}" data-v="${n}" data-kind="scale" data-disabled="${disabled ? '1' : ''}"${tip}>${n}</div>`;
+    }).join('')}</div>`;
+  } else if (q.type === 'nps') {
+    body = `<div class="scale-grid nps">${[0,1,2,3,4,5,6,7,8,9,10].map((n) => {
+      const tone = n <= 6 ? 'lo' : n <= 8 ? 'mid' : 'hi';
+      return `<div class="scale-cell ${tone}${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`;
+    }).join('')}</div>`;
+  } else if (q.type === 'slider') {
+    body = `<div class="scale-grid s5">${[1,2,3,4,5].map((n) => `
+      <div class="scale-cell${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`).join('')}</div>`;
+  } else if (q.type === 'number') {
+    body = `<input class="num-input" type="number" inputmode="numeric" data-q="${q.id}" data-kind="number" value="${cur != null ? cur : ''}"/>`;
+  } else if (q.type === 'text_short') {
+    body = `<input class="txt-input" type="text" data-q="${q.id}" data-kind="text" value="${escapeAttr(cur || '')}"/>`;
+  } else if (q.type === 'text_long') {
+    body = `<textarea class="txt-area" data-q="${q.id}" data-kind="text">${escapeText(cur || '')}</textarea>`;
+  } else if (q.type === 'consent') {
+    wrap.className = 'qa consent' + (answered ? ' answered' : '');
+    wrap.innerHTML = `<input type="checkbox" ${cur === true ? 'checked' : ''} data-q="${q.id}" data-kind="consent"/><span>${escapeText(questionTitle(q))}${q.required ? ` <span class="req">*</span>` : ''}</span>`;
+    bindOne(wrap);
+    return wrap;
+  }
+
+  wrap.innerHTML = `<div class="qa-top">${axisLabel}${kindLabel}</div>${title}${body}`;
+  bindOne(wrap);
+  return wrap;
+}
+
+function renderHierarchicalBody(q, cur){
+  const opts = Array.isArray(q.options) ? q.options : [];
+  const isMulti = q.type === 'multi_select';
+  const selectedValues = isMulti
+    ? (Array.isArray(cur) ? cur : [])
+    : (cur && typeof cur === 'object' && cur.choice ? [cur.choice] : []);
+  const otherTextSingle = !isMulti && cur && typeof cur === 'object' ? (cur.other_text || '') : '';
+  const otherTextByParent = (parentId) => {
+    if (!isMulti) return otherTextSingle;
+    return state.answers[q.id + '__other_' + parentId] || '';
+  };
+
+  if (!state.hierExpand) state.hierExpand = {};
+  for (const v of selectedValues) {
+    const sel = opts.find((o) => o.value === v);
+    if (sel && sel.parent_id) {
+      const curExp = state.hierExpand[q.id];
+      if (isMulti) {
+        const arr = Array.isArray(curExp) ? curExp.slice() : (curExp ? [curExp] : []);
+        if (!arr.includes(sel.parent_id)) arr.push(sel.parent_id);
+        state.hierExpand[q.id] = arr;
+      } else if (!(q.id in state.hierExpand)) {
+        state.hierExpand[q.id] = sel.parent_id;
+      }
+    }
+  }
+  const expandedRaw = state.hierExpand[q.id];
+  const expandedSet = new Set(Array.isArray(expandedRaw) ? expandedRaw : (expandedRaw ? [expandedRaw] : []));
+
+  const level0 = opts.filter((o) => o.level === 0);
+  let html = `<div class="opts hier${isMulti ? ' multi' : ''}">`;
+  for (const top of level0) {
+    const isExp = expandedSet.has(top.value);
+    const isParentSel = isMulti && selectedValues.includes(top.value);
+    const arrow = isExp ? '▼' : '▶';
+    const leadHtml = isMulti
+      ? `<span class="hier-chev" data-kind="hier-chev">${arrow}</span><span class="opt-num">${isParentSel ? '✓' : '+'}</span>`
+      : `<span class="opt-num">${arrow}</span>`;
+    html += `<div class="opt hier-top${isExp ? ' expanded' : ''}${isParentSel ? ' selected' : ''}" data-q="${q.id}" data-v="${escapeAttr(top.value)}" data-kind="hier-top">
+      ${leadHtml}<span>${escapeText(optionLabel(top))}</span>
+    </div>`;
+    if (isExp) {
+      const children = opts.filter((o) => o.level === 1 && o.parent_id === top.value);
+      for (const c of children) {
+        const selected = selectedValues.includes(c.value);
+        const mark = isMulti
+          ? (selected ? '✓' : (c.is_other ? '✎' : '+'))
+          : (c.is_other ? '✎' : '•');
+        html += `<div class="opt hier-child${selected ? ' selected' : ''}" data-q="${q.id}" data-v="${escapeAttr(c.value)}" data-kind="hier-child"${c.is_other ? ' data-is-other="1"' : ''} data-parent="${escapeAttr(top.value)}">
+          <span class="opt-num">${mark}</span><span>${escapeText(optionLabel(c))}</span>
+        </div>`;
+        if (c.is_other && selected) {
+          html += `<textarea class="txt-area hier-other" data-q="${q.id}" data-kind="hier-other" data-parent="${escapeAttr(top.value)}" placeholder="${t('hier_other_placeholder')}">${escapeText(otherTextByParent(top.value))}</textarea>`;
+        }
+      }
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
+function bindOne(wrap){
+  wrap.querySelectorAll('.opt[data-kind="single"]').forEach((el) => {
+    el.onclick = () => { const q=el.dataset.q, v=el.dataset.v;
+      state.answers[q] = state.answers[q] === v ? null : v;
+      if (state.answers[q] === null) delete state.answers[q];
+      render();
+    };
+  });
+  wrap.querySelectorAll('.opt[data-kind="multi"]').forEach((el) => {
+    el.onclick = () => { const q=el.dataset.q, v=el.dataset.v;
+      const cur = Array.isArray(state.answers[q]) ? state.answers[q].slice() : [];
+      const i = cur.indexOf(v); if (i>=0) cur.splice(i,1); else cur.push(v);
+      state.answers[q] = cur;
+      render();
+    };
+  });
+  wrap.querySelectorAll('.opt[data-kind="ranked"]').forEach((el) => {
+    el.onclick = () => {
+      const q = el.dataset.q, v = el.dataset.v;
+      const rankMax = Number(el.dataset.rankMax || 3);
+      const cur = Array.isArray(state.answers[q]) ? state.answers[q].slice() : [];
+      const idx = cur.indexOf(v);
+      if (idx >= 0) cur.splice(idx, 1);
+      else { if (cur.length >= rankMax) return; cur.push(v); }
+      state.answers[q] = cur;
+      render();
+    };
+  });
+  wrap.querySelectorAll('.scale-cell[data-kind="scale"]').forEach((el) => {
+    el.onclick = () => {
+      if (el.dataset.disabled === '1') return;
+      const q = el.dataset.q, v = Number(el.dataset.v);
+      const qObj = state.questions.find((qq) => qq.id === q);
+      if (qObj?.axis && state.axes.includes(qObj.axis)) {
+        const used = state.axes.filter((a) => a !== qObj.axis)
+          .map((a) => state.answers[`q_v1d26_dw_${a}`])
+          .includes(v);
+        if (used) { showToast(t('unique_point_blocked').replace('{n}', v), 'warn'); return; }
+      }
+      state.answers[q] = state.answers[q] === v ? null : v;
+      if (state.answers[q] === null) delete state.answers[q];
+      render();
+    };
+  });
+  wrap.querySelectorAll('input[data-kind="number"]').forEach((el) => {
+    el.oninput = () => { const v = el.value === '' ? null : Number(el.value); state.answers[el.dataset.q] = v; refreshSubmit(); };
+  });
+  wrap.querySelectorAll('.opt[data-kind="hier-top"]').forEach((el) => {
+    el.onclick = (ev) => {
+      const qid = el.dataset.q, v = el.dataset.v;
+      const qObj = state.questions.find((q) => q.id === qid);
+      const isMulti = qObj?.type === 'multi_select';
+      if (!state.hierExpand) state.hierExpand = {};
+      const onChev = !!(ev.target && ev.target.closest && ev.target.closest('.hier-chev'));
+      if (isMulti && !onChev) {
+        // 본문 클릭 — parent 선택 토글 (+자동 펼침)
+        const ans = Array.isArray(state.answers[qid]) ? state.answers[qid].slice() : [];
+        const ai = ans.indexOf(v);
+        const willSelect = ai < 0;
+        if (ai >= 0) ans.splice(ai, 1); else ans.push(v);
+        if (ans.length === 0) delete state.answers[qid]; else state.answers[qid] = ans;
+        if (willSelect) {
+          const cur = state.hierExpand[qid];
+          const arr = Array.isArray(cur) ? cur.slice() : (cur ? [cur] : []);
+          if (!arr.includes(v)) arr.push(v);
+          state.hierExpand[qid] = arr;
+        }
+      } else if (isMulti) {
+        // chevron 단독 — 펼침만 토글
+        const cur = state.hierExpand[qid];
+        const arr = Array.isArray(cur) ? cur.slice() : (cur ? [cur] : []);
+        const idx = arr.indexOf(v);
+        if (idx >= 0) arr.splice(idx, 1); else arr.push(v);
+        state.hierExpand[qid] = arr;
+      } else {
+        state.hierExpand[qid] = state.hierExpand[qid] === v ? null : v;
+      }
+      render();
+    };
+  });
+  wrap.querySelectorAll('.opt[data-kind="hier-child"]').forEach((el) => {
+    el.onclick = () => {
+      const qid = el.dataset.q, v = el.dataset.v;
+      const qObj = state.questions.find((q) => q.id === qid);
+      const isMulti = qObj?.type === 'multi_select';
+      if (isMulti) {
+        const arr = Array.isArray(state.answers[qid]) ? state.answers[qid].slice() : [];
+        const idx = arr.indexOf(v);
+        if (idx >= 0) arr.splice(idx, 1); else arr.push(v);
+        if (arr.length === 0) delete state.answers[qid]; else state.answers[qid] = arr;
+      } else {
+        const prev = state.answers[qid] && typeof state.answers[qid] === 'object' ? state.answers[qid] : {};
+        if (prev.choice === v) delete state.answers[qid];
+        else state.answers[qid] = { choice: v, other_text: el.dataset.isOther === '1' ? (prev.other_text || '') : null };
+      }
+      render();
+    };
+  });
+  wrap.querySelectorAll('textarea[data-kind="hier-other"]').forEach((el) => {
+    el.oninput = () => {
+      const qid = el.dataset.q, parent = el.dataset.parent;
+      const qObj = state.questions.find((q) => q.id === qid);
+      const isMulti = qObj?.type === 'multi_select';
+      if (isMulti && parent) state.answers[qid + '__other_' + parent] = el.value;
+      else {
+        const prev = state.answers[qid] && typeof state.answers[qid] === 'object' ? state.answers[qid] : { choice: null };
+        state.answers[qid] = { ...prev, other_text: el.value };
+      }
+      refreshSubmit();
+    };
+  });
+  wrap.querySelectorAll('textarea[data-kind="multi-other"]').forEach((el) => {
+    el.oninput = () => { state.answers[el.dataset.q + '__other'] = el.value; refreshSubmit(); };
+  });
+  wrap.querySelectorAll('input[data-kind="text"],textarea[data-kind="text"]').forEach((el) => {
+    el.oninput = () => { state.answers[el.dataset.q] = el.value; refreshSubmit(); };
+  });
+  wrap.querySelectorAll('input[type="checkbox"][data-kind="consent"]').forEach((el) => {
+    el.onchange = () => { state.answers[el.dataset.q] = el.checked; render(); };
+  });
+}
+
+/* ============================================================================
+   Top-level render (단일 스크롤 리스트)
+   ============================================================================ */
+function render(){
+  const root = document.getElementById('root');
+  root.innerHTML = '';
+
+  if (state.loadError) {
+    const div = document.createElement('div');
+    div.className = 'err-banner';
+    div.innerHTML = `<b>${t('load_error_prefix')}</b><br/><br/>${escapeText(state.loadError)}<br/><br/>${t('no_token_hint')}`;
+    root.appendChild(div);
+    refreshSubmit();
+    return;
+  }
+  // ---- LEFT-pane mirror: Dealer profile (target inputs + segment hypothesis chips) ----
+  // 047 마이그레이션이 q_v1d26_target_company / _contact_name / _contact_phone DB question DELETE.
+  // → 회사명·담당자·전화·메모는 좌측 input이 유일한 수집 경로 (payload.target_company 등).
+  // 8 segment hypothesis chips → payload.dealer_hypothesis_segment(s).
+  const profileH = document.createElement('div');
+  profileH.className = 'sec-h';
+  profileH.textContent = t('sec_profile');
+  root.appendChild(profileH);
+
+  // dealer card (compact)
+  const dCard = document.createElement('div');
+  if (!state.dealerId) {
+    dCard.className = 'dealer-card empty';
+    dCard.innerHTML = `<b>${escapeText(t('no_token'))}</b><div>${t('no_token_hint')}</div>`;
+  } else {
+    let expStr = '';
+    try {
+      const p = decodeJwt(state.token);
+      if (p?.exp) { expStr = new Date(p.exp * 1000).toLocaleDateString('ko-KR'); }
+    } catch(_){}
+    dCard.className = 'dealer-card';
+    dCard.innerHTML = `<b>Dealer</b> ${escapeText(state.event || '')}
+      <div class="dc-id">${escapeText(state.dealerId)}</div>
+      ${expStr ? `<div><b>exp</b> ${escapeText(expStr)}</div>` : ''}`;
+  }
+  root.appendChild(dCard);
+
+  // target inputs (좌측 input — 047 후 유일한 회사/담당자 수집 경로)
+  const tf = document.createElement('div');
+  tf.className = 'target-fields';
+  tf.innerHTML = `
+    <label>${escapeText(t('company'))}</label>
+    <input class="txt-input" id="inp_company" type="text" autocomplete="off" value="${escapeAttr(state.target_company || '')}"/>
+    <label>${escapeText(t('contact'))}</label>
+    <input class="txt-input" id="inp_contact" type="text" autocomplete="off" value="${escapeAttr(state.contact_name || '')}"/>
+    <label>${escapeText(t('phone'))}</label>
+    <input class="txt-input" id="inp_phone" type="text" inputmode="tel" autocomplete="off" value="${escapeAttr(state.contact_phone || '')}"/>
+    <label>${escapeText(t('notes'))}</label>
+    <textarea class="txt-area" id="inp_notes" autocomplete="off">${escapeText(state.notes || '')}</textarea>
+  `;
+  root.appendChild(tf);
+  // bind target inputs — re-render 시 focus 보존 필요 → 입력만 state 갱신, render 호출 X
+  const wireProfile = (id, prop) => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', () => { state[prop] = el.value; refreshSubmit(); });
+  };
+  wireProfile('inp_company', 'target_company');
+  wireProfile('inp_contact', 'contact_name');
+  wireProfile('inp_phone',   'contact_phone');
+  wireProfile('inp_notes',   'notes');
+
+  // 8 segment hypothesis chips (ranked max 3)
+  const segCard = document.createElement('div');
+  segCard.className = 'qa';
+  segCard.innerHTML = `<div class="qa-title">${escapeText(t('hypothesis'))}</div>
+    <div class="seg-list" id="segListMobile"></div>
+    <div class="seg-hint">${escapeText(t('hypothesis_hint'))}</div>`;
+  root.appendChild(segCard);
+  renderSegmentChips();
+
+  if (!state.questions.length) {
+    const div = document.createElement('div');
+    div.className = 'loading';
+    div.textContent = t('loading');
+    root.appendChild(div);
+    return;
+  }
+
+  // 섹션 분류: axis 보유=axis, type=consent|nps=final, 나머지=market
+  const sections = [
+    { key:'axis',   label:t('sec_axis'),   match:(q) => q.axis && q.type === 'scale_1_10' },
+    { key:'final',  label:t('sec_final'),  match:(q) => q.type === 'nps' || q.type === 'consent' },
+  ];
+  const buckets = { axis:[], market:[], final:[] };
+  for (const q of state.questions) {
+    const hit = sections.find((s) => s.match(q));
+    if (hit) buckets[hit.key].push(q);
+    else buckets.market.push(q);
+  }
+
+  const order = [
+    { key:'axis',   label:t('sec_axis') },
+    { key:'market', label:t('sec_market') },
+    { key:'final',  label:t('sec_final') },
+  ];
+  for (const sec of order) {
+    if (!buckets[sec.key].length) continue;
+    const h = document.createElement('div');
+    h.className = 'sec-h';
+    h.textContent = sec.label;
+    root.appendChild(h);
+    for (const q of buckets[sec.key]) root.appendChild(renderQuestion(q));
+  }
+
+  refreshSubmit();
+}
+
+/* ============================================================================
+   6축 radar (v1rev renderRadar 미러 — modal 안에서만 그림)
+   ============================================================================ */
+function renderRadar(){
+  const wrap = document.getElementById('radarWrap');
+  const sum  = document.getElementById('radarSummary');
+  if (!wrap) return;
+  const N = state.axes.length;
+  if (N < 3) {
+    wrap.innerHTML = `<span class="radar-empty">${N ? `Need ≥ 3 axes (now ${N})` : 'Появится после ответов'}</span>`;
+    if (sum) sum.innerHTML = '';
+    return;
+  }
+  const cx=200, cy=200, R=130;
+  const angle=(i)=>-Math.PI/2 + i*(2*Math.PI/N);
+  const pt=(i,f)=>({x:cx+Math.cos(angle(i))*R*f, y:cy+Math.sin(angle(i))*R*f});
+  const axesScore = computeAxes();
+
+  let out = `<svg width="400" height="400" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">`;
+  for (let lv=1; lv<=5; lv++) {
+    const f = lv/5;
+    const pts = state.axes.map((_,i)=>{const p=pt(i,f); return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;}).join(' ');
+    out += `<polygon points="${pts}" fill="none" stroke="${lv===5?'#d6dadf':'#e9edf0'}" stroke-width="${lv===5?1:0.6}"/>`;
+  }
+  for (let i=0; i<N; i++) {
+    const p = pt(i,1);
+    out += `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="#e9edf0" stroke-width="0.6"/>`;
+  }
+  for (let i=0; i<N; i++) {
+    const p = pt(i, 1.18);
+    const ax = state.axes[i];
+    const v = axesScore[ax];
+    const vRaw = state.answers[`q_v1d26_dw_${ax}`];
+    const vStr = typeof vRaw === 'number' ? String(vRaw) : (v != null ? v.toFixed(1) : '–');
+    const axLabel = AXIS_LABEL[ax] ? tx(AXIS_LABEL[ax]) : ax;
+    out += `<text x="${p.x.toFixed(1)}" y="${(p.y-4).toFixed(1)}" text-anchor="middle" font-family="Noto Sans KR" font-size="11" font-weight="600" fill="#002554">${escapeText(axLabel)}</text>`;
+    out += `<text x="${p.x.toFixed(1)}" y="${(p.y+8).toFixed(1)}" text-anchor="middle" font-family="Geist Mono" font-size="9.5" fill="#63666A">${vStr}</text>`;
+  }
+  const hasAny = state.axes.some((a) => axesScore[a] != null);
+  if (hasAny) {
+    const pts = state.axes.map((a,i)=>{const v=axesScore[a]||0; const f=Math.max(0,Math.min(5,v))/5; return pt(i,f);});
+    const ptsStr = pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    out += `<polygon points="${ptsStr}" fill="rgba(0,173,29,0.12)" stroke="#00AD1D" stroke-width="2"/>`;
+    for (const p of pts) {
+      if (p.x === cx && p.y === cy) continue;
+      out += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="#00AD1D"/>`;
+    }
+  }
+  // 1순위 segment 색 점선 outline
+  const segArr = Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []);
+  if (segArr.length > 0) {
+    const seg = SEGMENTS.find((s) => s.id === segArr[0]);
+    if (seg) out += `<circle cx="${cx}" cy="${cy}" r="${R+7}" fill="none" stroke="${seg.color}" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.55"/>`;
+  }
+  out += `</svg>`;
+  wrap.innerHTML = out;
+
+  // Summary metrics
+  if (sum) {
+    const all = state.axes.map((a) => ({ id: a, v: axesScore[a] })).filter((x) => x.v != null);
+    const avg = all.length ? all.reduce((s, x) => s + x.v, 0) / all.length : null;
+    const strong = all.length ? all.reduce((m, x) => x.v > m.v ? x : m) : null;
+    const weak   = all.length ? all.reduce((m, x) => x.v < m.v ? x : m) : null;
+    sum.innerHTML = `
+      <div class="metric"><div class="metric-label">avg</div><div class="metric-value num">${avg != null ? avg.toFixed(2) : '–'}</div></div>
+      <div class="metric"><div class="metric-label">strong</div><div class="metric-value num">${strong ? `${strong.id} · ${strong.v.toFixed(1)}` : '–'}</div></div>
+      <div class="metric"><div class="metric-label">weak</div><div class="metric-value num">${weak ? `${weak.id} · ${weak.v.toFixed(1)}` : '–'}</div></div>
+    `;
+  }
+}
+
+function openRadarModal(){
+  renderRadar();
+  document.getElementById('radarModal').classList.add('open');
+  document.body.style.overflow = 'hidden';  // background scroll lock
+}
+function closeRadarModal(){
+  document.getElementById('radarModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function renderSegmentChips(){
+  const list = document.getElementById('segListMobile');
+  if (!list) return;
+  list.innerHTML = '';
+  const sel = Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []);
+  state.segment = sel;
+  for (const s of SEGMENTS) {
+    const el = document.createElement('div');
+    const rankIdx = sel.indexOf(s.id);
+    const active = rankIdx >= 0;
+    el.className = 'seg' + (active ? ' active rank-' + (rankIdx + 1) : '');
+    const badge = active ? `<span class="seg-rank">${rankIdx + 1}</span>` : '';
+    el.innerHTML = `<span class="seg-dot" style="background:${s.color}"></span><span>${escapeText(tx(s.i18n))}</span>${badge}`;
+    el.onclick = () => {
+      const cur = Array.isArray(state.segment) ? state.segment.slice() : [];
+      const idx = cur.indexOf(s.id);
+      if (idx >= 0) cur.splice(idx, 1);
+      else {
+        if (cur.length >= SEGMENT_RANK_MAX) return;
+        cur.push(s.id);
+      }
+      state.segment = cur;
+      renderSegmentChips();
+      refreshSubmit();
+    };
+    list.appendChild(el);
+  }
+}
+
+function refreshSubmit(){
+  const btn = document.getElementById('btnSubmit');
+  const reqQs = state.questions.filter((q) => q.required);
+  const allOk = reqQs.every((q) => hasAnswer(q));
+  const hasCompany = !!(state.answers['q_v1d26_target_company'] || state.target_company?.trim());
+  btn.disabled = !(allOk && hasCompany);
+  btn.textContent = t('submit');
+
+  // progress
+  const total = state.questions.length || 1;
+  const done = state.questions.filter(hasAnswer).length;
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+}
+
+/* ============================================================================
+   Submit (v1rev mirror)
+   ============================================================================ */
+async function onSubmit(){
+  const axes = computeAxes();
+  const preference_axes = {};
+  for (const a of state.axes) if (axes[a] != null) preference_axes[a] = Math.round(axes[a] * 100) / 100;
+
+  const npsQ  = state.questions.find((q) => q.type === 'nps');
+  const subQ  = state.questions.find((q) => q.type === 'consent' && /subscri|подписк|수신/i.test(questionTitle(q)));
+  const dataQ = state.questions.find((q) => q.type === 'consent' && (q.required === true || /process|обработ|처리/i.test(questionTitle(q))));
+
+  const ansFor = (qid) => { const v = state.answers[qid]; return (typeof v === 'string' && v.trim()) ? v.trim() : null; };
+  const answersArr = state.questions.map((q) => ({ question_id: q.id, answer: state.answers[q.id] ?? null }));
+
+  // multi_select inline "기타" 텍스트 처리
+  for (const q of state.questions) {
+    if (q.type !== 'multi_select') continue;
+    const opts = q.options || [];
+    const arr = Array.isArray(state.answers[q.id]) ? state.answers[q.id] : [];
+    const isHierMulti = opts.some((o) => typeof o.level === 'number');
+    if (isHierMulti) {
+      for (const opt of opts) {
+        if (!opt.is_other) continue;
+        if (!arr.includes(opt.value)) continue;
+        const txt = (state.answers[q.id + '__other_' + opt.parent_id] || '').trim();
+        if (!txt) continue;
+        const idx = arr.indexOf(opt.value);
+        if (idx >= 0) arr[idx] = `${opt.value}:${txt}`;
+      }
+      if (arr.length) answersArr.find((a) => a.question_id === q.id).answer = arr;
+    } else {
+      const otherOpt = opts.find((o) => o.is_other === true);
+      if (!otherOpt) continue;
+      if (!arr.includes(otherOpt.value)) continue;
+      const txt = (state.answers[q.id + '__other'] || '').trim();
+      if (!txt) continue;
+      answersArr.push({ question_id: q.id + '_other', answer: txt });
+    }
+  }
+
+  const payload = {
+    survey_id: state.survey.id,
+    respondent_type: 'dealer',
+    dealer_id: state.dealerId,
+    event: state.event,
+    language: state.lang,
+    nps: npsQ ? (state.answers[npsQ.id] ?? null) : null,
+    future_subscription: subQ ? state.answers[subQ.id] === true : null,
+    consent_data_collection: dataQ ? state.answers[dataQ.id] === true : null,
+    segment: null, segment_method: null, segment_confidence: null, axis_data: null,
+    captured_at: new Date().toISOString(),
+    answers: answersArr,
+    preference_axes,
+    dealer_hypothesis_segment:  Array.isArray(state.segment) ? (state.segment[0] ?? null) : (state.segment ?? null),
+    dealer_hypothesis_segments: Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []),
+    target_company: ansFor('q_v1d26_target_company') ?? (state.target_company?.trim() || null),
+    contact_name:   ansFor('q_v1d26_contact_name')   ?? (state.contact_name?.trim()  || null),
+    contact_phone:  ansFor('q_v1d26_contact_phone')  ?? (state.contact_phone?.trim() || null),
+    notes:          state.notes?.trim() || null,
+  };
+
+  const id = crypto.randomUUID();
+  const rec = { id, payload, idempotency_key: `${id}_v2mobile` };
+  try {
+    if (state.online) { await postOne(rec); showToast(t('ok_sent'), 'ok'); }
+    else              { await queueAdd(rec); showToast(t('ok_offline'), 'warn'); }
+    document.getElementById('btnSubmit').style.display = 'none';
+    document.getElementById('btnReset').style.display = '';
+    refreshQueue();
+  } catch (e) {
+    await queueAdd(rec);
+    showToast(String(e).slice(0, 200), 'err');
+  }
+}
+
+function showToast(msg, kind){
+  const slot = document.getElementById('toastSlot');
+  slot.innerHTML = '';
+  if (!msg) return;
+  const d = document.createElement('div');
+  d.className = `toast ${kind || ''}`;
+  d.textContent = msg;
+  slot.appendChild(d);
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => { d.remove(); }, 4500);
+}
+
+function resetState(){
+  state.answers = {};
+  state.target_company = ''; state.contact_name = ''; state.contact_phone = ''; state.notes = '';
+  state.segment = [];
+  state.hierExpand = {};
+  document.getElementById('btnReset').style.display = 'none';
+  document.getElementById('btnSubmit').style.display = '';
+  showToast(null);
+  window.scrollTo({top:0, behavior:'instant'});
+  render();
+}
+
+function setNet(){
+  state.online = navigator.onLine;
+  const dot = document.getElementById('netDot'); if (dot) dot.classList.toggle('off', !state.online);
+  const lbl = document.getElementById('netLabel'); if (lbl) lbl.textContent = state.online ? t('net_on') : t('net_off');
+  if (state.online) drainQueue();
+}
+window.addEventListener('online', setNet);
+window.addEventListener('offline', setNet);
+
+/* Boot */
+document.addEventListener('DOMContentLoaded', () => {
+  // lang
+  const usp = new URLSearchParams(location.search);
+  const langParam = usp.get('lang');
+  if (langParam && I18N[langParam]) state.lang = langParam;
+  const sel = document.getElementById('langSel');
+  sel.value = state.lang;
+  sel.addEventListener('change', () => { state.lang = sel.value; render(); refreshQueue(); });
+
+  // api/token pills
+  document.getElementById('apiPill').textContent = API_BASE ? 'api…' : 'no api';
+  document.getElementById('tokenPill').textContent = state.dealerId ? `dealer:${state.dealerId.slice(0,10)}` : 'no token';
+
+  // buttons
+  document.getElementById('btnSubmit').onclick = onSubmit;
+  document.getElementById('btnReset').onclick  = resetState;
+
+  // Radar modal — 버튼 → 열기, 배경/× → 닫기
+  document.getElementById('radarBtn').onclick = openRadarModal;
+  document.getElementById('radarClose').onclick = closeRadarModal;
+  document.getElementById('radarModal').addEventListener('click', (e) => {
+    // .radar-modal-inner 안쪽 클릭은 무시, 바깥(배경)만 닫기
+    if (e.target.id === 'radarModal') closeRadarModal();
+  });
+  // Esc 키 — 모달 닫기
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('radarModal').classList.contains('open')) closeRadarModal();
+  });
+
+  setNet();
+  refreshQueue();
+  loadSurvey();
+});
+</script>
+</body>
+</html>

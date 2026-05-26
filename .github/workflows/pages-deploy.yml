@@ -15,6 +15,7 @@ on:
     branches: [main]
     paths:
       - 'V_Voice/dealer/demo/**'
+      - 'V_Voice/dealer/v2mobile/**'
       - '.github/workflows/pages-deploy.yml'
   workflow_dispatch:
 
@@ -36,12 +37,15 @@ jobs:
         run: |
           mkdir -p _site
           cp V_Voice/dealer/demo/index.html _site/index.html
-          # 루트에 데모 안내 redirect (선택)
+          # v2mobile — 모바일 우선 dealer UI 개발 페이지. /v2mobile/ 로 접근.
+          mkdir -p _site/v2mobile
+          cp V_Voice/dealer/v2mobile/index.html _site/v2mobile/index.html
           cat > _site/README.md <<EOF
           # HD건설기계 — Dealer Demo
 
-          이 페이지는 \`V_Voice/dealer/demo/index.html\`의 데모 미러입니다.
-          DB 미연결. CTT Expo 2026 Dealer 인터뷰 폼 (26문항·다국어 ko/ru/en).
+          - / — \`V_Voice/dealer/demo/index.html\` (현재 운영 데모)
+          - /v2mobile/ — \`V_Voice/dealer/v2mobile/index.html\` (모바일 우선 v2 — 스크롤 fix 검증용)
+          DB 미연결. CTT Expo 2026 Dealer 인터뷰 폼.
           EOF
       - uses: actions/configure-pages@v5
         with:
