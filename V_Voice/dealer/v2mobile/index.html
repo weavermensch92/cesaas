@@ -122,6 +122,8 @@
     .opt.hier-top{background:var(--hd-steel-50); font-weight:600;}
     .opt.hier-top.expanded{background:#fff; border-color:var(--hd-trust);}
     .opt.hier-child{margin-left:18px; background:#fff;}
+    .hier-chev{display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; font-size:13px; color:var(--hd-gray); flex-shrink:0; cursor:pointer;}
+    .hier-chev:hover{background:var(--hd-steel-100);}
 
     /* ---- Scale grids (scale_1_5, scale_1_10, nps) ---- */
     .scale-grid{display:grid; gap:6px;}
@@ -431,8 +433,9 @@ function optionLabel(o){ const k=`label_${state.lang}`; return o[k] || o.label_r
 })();
 function decodeJwt(tok){ try{ const p=tok.split('.'); return JSON.parse(atob(p[1].replace(/-/g,'+').replace(/_/g,'/')));} catch(_){return null;} }
 
-/* IndexedDB queue */
-const DB_NAME='hd_voice_dealer_v2mobile', STORE='queue';
+/* IndexedDB queue — dealer/index.html(desktop)과 동일 DB명.
+   1200px breakpoint 넘나들 때(예: 태블릿 회전) 큐 공유 → 한쪽에서 저장 → 다른 쪽에서 drain. */
+const DB_NAME='hd_voice_dealer_v2', STORE='queue';
 function openDb(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,1); r.onupgradeneeded=(e)=>{const db=e.target.result; if(!db.objectStoreNames.contains(STORE)){const s=db.createObjectStore(STORE,{keyPath:'id'}); s.createIndex('status','status');}}; r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);});}
 async function queueAdd(rec){const db=await openDb(); rec.status='pending'; rec.attempts=0; rec.enqueued_at=new Date().toISOString(); await new Promise((res,rej)=>{const tx_=db.transaction(STORE,'readwrite'); tx_.objectStore(STORE).add(rec); tx_.oncomplete=res; tx_.onerror=()=>rej(tx_.error);}); return rec.id;}
 async function queueCountFn(){const db=await openDb(); return new Promise((res)=>{const tx_=db.transaction(STORE,'readonly'); const r=tx_.objectStore(STORE).index('status').count(IDBKeyRange.only('pending')); r.onsuccess=()=>res(r.result); r.onerror=()=>res(0);});}
@@ -690,9 +693,13 @@ function renderHierarchicalBody(q, cur){
   let html = `<div class="opts hier${isMulti ? ' multi' : ''}">`;
   for (const top of level0) {
     const isExp = expandedSet.has(top.value);
+    const isParentSel = isMulti && selectedValues.includes(top.value);
     const arrow = isExp ? '▼' : '▶';
-    html += `<div class="opt hier-top${isExp ? ' expanded' : ''}" data-q="${q.id}" data-v="${escapeAttr(top.value)}" data-kind="hier-top">
-      <span class="opt-num">${arrow}</span><span>${escapeText(optionLabel(top))}</span>
+    const leadHtml = isMulti
+      ? `<span class="hier-chev" data-kind="hier-chev">${arrow}</span><span class="opt-num">${isParentSel ? '✓' : '+'}</span>`
+      : `<span class="opt-num">${arrow}</span>`;
+    html += `<div class="opt hier-top${isExp ? ' expanded' : ''}${isParentSel ? ' selected' : ''}" data-q="${q.id}" data-v="${escapeAttr(top.value)}" data-kind="hier-top">
+      ${leadHtml}<span>${escapeText(optionLabel(top))}</span>
     </div>`;
     if (isExp) {
       const children = opts.filter((o) => o.level === 1 && o.parent_id === top.value);
@@ -762,12 +769,27 @@ function bindOne(wrap){
     el.oninput = () => { const v = el.value === '' ? null : Number(el.value); state.answers[el.dataset.q] = v; refreshSubmit(); };
   });
   wrap.querySelectorAll('.opt[data-kind="hier-top"]').forEach((el) => {
-    el.onclick = () => {
+    el.onclick = (ev) => {
       const qid = el.dataset.q, v = el.dataset.v;
       const qObj = state.questions.find((q) => q.id === qid);
       const isMulti = qObj?.type === 'multi_select';
       if (!state.hierExpand) state.hierExpand = {};
-      if (isMulti) {
+      const onChev = !!(ev.target && ev.target.closest && ev.target.closest('.hier-chev'));
+      if (isMulti && !onChev) {
+        // 본문 클릭 — parent 선택 토글 (+자동 펼침)
+        const ans = Array.isArray(state.answers[qid]) ? state.answers[qid].slice() : [];
+        const ai = ans.indexOf(v);
+        const willSelect = ai < 0;
+        if (ai >= 0) ans.splice(ai, 1); else ans.push(v);
+        if (ans.length === 0) delete state.answers[qid]; else state.answers[qid] = ans;
+        if (willSelect) {
+          const cur = state.hierExpand[qid];
+          const arr = Array.isArray(cur) ? cur.slice() : (cur ? [cur] : []);
+          if (!arr.includes(v)) arr.push(v);
+          state.hierExpand[qid] = arr;
+        }
+      } else if (isMulti) {
+        // chevron 단독 — 펼침만 토글
         const cur = state.hierExpand[qid];
         const arr = Array.isArray(cur) ? cur.slice() : (cur ? [cur] : []);
         const idx = arr.indexOf(v);

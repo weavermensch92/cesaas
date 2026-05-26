@@ -136,6 +136,8 @@ input,textarea,select{font:inherit;color:inherit;}
 .opt.hier-top.expanded{border-color:var(--hd-heritage);}
 .opt.hier-child{margin-left:18px;font-size:12px;}
 .opt.hier-child .opt-num{width:18px;height:18px;font-size:9px;}
+.hier-chev{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:6px;font-size:12px;color:var(--hd-gray);flex-shrink:0;cursor:pointer;}
+.hier-chev:hover{background:var(--hd-steel-100);}
 .txt-area.hier-other{margin-left:18px;margin-top:4px;width:calc(100% - 18px);min-height:48px;}
 .txt-area.multi-other{margin-top:6px;width:100%;min-height:48px;font-size:12px;}
 .scale-cell.selected.hi{background:var(--hd-prosperity);border-color:var(--hd-prosperity);color:#fff;}
@@ -199,9 +201,29 @@ input,textarea,select{font:inherit;color:inherit;}
 .toast.warn{background:#fffbeb;border-color:#fde68a;color:var(--hd-amber);}
 
 .loading{padding:40px 20px;text-align:center;color:var(--hd-gray);font-family:var(--hd-mono);font-size:12px;}
+
+/* ============================================================================
+   Viewport responsive integration — ≤1200px: 모바일 v2 iframe overlay,
+   >1200px: 기존 데스크탑 3-pane 레이아웃. localStorage(JWT/api_base) 공유.
+   ============================================================================ */
+.mobile-shell{
+  position:fixed; inset:0; z-index:9999;
+  border:0; width:100vw; height:100dvh;
+  background:#f6f8f6; display:none;
+}
+@media (max-width:1200px){
+  .mobile-shell{display:block;}
+  body.has-mobile{overflow:hidden;}
+  /* 데스크탑 레이아웃은 iframe 뒤에 가려져도 비효율 — 추가로 숨김 */
+  body.has-mobile > header.topbar,
+  body.has-mobile > main.stage{display:none;}
+}
 </style>
 </head>
 <body>
+
+<!-- ≤1200px 뷰포트에서 모바일 v2 iframe 노출. localStorage(token·api_base) 공유 → 자동 인증. -->
+<iframe class="mobile-shell" id="mobileShell" src="about:blank" title="HD Dealer Mobile" allow="clipboard-write" referrerpolicy="same-origin"></iframe>
 
 <header class="topbar">
   <span class="brand"><span class="brand-mark">H</span><span class="brand-name"><b>HD</b>건설기계 · Dealer v2</span></span>
@@ -937,9 +959,14 @@ function renderHierarchicalBody(q, cur){
   let html = `<div class="opts hier${isMulti ? ' multi' : ''}">`;
   for (const top of level0) {
     const isExp = expandedSet.has(top.value);
+    const isParentSel = isMulti && selectedValues.includes(top.value);
     const arrow = isExp ? '▼' : '▶';
-    html += `<div class="opt hier-top${isExp ? ' expanded' : ''}" data-q="${q.id}" data-v="${escapeAttr(top.value)}" data-kind="hier-top">
-      <span class="opt-num">${arrow}</span><span>${optionLabel(top)}</span>
+    // multi: chevron(펼침) + opt-num(선택 마크) 분리. single: opt-num이 chevron 역할.
+    const leadHtml = isMulti
+      ? `<span class="hier-chev" data-kind="hier-chev">${arrow}</span><span class="opt-num">${isParentSel ? '✓' : '+'}</span>`
+      : `<span class="opt-num">${arrow}</span>`;
+    html += `<div class="opt hier-top${isExp ? ' expanded' : ''}${isParentSel ? ' selected' : ''}" data-q="${q.id}" data-v="${escapeAttr(top.value)}" data-kind="hier-top">
+      ${leadHtml}<span>${optionLabel(top)}</span>
     </div>`;
     if (isExp) {
       const children = opts.filter((o) => o.level === 1 && o.parent_id === top.value);
@@ -1020,14 +1047,30 @@ function bindOne(wrap){
   wrap.querySelectorAll('input[data-kind="number"]').forEach((el) => {
     el.oninput = () => { const v = el.value === '' ? null : Number(el.value); state.answers[el.dataset.q] = v; refreshSubmit(); };
   });
-  // 계층 level 0 클릭 — 펼침 토글 (single은 단일 대분류, multi는 여러 대분류 동시 펼침 가능)
+  // 계층 level 0 클릭 — single: 펼침만. multi: chevron=펼침, 본문=선택 토글(+자동 펼침).
   wrap.querySelectorAll('.opt[data-kind="hier-top"]').forEach((el) => {
-    el.onclick = () => {
+    el.onclick = (ev) => {
       const qid = el.dataset.q, v = el.dataset.v;
       const qObj = state.questions.find((q) => q.id === qid);
       const isMulti = qObj?.type === 'multi_select';
       if (!state.hierExpand) state.hierExpand = {};
-      if (isMulti) {
+      const onChev = !!(ev.target && ev.target.closest && ev.target.closest('.hier-chev'));
+      if (isMulti && !onChev) {
+        // 본문 클릭 — parent 선택 토글
+        const ans = Array.isArray(state.answers[qid]) ? state.answers[qid].slice() : [];
+        const ai = ans.indexOf(v);
+        const willSelect = ai < 0;
+        if (ai >= 0) ans.splice(ai, 1); else ans.push(v);
+        if (ans.length === 0) delete state.answers[qid]; else state.answers[qid] = ans;
+        // 선택 시 자식 자동 펼침
+        if (willSelect) {
+          const cur = state.hierExpand[qid];
+          const arr = Array.isArray(cur) ? cur.slice() : (cur ? [cur] : []);
+          if (!arr.includes(v)) arr.push(v);
+          state.hierExpand[qid] = arr;
+        }
+      } else if (isMulti) {
+        // chevron 단독 클릭 — 펼침만 토글
         const cur = state.hierExpand[qid];
         const arr = Array.isArray(cur) ? cur.slice() : (cur ? [cur] : []);
         const idx = arr.indexOf(v);
@@ -1259,13 +1302,55 @@ function setNet(){
 window.addEventListener('online',setNet); window.addEventListener('offline',setNet);
 
 document.addEventListener('DOMContentLoaded', () => {
+  // ============================================================================
+  // Viewport switch — ≤1200px: 모바일 iframe overlay 노출, >1200px: 데스크탑 풀.
+  // localStorage(JWT·api_base)가 같은 origin이라 v2mobile이 자동 인증·fetch.
+  // iframe은 lazy 로드 (첫 mobile breakpoint 도달 시) — 데스크탑 우선 사용자 성능 절약.
+  // ============================================================================
+  (function initViewportSwitch(){
+    const mq = window.matchMedia('(max-width:1200px)');
+    const frame = document.getElementById('mobileShell');
+    let loaded = false;
+    function applyMq(){
+      if (mq.matches) {
+        if (!loaded) {
+          // 진입 URL params(token·api_base·lang)을 iframe에 그대로 전달 →
+          // dealer/index.html이 history.replaceState로 URL 비우기 전에 잡아야 함.
+          frame.src = 'v2mobile/' + (location.search || '');
+          loaded = true;
+        }
+        document.body.classList.add('has-mobile');
+      } else {
+        document.body.classList.remove('has-mobile');
+      }
+    }
+    applyMq();
+    if (mq.addEventListener) mq.addEventListener('change', applyMq);
+    else mq.addListener(applyMq);  // Safari <14 호환
+  })();
+
+  // 데스크탑 부트 — DOM 바인딩은 항상 (resize 시 즉시 사용), API fetch는 데스크탑 뷰포트일 때만.
+  // (모바일 뷰포트면 iframe v2mobile이 같은 surveys-get을 호출 → 중복 방지)
   bindInputs();
   document.getElementById('btnSubmit').onclick = onSubmit;
   document.getElementById('btnReset').onclick  = resetState;
   document.getElementById('btnPrev').onclick   = () => gotoPage(_currentPage - 1, true);
   document.getElementById('btnNext').onclick   = () => gotoPage(_currentPage + 1, true);
-  applyI18N(); setNet(); drainQueue();
-  loadSurvey();
+  applyI18N(); setNet();
+
+  const isMobileVp = window.matchMedia('(max-width:1200px)').matches;
+  if (!isMobileVp) {
+    drainQueue();
+    loadSurvey();
+  } else {
+    // 모바일 뷰포트 — iframe이 인계. resize 시 desktop으로 돌아오면 그때 loadSurvey 호출 (lazy).
+    const lazyMq = window.matchMedia('(min-width:1201px)');
+    const handler = () => {
+      if (lazyMq.matches && !state.questions.length) { drainQueue(); loadSurvey(); }
+    };
+    if (lazyMq.addEventListener) lazyMq.addEventListener('change', handler);
+    else lazyMq.addListener(handler);
+  }
 });
 </script>
 
