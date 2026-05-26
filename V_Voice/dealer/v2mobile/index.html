@@ -236,6 +236,49 @@
     .dealer-card.empty{background:#fef2f2;color:var(--hd-red);border:1px solid #fecaca;}
     .dealer-card b{color:var(--hd-trust);}
     .dealer-card .dc-id{font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--hd-trust);margin-top:2px;}
+
+    /* ---- Radar modal (6축 헥사 그래프) ---- */
+    .radar-btn{
+      background:rgba(0,173,29,0.15); color:#fff;
+      border:1px solid rgba(0,173,29,0.5); border-radius:999px;
+      padding:5px 11px; font:600 11px var(--hd-font);
+      cursor:pointer; display:inline-flex; align-items:center; gap:5px;
+      letter-spacing:0.02em;
+    }
+    .radar-btn:active{transform:scale(0.97);}
+    .radar-modal{
+      position:fixed; inset:0; z-index:80;
+      background:rgba(0,37,84,0.62);
+      display:none; align-items:center; justify-content:center;
+      padding:16px; padding-top:calc(var(--safe-top) + 16px);
+      padding-bottom:calc(var(--safe-bot) + 16px);
+      backdrop-filter:blur(2px);
+      -webkit-backdrop-filter:blur(2px);
+    }
+    .radar-modal.open{display:flex;}
+    .radar-modal-inner{
+      background:#fff; border-radius:var(--hd-radius-lg);
+      padding:18px; width:100%; max-width:420px;
+      box-shadow:0 16px 40px rgba(0,0,0,0.32);
+      max-height:100%; overflow-y:auto;
+      animation:radarPop 0.18s ease-out;
+    }
+    @keyframes radarPop{from{opacity:0;transform:scale(0.94);}to{opacity:1;transform:scale(1);}}
+    .radar-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+    .radar-modal-head h3{margin:0;font:700 16px var(--hd-font);color:var(--hd-trust);}
+    .radar-modal-close{
+      background:none;border:0;font-size:22px;line-height:1;color:var(--hd-gray);
+      cursor:pointer;padding:4px 8px;border-radius:6px;
+    }
+    .radar-modal-close:hover{background:var(--hd-steel-50);}
+    .radar-wrap{display:flex;align-items:center;justify-content:center;}
+    .radar-wrap svg{max-width:100%;height:auto;}
+    .radar-empty{padding:60px 16px;color:var(--hd-gray);font-size:13px;text-align:center;}
+    .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;}
+    .summary .metric{background:var(--hd-steel-50);border-radius:var(--hd-radius);padding:10px;text-align:center;}
+    .summary .metric-label{font-size:10px;color:var(--hd-gray);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;}
+    .summary .metric-value{margin-top:4px;font-size:13px;color:var(--hd-trust);font-weight:700;}
+    .summary .metric-value.num{font-family:'Geist Mono',ui-monospace,monospace;}
   </style>
 </head>
 <body>
@@ -255,6 +298,7 @@
 
   <div class="meta-strip">
     <span class="crumb" id="surveyCrumb">Loading…</span>
+    <button class="radar-btn" id="radarBtn" type="button" aria-label="show 6-axis radar">📊 <span id="radarBtnLabel">6축</span></button>
     <span class="pill" id="apiPill">no api</span>
     <span class="pill" id="tokenPill">no token</span>
   </div>
@@ -270,6 +314,18 @@
   </footer>
 
   <div id="toastSlot"></div>
+
+  <!-- 6축 radar modal — 배경 클릭으로 닫힘 -->
+  <div class="radar-modal" id="radarModal" role="dialog" aria-modal="true" aria-labelledby="radarModalH">
+    <div class="radar-modal-inner" id="radarModalInner">
+      <div class="radar-modal-head">
+        <h3 id="radarModalH">6 DW</h3>
+        <button class="radar-modal-close" id="radarClose" type="button" aria-label="close">×</button>
+      </div>
+      <div class="radar-wrap" id="radarWrap"><span class="radar-empty">…</span></div>
+      <div class="summary" id="radarSummary"></div>
+    </div>
+  </div>
 
 <script>
 /* ============================================================================
@@ -314,6 +370,16 @@ const I18N = {
        unique_point_blocked:'{n}점은 이미 다른 축에 부여됨.',
        sec_profile:'딜러 프로필', sec_target:'상담 대상 정보', sec_axis:'6 DW 축 · 고유 점수', sec_market:'마케팅·서비스', sec_final:'NPS·동의',
        hypothesis:'가설 — 8 segment', hypothesis_hint:'최대 3개 · 1순위 = 주요 가설. 서버는 별도 자동 재분류.' },
+};
+
+/* 6 DW axis 다국어 라벨 — radar 표시용 (v1rev AXIS_LABEL 미러) */
+const AXIS_LABEL = {
+  price:       { ru:'Цена',       en:'Price',       ko:'가격'     },
+  fuel:        { ru:'Топливо',    en:'Fuel',        ko:'연료'     },
+  durability:  { ru:'Надёжность', en:'Durability',  ko:'내구성'   },
+  service:     { ru:'Сервис',     en:'Service',     ko:'서비스'   },
+  reference:   { ru:'Референсы',  en:'Reference',   ko:'레퍼런스' },
+  versatility: { ru:'Универс.',   en:'Versatility', ko:'다목적'   },
 };
 
 /* SEGMENTS — v1rev 미러 (R_10.05 v2 CTT Moscow 2026). 좌측 sidebar hypothesis chips로 노출 */
@@ -867,6 +933,87 @@ function render(){
   refreshSubmit();
 }
 
+/* ============================================================================
+   6축 radar (v1rev renderRadar 미러 — modal 안에서만 그림)
+   ============================================================================ */
+function renderRadar(){
+  const wrap = document.getElementById('radarWrap');
+  const sum  = document.getElementById('radarSummary');
+  if (!wrap) return;
+  const N = state.axes.length;
+  if (N < 3) {
+    wrap.innerHTML = `<span class="radar-empty">${N ? `Need ≥ 3 axes (now ${N})` : 'Появится после ответов'}</span>`;
+    if (sum) sum.innerHTML = '';
+    return;
+  }
+  const cx=200, cy=200, R=130;
+  const angle=(i)=>-Math.PI/2 + i*(2*Math.PI/N);
+  const pt=(i,f)=>({x:cx+Math.cos(angle(i))*R*f, y:cy+Math.sin(angle(i))*R*f});
+  const axesScore = computeAxes();
+
+  let out = `<svg width="400" height="400" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid meet">`;
+  for (let lv=1; lv<=5; lv++) {
+    const f = lv/5;
+    const pts = state.axes.map((_,i)=>{const p=pt(i,f); return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;}).join(' ');
+    out += `<polygon points="${pts}" fill="none" stroke="${lv===5?'#d6dadf':'#e9edf0'}" stroke-width="${lv===5?1:0.6}"/>`;
+  }
+  for (let i=0; i<N; i++) {
+    const p = pt(i,1);
+    out += `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="#e9edf0" stroke-width="0.6"/>`;
+  }
+  for (let i=0; i<N; i++) {
+    const p = pt(i, 1.18);
+    const ax = state.axes[i];
+    const v = axesScore[ax];
+    const vRaw = state.answers[`q_v1d26_dw_${ax}`];
+    const vStr = typeof vRaw === 'number' ? String(vRaw) : (v != null ? v.toFixed(1) : '–');
+    const axLabel = AXIS_LABEL[ax] ? tx(AXIS_LABEL[ax]) : ax;
+    out += `<text x="${p.x.toFixed(1)}" y="${(p.y-4).toFixed(1)}" text-anchor="middle" font-family="Noto Sans KR" font-size="11" font-weight="600" fill="#002554">${escapeText(axLabel)}</text>`;
+    out += `<text x="${p.x.toFixed(1)}" y="${(p.y+8).toFixed(1)}" text-anchor="middle" font-family="Geist Mono" font-size="9.5" fill="#63666A">${vStr}</text>`;
+  }
+  const hasAny = state.axes.some((a) => axesScore[a] != null);
+  if (hasAny) {
+    const pts = state.axes.map((a,i)=>{const v=axesScore[a]||0; const f=Math.max(0,Math.min(5,v))/5; return pt(i,f);});
+    const ptsStr = pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    out += `<polygon points="${ptsStr}" fill="rgba(0,173,29,0.12)" stroke="#00AD1D" stroke-width="2"/>`;
+    for (const p of pts) {
+      if (p.x === cx && p.y === cy) continue;
+      out += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="#00AD1D"/>`;
+    }
+  }
+  // 1순위 segment 색 점선 outline
+  const segArr = Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []);
+  if (segArr.length > 0) {
+    const seg = SEGMENTS.find((s) => s.id === segArr[0]);
+    if (seg) out += `<circle cx="${cx}" cy="${cy}" r="${R+7}" fill="none" stroke="${seg.color}" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.55"/>`;
+  }
+  out += `</svg>`;
+  wrap.innerHTML = out;
+
+  // Summary metrics
+  if (sum) {
+    const all = state.axes.map((a) => ({ id: a, v: axesScore[a] })).filter((x) => x.v != null);
+    const avg = all.length ? all.reduce((s, x) => s + x.v, 0) / all.length : null;
+    const strong = all.length ? all.reduce((m, x) => x.v > m.v ? x : m) : null;
+    const weak   = all.length ? all.reduce((m, x) => x.v < m.v ? x : m) : null;
+    sum.innerHTML = `
+      <div class="metric"><div class="metric-label">avg</div><div class="metric-value num">${avg != null ? avg.toFixed(2) : '–'}</div></div>
+      <div class="metric"><div class="metric-label">strong</div><div class="metric-value num">${strong ? `${strong.id} · ${strong.v.toFixed(1)}` : '–'}</div></div>
+      <div class="metric"><div class="metric-label">weak</div><div class="metric-value num">${weak ? `${weak.id} · ${weak.v.toFixed(1)}` : '–'}</div></div>
+    `;
+  }
+}
+
+function openRadarModal(){
+  renderRadar();
+  document.getElementById('radarModal').classList.add('open');
+  document.body.style.overflow = 'hidden';  // background scroll lock
+}
+function closeRadarModal(){
+  document.getElementById('radarModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
 function renderSegmentChips(){
   const list = document.getElementById('segListMobile');
   if (!list) return;
@@ -1037,6 +1184,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // buttons
   document.getElementById('btnSubmit').onclick = onSubmit;
   document.getElementById('btnReset').onclick  = resetState;
+
+  // Radar modal — 버튼 → 열기, 배경/× → 닫기
+  document.getElementById('radarBtn').onclick = openRadarModal;
+  document.getElementById('radarClose').onclick = closeRadarModal;
+  document.getElementById('radarModal').addEventListener('click', (e) => {
+    // .radar-modal-inner 안쪽 클릭은 무시, 바깥(배경)만 닫기
+    if (e.target.id === 'radarModal') closeRadarModal();
+  });
+  // Esc 키 — 모달 닫기
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.getElementById('radarModal').classList.contains('open')) closeRadarModal();
+  });
 
   setNet();
   refreshQueue();
