@@ -14,6 +14,7 @@ FILES="
   S_Sensor/admin/public/dealer/index.html
   S_Sensor/admin/public/dealer/v2/index.html
   S_Sensor/admin/public/dealer/v1rev/index.html
+  S_Sensor/admin/public/dealer/v2mobile/index.html
   S_Sensor/admin/public/dealer/demo/index.html
   S_Sensor/admin/public/visitor/index.html
 "
