@@ -205,6 +205,37 @@
     .result .axes-summary{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:10px;}
     .result .axes-summary > div{background:var(--hd-steel-50);border-radius:var(--hd-radius);padding:8px 10px;font-size:12px;}
     .result .axes-summary b{display:block;color:var(--hd-discovery);}
+
+    /* ---- LEFT-pane mirror: target inputs + segment chips ---- */
+    .target-fields{background:var(--hd-paper);border:1px solid var(--hd-steel-200);border-radius:var(--hd-radius-lg);padding:14px;margin-bottom:10px;}
+    .target-fields label{display:block;font-size:11px;font-weight:600;color:var(--hd-discovery);text-transform:uppercase;letter-spacing:0.04em;margin:8px 0 4px;}
+    .target-fields label:first-child{margin-top:0;}
+
+    .seg-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+    .seg{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:8px 12px;min-height:38px;
+      border:1px solid var(--hd-steel-300);background:#fff;
+      border-radius:999px;cursor:pointer;
+      font-size:13px;color:#1d1d1f;user-select:none;
+    }
+    .seg:active{transform:scale(0.97);}
+    .seg-dot{width:9px;height:9px;border-radius:50%;display:inline-block;}
+    .seg.active{border-color:var(--hd-heritage);background:#e8f7eb;font-weight:600;color:var(--hd-trust);}
+    .seg-rank{
+      display:inline-grid;place-items:center;
+      width:18px;height:18px;border-radius:50%;
+      background:var(--hd-heritage);color:#fff;font-size:11px;font-weight:700;
+    }
+    .seg.rank-1 .seg-rank{background:var(--hd-prosperity);}
+    .seg.rank-2 .seg-rank{background:var(--hd-discovery);}
+    .seg.rank-3 .seg-rank{background:var(--hd-amber);}
+    .seg-hint{font-size:11px;color:var(--hd-gray);margin-top:6px;line-height:1.4;}
+
+    .dealer-card{background:var(--hd-steel-50);border-radius:var(--hd-radius);padding:10px 12px;font-size:12px;color:var(--hd-gray);margin-bottom:10px;}
+    .dealer-card.empty{background:#fef2f2;color:var(--hd-red);border:1px solid #fecaca;}
+    .dealer-card b{color:var(--hd-trust);}
+    .dealer-card .dc-id{font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;color:var(--hd-trust);margin-top:2px;}
   </style>
 </head>
 <body>
@@ -257,7 +288,8 @@ const I18N = {
        load_error_prefix:'Ошибка загрузки опроса',
        api_base_missing:'API_BASE не настроен. URL?api_base=…',
        unique_point_blocked:'Балл {n} уже на другой оси.',
-       sec_target:'Информация о клиенте', sec_axis:'6 осей DW · уникальный балл', sec_market:'Маркетинг и сервис', sec_final:'NPS и согласие' },
+       sec_profile:'Профиль дилера', sec_target:'Информация о клиенте', sec_axis:'6 осей DW · уникальный балл', sec_market:'Маркетинг и сервис', sec_final:'NPS и согласие',
+       hypothesis:'Гипотеза — 8 сегментов', hypothesis_hint:'Выберите до 3 — 1-й = основная гипотеза. Сервер автоматически реклассифицирует.' },
   en:{ target_head:'Customer information', company:'Customer company *', contact:'Contact', phone:'Phone', notes:'Notes',
        net_on:'Online', net_off:'Offline', queue:'Queue',
        submit:'Save + CRM Sync', reset:'New interview',
@@ -268,7 +300,8 @@ const I18N = {
        load_error_prefix:'Failed to load survey',
        api_base_missing:'API_BASE not configured. URL?api_base=…',
        unique_point_blocked:'Score {n} already used on another axis.',
-       sec_target:'Customer information', sec_axis:'6 DW axes · unique score', sec_market:'Marketing & service', sec_final:'NPS & consent' },
+       sec_profile:'Dealer profile', sec_target:'Customer information', sec_axis:'6 DW axes · unique score', sec_market:'Marketing & service', sec_final:'NPS & consent',
+       hypothesis:'Hypothesis — 8 segments', hypothesis_hint:'Pick up to 3 — 1st = primary hypothesis. Server re-classifies independently.' },
   ko:{ target_head:'상담 대상 정보', company:'회사명 *', contact:'담당자', phone:'연락처', notes:'메모',
        net_on:'Online', net_off:'Offline', queue:'큐',
        submit:'저장 + CRM Sync', reset:'새 상담',
@@ -279,12 +312,27 @@ const I18N = {
        load_error_prefix:'설문 로드 실패',
        api_base_missing:'API_BASE 미설정. URL에 ?api_base=…',
        unique_point_blocked:'{n}점은 이미 다른 축에 부여됨.',
-       sec_target:'상담 대상 정보', sec_axis:'6 DW 축 · 고유 점수', sec_market:'마케팅·서비스', sec_final:'NPS·동의' },
+       sec_profile:'딜러 프로필', sec_target:'상담 대상 정보', sec_axis:'6 DW 축 · 고유 점수', sec_market:'마케팅·서비스', sec_final:'NPS·동의',
+       hypothesis:'가설 — 8 segment', hypothesis_hint:'최대 3개 · 1순위 = 주요 가설. 서버는 별도 자동 재분류.' },
 };
+
+/* SEGMENTS — v1rev 미러 (R_10.05 v2 CTT Moscow 2026). 좌측 sidebar hypothesis chips로 노출 */
+const SEGMENTS = [
+  { id:'individual',      color:'#F59E0B', i18n:{ru:'Индивидуал.',   en:'Individual',    ko:'개인 사업자'}},
+  { id:'fleet_rental',    color:'#1E293B', i18n:{ru:'Парк/аренда',   en:'Fleet/Rental',  ko:'플릿·렌탈' }},
+  { id:'key_account',     color:'#8B5CF6', i18n:{ru:'Ключ. клиент',  en:'Key Account',   ko:'키 어카운트'}},
+  { id:'mining',          color:'#F87171', i18n:{ru:'Горнодобыча',   en:'Mining',        ko:'광업'      }},
+  { id:'infrastructure',  color:'#F97316', i18n:{ru:'Инфраструкт.',  en:'Infrastructure',ko:'인프라'    }},
+  { id:'agri_plantation', color:'#EAB308', i18n:{ru:'С/х · план.',   en:'Agri/Plant.',   ko:'농업·플랜.'}},
+  { id:'quarry',          color:'#14B8A6', i18n:{ru:'Карьер',        en:'Quarry',        ko:'채석장'    }},
+  { id:'gov_public',      color:'#38BDF8', i18n:{ru:'Гос. сектор',   en:'Gov/Public',    ko:'정부·공공' }},
+];
+const SEGMENT_RANK_MAX = 3;
 
 const state = {
   lang:'ru', answers:{},
   target_company:'', contact_name:'', contact_phone:'', notes:'',
+  segment:[],   // 0~3 entries — ranked hypothesis (LEFT pane mirror)
   token:null, dealerId:null, event:null,
   online:navigator.onLine, queueCount:0,
   survey:null, questions:[], axes:[],
@@ -722,6 +770,66 @@ function render(){
     refreshSubmit();
     return;
   }
+  // ---- LEFT-pane mirror: Dealer profile (target inputs + segment hypothesis chips) ----
+  // 047 마이그레이션이 q_v1d26_target_company / _contact_name / _contact_phone DB question DELETE.
+  // → 회사명·담당자·전화·메모는 좌측 input이 유일한 수집 경로 (payload.target_company 등).
+  // 8 segment hypothesis chips → payload.dealer_hypothesis_segment(s).
+  const profileH = document.createElement('div');
+  profileH.className = 'sec-h';
+  profileH.textContent = t('sec_profile');
+  root.appendChild(profileH);
+
+  // dealer card (compact)
+  const dCard = document.createElement('div');
+  if (!state.dealerId) {
+    dCard.className = 'dealer-card empty';
+    dCard.innerHTML = `<b>${escapeText(t('no_token'))}</b><div>${t('no_token_hint')}</div>`;
+  } else {
+    let expStr = '';
+    try {
+      const p = decodeJwt(state.token);
+      if (p?.exp) { expStr = new Date(p.exp * 1000).toLocaleDateString('ko-KR'); }
+    } catch(_){}
+    dCard.className = 'dealer-card';
+    dCard.innerHTML = `<b>Dealer</b> ${escapeText(state.event || '')}
+      <div class="dc-id">${escapeText(state.dealerId)}</div>
+      ${expStr ? `<div><b>exp</b> ${escapeText(expStr)}</div>` : ''}`;
+  }
+  root.appendChild(dCard);
+
+  // target inputs (좌측 input — 047 후 유일한 회사/담당자 수집 경로)
+  const tf = document.createElement('div');
+  tf.className = 'target-fields';
+  tf.innerHTML = `
+    <label>${escapeText(t('company'))}</label>
+    <input class="txt-input" id="inp_company" type="text" autocomplete="off" value="${escapeAttr(state.target_company || '')}"/>
+    <label>${escapeText(t('contact'))}</label>
+    <input class="txt-input" id="inp_contact" type="text" autocomplete="off" value="${escapeAttr(state.contact_name || '')}"/>
+    <label>${escapeText(t('phone'))}</label>
+    <input class="txt-input" id="inp_phone" type="text" inputmode="tel" autocomplete="off" value="${escapeAttr(state.contact_phone || '')}"/>
+    <label>${escapeText(t('notes'))}</label>
+    <textarea class="txt-area" id="inp_notes" autocomplete="off">${escapeText(state.notes || '')}</textarea>
+  `;
+  root.appendChild(tf);
+  // bind target inputs — re-render 시 focus 보존 필요 → 입력만 state 갱신, render 호출 X
+  const wireProfile = (id, prop) => {
+    const el = document.getElementById(id);
+    el.addEventListener('input', () => { state[prop] = el.value; refreshSubmit(); });
+  };
+  wireProfile('inp_company', 'target_company');
+  wireProfile('inp_contact', 'contact_name');
+  wireProfile('inp_phone',   'contact_phone');
+  wireProfile('inp_notes',   'notes');
+
+  // 8 segment hypothesis chips (ranked max 3)
+  const segCard = document.createElement('div');
+  segCard.className = 'qa';
+  segCard.innerHTML = `<div class="qa-title">${escapeText(t('hypothesis'))}</div>
+    <div class="seg-list" id="segListMobile"></div>
+    <div class="seg-hint">${escapeText(t('hypothesis_hint'))}</div>`;
+  root.appendChild(segCard);
+  renderSegmentChips();
+
   if (!state.questions.length) {
     const div = document.createElement('div');
     div.className = 'loading';
@@ -730,14 +838,12 @@ function render(){
     return;
   }
 
-  // 섹션 분류: axis 보유=axis, type=consent|nps=final, type=multi_select|text_short=market, 나머지=target
+  // 섹션 분류: axis 보유=axis, type=consent|nps=final, 나머지=market
   const sections = [
-    { key:'target', label:t('sec_target'), match:(q) => /target_company|contact_name|contact_phone/.test(q.id) },
     { key:'axis',   label:t('sec_axis'),   match:(q) => q.axis && q.type === 'scale_1_10' },
     { key:'final',  label:t('sec_final'),  match:(q) => q.type === 'nps' || q.type === 'consent' },
   ];
-  // market = 그 외
-  const buckets = { target:[], axis:[], market:[], final:[] };
+  const buckets = { axis:[], market:[], final:[] };
   for (const q of state.questions) {
     const hit = sections.find((s) => s.match(q));
     if (hit) buckets[hit.key].push(q);
@@ -745,7 +851,6 @@ function render(){
   }
 
   const order = [
-    { key:'target', label:t('sec_target') },
     { key:'axis',   label:t('sec_axis') },
     { key:'market', label:t('sec_market') },
     { key:'final',  label:t('sec_final') },
@@ -760,6 +865,35 @@ function render(){
   }
 
   refreshSubmit();
+}
+
+function renderSegmentChips(){
+  const list = document.getElementById('segListMobile');
+  if (!list) return;
+  list.innerHTML = '';
+  const sel = Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []);
+  state.segment = sel;
+  for (const s of SEGMENTS) {
+    const el = document.createElement('div');
+    const rankIdx = sel.indexOf(s.id);
+    const active = rankIdx >= 0;
+    el.className = 'seg' + (active ? ' active rank-' + (rankIdx + 1) : '');
+    const badge = active ? `<span class="seg-rank">${rankIdx + 1}</span>` : '';
+    el.innerHTML = `<span class="seg-dot" style="background:${s.color}"></span><span>${escapeText(tx(s.i18n))}</span>${badge}`;
+    el.onclick = () => {
+      const cur = Array.isArray(state.segment) ? state.segment.slice() : [];
+      const idx = cur.indexOf(s.id);
+      if (idx >= 0) cur.splice(idx, 1);
+      else {
+        if (cur.length >= SEGMENT_RANK_MAX) return;
+        cur.push(s.id);
+      }
+      state.segment = cur;
+      renderSegmentChips();
+      refreshSubmit();
+    };
+    list.appendChild(el);
+  }
 }
 
 function refreshSubmit(){
@@ -831,8 +965,8 @@ async function onSubmit(){
     captured_at: new Date().toISOString(),
     answers: answersArr,
     preference_axes,
-    dealer_hypothesis_segment: null,
-    dealer_hypothesis_segments: [],
+    dealer_hypothesis_segment:  Array.isArray(state.segment) ? (state.segment[0] ?? null) : (state.segment ?? null),
+    dealer_hypothesis_segments: Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []),
     target_company: ansFor('q_v1d26_target_company') ?? (state.target_company?.trim() || null),
     contact_name:   ansFor('q_v1d26_contact_name')   ?? (state.contact_name?.trim()  || null),
     contact_phone:  ansFor('q_v1d26_contact_phone')  ?? (state.contact_phone?.trim() || null),
@@ -868,6 +1002,7 @@ function showToast(msg, kind){
 function resetState(){
   state.answers = {};
   state.target_company = ''; state.contact_name = ''; state.contact_phone = ''; state.notes = '';
+  state.segment = [];
   state.hierExpand = {};
   document.getElementById('btnReset').style.display = 'none';
   document.getElementById('btnSubmit').style.display = '';
