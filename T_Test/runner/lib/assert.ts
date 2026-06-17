@@ -15,7 +15,7 @@ export interface RunHandle {
 }
 
 export async function startRun(args: {
-  suite: 'T_04' | 'T_05' | 'T_06';
+  suite: 'T_04' | 'T_05' | 'T_06' | 'T_07';
   scenario: string;
   fixtureSeed?: string;
   notes?: string;
@@ -39,7 +39,7 @@ export async function startRun(args: {
 export interface AssertOptions {
   step: string;
   name: string;
-  hypothesis?: 'H1' | 'H2' | 'H3' | 'H_LLM' | 'V_가설' | 'H_채널통합' | 'H_도달성' | 'H_외부컨트롤';
+  hypothesis?: 'H1' | 'H2' | 'H3' | 'H_LLM' | 'V_가설' | 'H_채널통합' | 'H_도달성' | 'H_외부컨트롤' | 'H_하네스2' | 'H_도달성·V_가설';
   expected?: unknown;
   actual?: unknown;
   metric?: { name: string; value: number };

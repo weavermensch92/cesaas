@@ -8,3 +8,5 @@ async function main() {
   console.log(data[0]?.def?.slice(0, 3000));
 }
 main();
+
+export {};

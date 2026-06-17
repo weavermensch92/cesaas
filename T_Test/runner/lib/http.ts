@@ -17,11 +17,10 @@ export async function http(args: {
 }): Promise<HttpResponse> {
   const url = `${CONFIG.apiBase}${args.path}`;
   const start = Date.now();
-  const res = await fetch(url, {
-    method: args.method,
-    headers: args.headers,
-    body: args.body,
-  });
+  const init: RequestInit = { method: args.method };
+  if (args.headers) init.headers = args.headers;
+  if (args.body !== undefined) init.body = args.body as BodyInit;
+  const res = await fetch(url, init);
   const durationMs = Date.now() - start;
   const text = await res.text();
   let json: unknown = null;

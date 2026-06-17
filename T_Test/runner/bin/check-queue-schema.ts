@@ -10,3 +10,5 @@ async function main() {
   console.log(await r.text());
 }
 main();
+
+export {};
