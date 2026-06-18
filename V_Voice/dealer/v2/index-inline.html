@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HD건설기계 · Dealer v1.2026rev</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=Geist+Mono:wght@300..700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================================
+   HD CI 2026 — C_Common/packages/design 미러
+   ============================================================================ */
+:root {
+  --hd-eco:#00E600; --hd-heritage:#00AD1D; --hd-prosperity:#008233; --hd-dark-green:#024638;
+  --hd-bright-green:#79D97C; --hd-light-green:#C7E995; --hd-green-gray:#BFCEC2;
+  --hd-discovery:#003087; --hd-trust:#002554; --hd-light-blue:#B1E4E3; --hd-blue-gray:#DBE2E9;
+  --hd-gray:#63666A; --hd-paper:#FFFFFF; --hd-bg:#f6f8f6;
+  --hd-ink:var(--hd-trust); --hd-ink-2:var(--hd-discovery); --hd-ink-text:var(--hd-gray);
+  --hd-accent:var(--hd-heritage); --hd-accent-2:var(--hd-prosperity); --hd-accent-50:#e8f7eb;
+  --hd-steel-900:#2b2f33; --hd-steel-700:#4f535a; --hd-steel-500:var(--hd-gray);
+  --hd-steel-400:#91969d; --hd-steel-300:#b8bcc2; --hd-steel-200:#d6dadf;
+  --hd-steel-100:#e9edf0; --hd-steel-50:#f3f5f7;
+  --hd-red:#b91c1c; --hd-amber:#b45309;
+  --hd-radius:6px; --hd-radius-lg:10px;
+  --hd-border:1px solid var(--hd-steel-200);
+  --hd-font:'Noto Sans KR','Malgun Gothic',-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  --hd-mono:'Geist Mono',ui-monospace,'SF Mono',monospace;
+  --hd-shadow-1:0 2px 6px rgba(0,0,0,0.06);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{background:var(--hd-bg);color:var(--hd-ink-text);font-family:var(--hd-font);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased;}
+button{font:inherit;cursor:pointer;}
+input,textarea,select{font:inherit;color:inherit;}
+.num{font-feature-settings:"tnum";font-variant-numeric:tabular-nums;}
+.mono{font-family:var(--hd-mono);}
+
+/* Top bar */
+.topbar{display:flex;align-items:center;gap:12px;padding:12px 22px;background:var(--hd-paper);border-bottom:var(--hd-border);box-shadow:var(--hd-shadow-1);}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-mark{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;background:var(--hd-heritage);color:#fff;font-weight:800;font-size:16px;border-radius:var(--hd-radius);}
+.brand-name{font-weight:700;color:var(--hd-ink);letter-spacing:-0.01em;}
+.brand-name b{color:var(--hd-heritage);}
+.crumb{font-size:11.5px;color:var(--hd-gray);}
+.spacer{flex:1;}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--hd-steel-50);border:var(--hd-border);border-radius:999px;font-size:11.5px;color:var(--hd-gray);font-family:var(--hd-mono);}
+.pill.green{background:var(--hd-accent-50);border-color:#cce5d0;color:var(--hd-prosperity);}
+.pill.amber{background:#fffbeb;border-color:#fde68a;color:var(--hd-amber);}
+.net-dot{width:7px;height:7px;border-radius:50%;background:var(--hd-prosperity);}
+.net-dot.off{background:var(--hd-amber);}
+.lang-sel{height:28px;padding:0 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-family:var(--hd-mono);font-size:11.5px;}
+
+/* Stage */
+.stage{display:grid;grid-template-columns:300px 1fr 420px;gap:14px;padding:14px;min-height:calc(100vh - 56px);}
+.panel{background:var(--hd-paper);border:var(--hd-border);border-radius:var(--hd-radius-lg);padding:16px;overflow:hidden;}
+.panel-head{font-family:var(--hd-mono);font-size:10.5px;color:var(--hd-gray);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:12px;}
+.panel-head b{color:var(--hd-heritage);font-weight:600;}
+@media (max-width:1100px){.stage{grid-template-columns:1fr;gap:10px;}}
+
+/* Segments */
+.seg-list{display:flex;flex-direction:column;gap:5px;}
+.seg{display:flex;align-items:center;gap:8px;padding:8px 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-size:12.5px;color:var(--hd-ink);cursor:pointer;transition:border-color 0.1s,background 0.1s;}
+.seg:hover{border-color:var(--hd-steel-400);}
+.seg.active{border-color:var(--hd-heritage);background:var(--hd-accent-50);font-weight:600;}
+.seg.active.rank-1{border-color:#16A34A;}
+.seg.active.rank-2{border-color:#0EA5E9;}
+.seg.active.rank-3{border-color:#F59E0B;}
+.seg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.seg-rank{margin-left:auto;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;font-family:var(--hd-mono);font-size:10.5px;font-weight:700;color:#fff;background:var(--hd-heritage);}
+.seg.active.rank-1 .seg-rank{background:#16A34A;}
+.seg.active.rank-2 .seg-rank{background:#0EA5E9;}
+.seg.active.rank-3 .seg-rank{background:#F59E0B;}
+.hint{margin-top:14px;padding:10px 12px;background:var(--hd-steel-50);border-left:3px solid var(--hd-discovery);border-radius:4px;font-size:11.5px;color:var(--hd-gray);line-height:1.55;}
+.survey-meta{margin-top:12px;padding:10px 12px;background:var(--hd-accent-50);border-left:3px solid var(--hd-heritage);border-radius:4px;font-size:11.5px;color:var(--hd-prosperity);line-height:1.5;font-family:var(--hd-mono);}
+
+/* Target */
+.target{display:grid;grid-template-columns:90px 1fr;gap:8px 12px;margin-bottom:14px;padding:12px;background:var(--hd-steel-50);border:var(--hd-border);border-radius:var(--hd-radius);}
+.target label{font-family:var(--hd-mono);font-size:10.5px;color:var(--hd-gray);letter-spacing:0.04em;align-self:center;text-transform:uppercase;}
+.target input,.target textarea{width:100%;padding:7px 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-size:13px;}
+.target textarea{min-height:46px;resize:vertical;}
+.target input:focus,.target textarea:focus{outline:none;border-color:var(--hd-heritage);}
+
+/* Radar */
+.radar-wrap{display:flex;align-items:center;justify-content:center;padding:10px;min-height:380px;border:var(--hd-border);border-radius:var(--hd-radius);background:linear-gradient(180deg,var(--hd-paper) 0%,var(--hd-steel-50) 100%);}
+.radar-wrap svg{max-width:100%;height:auto;}
+.radar-empty{font-size:12px;color:var(--hd-gray);font-family:var(--hd-mono);}
+
+/* Summary */
+.summary{margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.metric{padding:10px 12px;border:var(--hd-border);border-radius:var(--hd-radius);background:var(--hd-paper);}
+.metric-label{font-family:var(--hd-mono);font-size:9.5px;color:var(--hd-gray);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;}
+.metric-value{font-weight:700;font-size:16px;color:var(--hd-ink);}
+
+/* Q&A */
+.qa-list{display:flex;flex-direction:column;gap:12px;max-height:calc(100vh - 200px);overflow-y:auto;padding-right:4px;}
+.qa-list::-webkit-scrollbar{width:6px;} .qa-list::-webkit-scrollbar-thumb{background:var(--hd-steel-300);border-radius:3px;}
+.qa{padding:12px 14px;border:var(--hd-border);border-radius:var(--hd-radius);background:var(--hd-paper);}
+.qa.answered{border-color:var(--hd-bright-green);background:#f4fbf5;}
+.qa-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.qa-axis{display:inline-block;padding:2px 8px;background:var(--hd-steel-100);border-radius:999px;font-family:var(--hd-mono);font-size:9.5px;color:var(--hd-gray);letter-spacing:0.06em;text-transform:uppercase;}
+.qa.answered .qa-axis{background:var(--hd-accent-50);color:var(--hd-prosperity);}
+.qa-kind{font-family:var(--hd-mono);font-size:9.5px;color:var(--hd-steel-400);letter-spacing:0.04em;}
+.qa-title{font-size:13px;font-weight:500;color:var(--hd-ink);margin-bottom:10px;line-height:1.4;}
+.qa-title .req{color:var(--hd-red);font-weight:600;margin-left:4px;}
+
+.opts{display:flex;flex-direction:column;gap:5px;}
+.opt{display:flex;align-items:center;gap:10px;padding:8px 10px;border:var(--hd-border);border-radius:var(--hd-radius);background:var(--hd-paper);font-size:12.5px;color:var(--hd-ink-text);cursor:pointer;transition:border-color 0.1s,background 0.1s;}
+.opt:hover{border-color:var(--hd-steel-400);}
+.opt.selected{border-color:var(--hd-heritage);background:var(--hd-accent-50);color:var(--hd-ink);font-weight:500;}
+.opt-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:var(--hd-border);border-radius:999px;font-family:var(--hd-mono);font-size:11px;font-weight:600;background:var(--hd-paper);color:var(--hd-gray);flex-shrink:0;}
+.opt.selected .opt-num{background:var(--hd-heritage);color:var(--hd-paper);border-color:var(--hd-heritage);}
+/* B-Q1 ranked — 1·2·3 순위 색상 */
+.opts.ranked .opt.rank-1 .opt-num{background:#16A34A;border-color:#16A34A;color:#fff;}
+.opts.ranked .opt.rank-2 .opt-num{background:#0EA5E9;border-color:#0EA5E9;color:#fff;}
+.opts.ranked .opt.rank-3 .opt-num{background:#F59E0B;border-color:#F59E0B;color:#fff;}
+.opts.ranked .opt.rank-1{border-color:#16A34A;}
+.opts.ranked .opt.rank-2{border-color:#0EA5E9;}
+.opts.ranked .opt.rank-3{border-color:#F59E0B;}
+
+.scale-grid{display:grid;gap:4px;}
+.scale-grid.s5{grid-template-columns:repeat(5,1fr);}
+.scale-grid.s10{grid-template-columns:repeat(10,1fr);}
+.scale-grid.nps{grid-template-columns:repeat(11,1fr);}
+.scale-cell{padding:8px 0;text-align:center;border:var(--hd-border);border-radius:var(--hd-radius);background:var(--hd-paper);font-family:var(--hd-mono);font-size:11px;font-weight:600;color:var(--hd-gray);cursor:pointer;}
+.scale-cell:hover{border-color:var(--hd-steel-400);}
+.scale-cell.selected{background:var(--hd-heritage);color:#fff;border-color:var(--hd-heritage);}
+.scale-cell.lo{color:var(--hd-red);}
+.scale-cell.mid{color:var(--hd-amber);}
+.scale-cell.hi{color:var(--hd-prosperity);}
+.scale-cell.selected.lo{background:var(--hd-red);border-color:var(--hd-red);color:#fff;}
+.scale-cell.selected.mid{background:var(--hd-amber);border-color:var(--hd-amber);color:#fff;}
+.scale-cell.disabled{opacity:0.35;cursor:not-allowed;}
+.scale-cell.disabled:hover{border-color:var(--hd-steel-200);}
+.opt.hier-top{font-weight:600;background:var(--hd-steel-50,#F5F7F9);}
+.opt.hier-top.expanded{border-color:var(--hd-heritage);}
+.opt.hier-child{margin-left:18px;font-size:12px;}
+.opt.hier-child .opt-num{width:18px;height:18px;font-size:9px;}
+.txt-area.hier-other{margin-left:18px;margin-top:4px;width:calc(100% - 18px);min-height:48px;}
+.txt-area.multi-other{margin-top:6px;width:100%;min-height:48px;font-size:12px;}
+.scale-cell.selected.hi{background:var(--hd-prosperity);border-color:var(--hd-prosperity);color:#fff;}
+
+.txt-input,.txt-area{width:100%;padding:8px 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-size:13px;}
+.txt-area{min-height:64px;resize:vertical;}
+.txt-input:focus,.txt-area:focus{outline:none;border-color:var(--hd-heritage);}
+.num-input{width:140px;padding:8px 10px;border:var(--hd-border);background:var(--hd-paper);border-radius:var(--hd-radius);font-family:var(--hd-mono);font-size:13px;}
+
+.consent{display:flex;align-items:flex-start;gap:9px;padding:10px 14px;border:var(--hd-border);border-radius:var(--hd-radius);font-size:12.5px;line-height:1.45;color:var(--hd-ink);cursor:pointer;background:var(--hd-paper);}
+.consent input{margin-top:2px;accent-color:var(--hd-heritage);}
+.req{color:var(--hd-red);font-weight:600;}
+
+/* 2-col profile grid (center bottom) */
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media (max-width:1400px){.profile-grid{grid-template-columns:1fr;}}
+
+/* Right column · fixed viewport-height + paginated */
+.right-fixed{display:flex;flex-direction:column;height:calc(100vh - 56px - 28px);}
+.page-nav{flex-shrink:0;display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:10px;border-bottom:var(--hd-border);}
+.page-nav-dots{display:flex;gap:6px;flex:1;}
+.page-dot{flex:1;height:4px;background:var(--hd-steel-200);border-radius:2px;transition:background 0.2s;}
+.page-dot.active{background:var(--hd-heritage);}
+.page-dot.done{background:var(--hd-bright-green);}
+.page-counter{font-family:var(--hd-mono);font-size:11px;color:var(--hd-gray);font-weight:600;}
+.pager-viewport{flex:1;overflow:hidden;position:relative;}
+.pager-track{display:flex;height:100%;transition:transform 0.42s cubic-bezier(0.4,0.0,0.2,1);}
+.pager-page{flex-shrink:0;width:100%;padding-right:6px;display:flex;flex-direction:column;gap:12px;overflow-y:auto;}
+.pager-page::-webkit-scrollbar{width:6px;} .pager-page::-webkit-scrollbar-thumb{background:var(--hd-steel-300);border-radius:3px;}
+.page-controls{flex-shrink:0;display:flex;gap:8px;margin-top:10px;}
+.page-controls .btn{flex:1;padding:11px 14px;}
+.page-controls .btn.ghost{flex:0 0 80px;}
+
+/* Dealer Profile card */
+.dealer-card{padding:12px;background:linear-gradient(135deg,var(--hd-trust) 0%,var(--hd-discovery) 100%);color:#fff;border-radius:var(--hd-radius);margin-bottom:14px;}
+.dealer-card .dc-row{display:flex;justify-content:space-between;align-items:center;font-family:var(--hd-mono);font-size:10.5px;letter-spacing:0.04em;opacity:0.85;text-transform:uppercase;margin-bottom:4px;}
+.dealer-card .dc-id{font-family:var(--hd-mono);font-size:14px;font-weight:600;letter-spacing:0.02em;margin-bottom:6px;color:var(--hd-light-blue);}
+.dealer-card .dc-meta{font-size:11.5px;line-height:1.5;opacity:0.9;}
+.dealer-card .dc-meta b{font-weight:600;opacity:1;}
+.dealer-card.empty{background:var(--hd-steel-100);color:var(--hd-gray);}
+.dealer-card.empty .dc-id{color:var(--hd-gray);}
+
+/* Section block headers within columns */
+.section-block{margin-top:18px;}
+.section-block:first-child{margin-top:0;}
+
+/* Submit */
+.submit-row{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+.btn{padding:12px 16px;border:var(--hd-border);border-radius:var(--hd-radius);background:var(--hd-paper);color:var(--hd-ink);font-weight:600;font-size:13px;transition:background 0.1s,opacity 0.1s;}
+.btn:hover{background:var(--hd-steel-50);}
+.btn.primary{background:var(--hd-heritage);border-color:var(--hd-heritage);color:#fff;}
+.btn.primary:hover{background:var(--hd-prosperity);border-color:var(--hd-prosperity);}
+.btn:disabled{opacity:0.45;cursor:not-allowed;}
+.btn:disabled:hover{background:var(--hd-paper);}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--hd-gray);font-weight:400;}
+.btn.ghost:hover{background:var(--hd-steel-50);}
+
+.toast{padding:10px 14px;border:var(--hd-border);border-radius:var(--hd-radius);font-size:12.5px;}
+.toast.ok{background:var(--hd-accent-50);border-color:#b6e0bf;color:var(--hd-prosperity);}
+.toast.err{background:#fef2f2;border-color:#fecaca;color:var(--hd-red);}
+.toast.warn{background:#fffbeb;border-color:#fde68a;color:var(--hd-amber);}
+
+.loading{padding:40px 20px;text-align:center;color:var(--hd-gray);font-family:var(--hd-mono);font-size:12px;}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <span class="brand"><span class="brand-mark">H</span><span class="brand-name"><b>HD</b>건설기계 · Dealer v2</span></span>
+  <span class="crumb" id="surveyCrumb">Загрузка опроса…</span>
+  <span class="spacer"></span>
+  <span class="pill" id="tokenStatus">no token</span>
+  <span class="pill" id="netPill"><span class="net-dot" id="netDot"></span><span id="netLabel">Online</span></span>
+  <span class="pill" id="queuePill">Очередь 0</span>
+  <a id="verSwitch" href="/dealer/" title="Открыть Dealer v1 (текущая)"
+     class="pill"
+     style="text-decoration:none;color:inherit;font-weight:600;letter-spacing:0.04em;">
+    &larr; v1
+  </a>
+  <select id="langSel" class="lang-sel">
+    <option value="ru">RU</option><option value="en">EN</option><option value="ko">KO</option>
+  </select>
+</header>
+
+<main class="stage">
+
+  <!-- LEFT — Dealer Profile · Target · Hypothesis -->
+  <aside class="panel">
+    <div class="section-block">
+      <div class="panel-head" id="lbl_dealer_profile">Dealer Profile</div>
+      <div id="dealerCard"></div>
+    </div>
+
+    <div class="section-block">
+      <!-- 회사명·담당자·연락처·메모는 좌측 sidebar 공통 입력에서 받음 (모든 페이지에 노출).
+           047 마이그레이션이 q_v1d26_target_company / _contact_name / _contact_phone 정식 question 3개 DELETE — 우측 본문에는 안 보임.
+           payload는 좌측 input 값을 그대로 송출 (onSubmit의 target_company / contact_name / contact_phone). -->
+      <div class="panel-head" id="lbl_target_head">Информация о клиенте</div>
+      <div class="target">
+        <label id="lbl_company">Company *</label><input id="inp_company" type="text" autocomplete="off"/>
+        <label id="lbl_contact">Contact</label><input id="inp_contact" type="text" autocomplete="off"/>
+        <label id="lbl_phone">Phone</label><input id="inp_phone" type="text" inputmode="tel" autocomplete="off"/>
+        <label id="lbl_notes">Notes</label><textarea id="inp_notes" autocomplete="off"></textarea>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <div class="panel-head"><b>8</b> Segments · <span id="lbl_hypothesis">гипотеза</span></div>
+      <div class="seg-list" id="segList"></div>
+      <div class="hint" id="lbl_hypothesis_help"></div>
+    </div>
+
+    <div class="survey-meta" id="surveyMeta" style="display:none;"></div>
+  </aside>
+
+  <!-- CENTER — Summary · Radar · 회사 프로필 2x3 -->
+  <section class="panel">
+    <div class="section-block">
+      <div class="panel-head" id="lbl_summary_head">Среднее · Сильная · Слабая</div>
+      <div class="summary" id="summary"></div>
+    </div>
+
+    <div class="section-block">
+      <div class="panel-head" id="lbl_radar_head">Карта позиционирования · автовывод по ответам</div>
+      <div class="radar-wrap" id="radarWrap">
+        <span class="radar-empty">Появится после ответов</span>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <div class="panel-head" id="lbl_profile_head">Профиль компании (6 осей)</div>
+      <div class="profile-grid" id="profileGrid"></div>
+    </div>
+  </section>
+
+  <!-- RIGHT — 마케팅 + NPS + 동의 · 페이지네이션 · 슬라이드 -->
+  <aside class="panel right-fixed">
+    <div class="page-nav">
+      <span class="panel-head" style="margin:0;flex-shrink:0;"><span id="lbl_interview">Интервью клиента</span></span>
+      <div class="page-nav-dots" id="pageDots"></div>
+      <span class="page-counter" id="pageCounter">0/0</span>
+    </div>
+    <div class="pager-viewport" id="pagerViewport">
+      <div class="pager-track" id="pagerTrack"></div>
+    </div>
+    <div class="page-controls">
+      <button class="btn ghost" id="btnPrev" disabled>← Назад</button>
+      <button class="btn" id="btnNext">Далее →</button>
+      <button class="btn primary" id="btnSubmit" disabled style="display:none;">Сохранить + CRM Sync</button>
+      <button class="btn ghost" id="btnReset" style="display:none;">Новое интервью</button>
+    </div>
+    <div id="toastSlot"></div>
+  </aside>
+
+</main>
+
+<script>
+/* ============================================================================
+   SEGMENTS · R_10.05 v2 — CTT Moscow 2026 8 segment (037 시드와 동기)
+   ============================================================================ */
+const SEGMENTS = [
+  { id:'individual',      color:'#F59E0B', i18n:{ru:'Индивидуал.',   en:'Individual',    ko:'개인 사업자'}},
+  { id:'fleet_rental',    color:'#1E293B', i18n:{ru:'Парк/аренда',   en:'Fleet/Rental',  ko:'플릿·렌탈' }},
+  { id:'key_account',     color:'#8B5CF6', i18n:{ru:'Ключ. клиент',  en:'Key Account',   ko:'키 어카운트'}},
+  { id:'mining',          color:'#F87171', i18n:{ru:'Горнодобыча',   en:'Mining',        ko:'광업'      }},
+  { id:'infrastructure',  color:'#F97316', i18n:{ru:'Инфраструкт.',  en:'Infrastructure',ko:'인프라'    }},
+  { id:'agri_plantation', color:'#EAB308', i18n:{ru:'С/х · план.',   en:'Agri/Plant.',   ko:'농업·플랜.'}},
+  { id:'quarry',          color:'#14B8A6', i18n:{ru:'Карьер',        en:'Quarry',        ko:'채석장'    }},
+  { id:'gov_public',      color:'#38BDF8', i18n:{ru:'Гос. сектор',   en:'Gov/Public',    ko:'정부·공공' }},
+];
+
+// 042 survey_v1_dealer_2026rev — sort_order 기반 단일 진행 (Block 라벨 미사용).
+const BLOCK_LABELS = null;
+
+// 042 q_v1d26_decision_roles의 첫 옵션 메타 rank_max 사용. 클라이언트는 'options[0].rank_max'로 분기.
+
+// 6 DW axis 라벨 다국어 — radar SVG 라벨 + 헥사 패널 공통.
+const AXIS_LABEL = {
+  price:       { ru:'Цена',       en:'Price',       ko:'가격'     },
+  fuel:        { ru:'Топливо',    en:'Fuel',        ko:'연료'     },
+  durability:  { ru:'Надёжность', en:'Durability',  ko:'내구성'   },
+  service:     { ru:'Сервис',     en:'Service',     ko:'서비스'   },
+  reference:   { ru:'Референсы',  en:'Reference',   ko:'레퍼런스' },
+  versatility: { ru:'Универс.',   en:'Versatility', ko:'다목적'   },
+};
+
+const I18N = {
+  ru:{ dealer_profile:'Профиль дилера',
+       hypothesis:'гипотеза', hypothesis_help:'Дилер выбирает гипотетический сегмент. Сервер автоматически переклассифицирует — измеряется точность гипотезы.',
+       summary_head:'Среднее · Сильная · Слабая', profile_head:'Профиль компании (6 осей)',
+       target_head:'Информация о клиенте', company:'Компания *', contact:'Контакт', phone:'Телефон', notes:'Заметки',
+       radar_head:'Карта позиционирования · автовывод по ответам', interview:'Интервью клиента',
+       net_on:'Online', net_off:'Offline', queue:'Очередь',
+       submit:'Сохранить + CRM Sync', reset:'Новое интервью',
+       ok_sent:'Сохранено + отправлено', ok_offline:'Сохранено локально (offline)',
+       loading:'Загрузка опроса…', radar_empty:'Появится после ответов', survey_id:'Опрос',
+       avg:'Среднее', strong:'Сильнейшая ось', weak:'Слабейшая',
+       prev:'← Назад', next:'Далее →',
+       no_token:'Требуется вход',
+       no_token_hint:'Выпустите токен в админ-консоли (раздел дилеров) и перейдите по URL с параметром <code>?token=...</code>',
+       radar_axes_short:'Нужно ≥ 3 осей (сейчас {n})',
+       unique_ten_blocked:'10 баллов уже у оси «{axis}». Сначала снимите, чтобы поставить здесь.',
+       unique_point_blocked:'Балл {n} уже использован на другой оси. Каждая ось получает уникальный балл.',
+       hier_other_placeholder:'Уточните…',
+       load_error_prefix:'Ошибка загрузки опроса',
+       api_base_missing:'API_BASE не настроен' },
+  en:{ dealer_profile:'Dealer Profile',
+       hypothesis:'hypothesis', hypothesis_help:'Dealer toggles hypothesized segment. Server re-classifies independently — hypothesis accuracy measured.',
+       summary_head:'Avg · Strong · Weak', profile_head:'Company profile (6 axes)',
+       target_head:'Customer information', company:'Company *', contact:'Contact', phone:'Phone', notes:'Notes',
+       radar_head:'Positioning Map · derived from answers', interview:'Customer Interview',
+       net_on:'Online', net_off:'Offline', queue:'Queue',
+       submit:'Save + CRM Sync', reset:'New interview',
+       ok_sent:'Saved + sent', ok_offline:'Saved locally (offline)',
+       loading:'Loading survey…', radar_empty:'Shows up after answers', survey_id:'Survey',
+       avg:'Average', strong:'Strongest axis', weak:'Weakest',
+       prev:'← Prev', next:'Next →',
+       no_token:'Login required',
+       no_token_hint:'Issue a token in the admin console (dealers section), then open the URL with <code>?token=...</code>',
+       radar_axes_short:'Need ≥ 3 axes (now {n})',
+       unique_ten_blocked:'10 is already on «{axis}». Clear it first to use 10 here.',
+       unique_point_blocked:'Score {n} is already used on another axis. Each axis must have a unique score.',
+       hier_other_placeholder:'Please specify…',
+       load_error_prefix:'Failed to load survey',
+       api_base_missing:'API_BASE is not configured' },
+  ko:{ dealer_profile:'딜러 프로필',
+       hypothesis:'가설', hypothesis_help:'딜러가 인터뷰 중 가정하는 segment 라벨. 서버는 별도로 자동 재분류 — 가설 vs 자동 정확도가 측정됨.',
+       summary_head:'평균 · 최강 · 최약', profile_head:'회사 프로필 (6 axes · 2×3)',
+       target_head:'상담 대상 정보', company:'회사명 *', contact:'담당자', phone:'연락처', notes:'메모',
+       radar_head:'포지셔닝 맵 · 답변 기반 자동 도출', interview:'고객 인터뷰',
+       net_on:'Online', net_off:'Offline', queue:'큐',
+       submit:'저장 + CRM Sync', reset:'새 상담',
+       ok_sent:'저장 + 송출 완료', ok_offline:'오프라인 저장됨',
+       loading:'설문 로딩 중…', radar_empty:'답변 시작되면 표시', survey_id:'설문',
+       avg:'평균', strong:'최강 축', weak:'최약 축',
+       prev:'← 이전', next:'다음 →',
+       no_token:'로그인 필요',
+       no_token_hint:'어드민 콘솔(딜러 발급 메뉴)에서 토큰을 발급받은 후 URL에 <code>?token=...</code>로 진입하세요',
+       radar_axes_short:'레이더에 필요한 축 ≥ 3 (현재 {n})',
+       unique_ten_blocked:'10점은 「{axis}」 축에 이미 부여됨. 해제 후 다시 시도',
+       unique_point_blocked:'{n}점은 이미 다른 축에 부여됨. 6 axis는 서로 다른 점수를 받습니다.',
+       hier_other_placeholder:'직접 입력해 주세요…',
+       load_error_prefix:'설문 로드 실패',
+       api_base_missing:'API_BASE 미설정' },
+};
+
+/* ============================================================================ */
+const state = {
+  lang:'ru', segment:[], answers:{},
+  target_company:'', contact_name:'', contact_phone:'', notes:'',
+  token:null, dealerId:null, event:null,
+  online:navigator.onLine, queueCount:0,
+  survey:null, questions:[], axes:[],   // fetched
+  loadError:null,
+};
+function tx(o){ return (o && (o[state.lang] || o.ru || o.en || o.ko)) || ''; }
+function t(k){ return (I18N[state.lang] || I18N.ru)[k] || k; }
+function questionTitle(q){
+  const k = `title_${state.lang}`;
+  return q[k] || q.title_ru || q.title_en || q.title_ko || q.id;
+}
+
+/* JWT bootstrap */
+(function(){
+  const usp = new URLSearchParams(location.search);
+  const tok = usp.get('token');
+  if (tok) {
+    try { localStorage.setItem('hd_dealer_token', tok); } catch(_){}
+    const p = decodeJwt(tok);
+    if (p) {
+      if (p.sub)   try { localStorage.setItem('hd_dealer_id', p.sub); } catch(_){}
+      if (p.event) try { localStorage.setItem('hd_event', p.event); } catch(_){}
+    }
+    history.replaceState({}, '', location.pathname);
+  }
+  state.token    = localStorage.getItem('hd_dealer_token');
+  state.dealerId = localStorage.getItem('hd_dealer_id');
+  state.event    = localStorage.getItem('hd_event');
+})();
+function decodeJwt(tok){ try{ const p=tok.split('.'); return JSON.parse(atob(p[1].replace(/-/g,'+').replace(/_/g,'/')));} catch(_){return null;} }
+
+/* IndexedDB queue */
+const DB_NAME='hd_voice_dealer_v2', STORE='queue';
+function openDb(){return new Promise((res,rej)=>{const r=indexedDB.open(DB_NAME,1); r.onupgradeneeded=(e)=>{const db=e.target.result; if(!db.objectStoreNames.contains(STORE)){const s=db.createObjectStore(STORE,{keyPath:'id'}); s.createIndex('status','status');}}; r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);});}
+async function queueAdd(rec){const db=await openDb(); rec.status='pending'; rec.attempts=0; rec.enqueued_at=new Date().toISOString(); await new Promise((res,rej)=>{const tx_=db.transaction(STORE,'readwrite'); tx_.objectStore(STORE).add(rec); tx_.oncomplete=res; tx_.onerror=()=>rej(tx_.error);}); return rec.id;}
+async function queueCountFn(){const db=await openDb(); return new Promise((res)=>{const tx_=db.transaction(STORE,'readonly'); const r=tx_.objectStore(STORE).index('status').count(IDBKeyRange.only('pending')); r.onsuccess=()=>res(r.result); r.onerror=()=>res(0);});}
+async function queueListPending(){const db=await openDb(); return new Promise((res)=>{const out=[]; const tx_=db.transaction(STORE,'readonly'); const cur=tx_.objectStore(STORE).index('status').openCursor(IDBKeyRange.only('pending')); cur.onsuccess=(e)=>{const c=e.target.result; if(c){out.push(c.value);c.continue();}else res(out);}; cur.onerror=()=>res(out);});}
+async function queueUpdate(id,patch){const db=await openDb(); return new Promise((res)=>{const tx_=db.transaction(STORE,'readwrite'); const st=tx_.objectStore(STORE); const get=st.get(id); get.onsuccess=()=>{const r=get.result; if(r){Object.assign(r,patch); st.put(r);} res();}; get.onerror=()=>res();});}
+async function refreshQueue(){state.queueCount=await queueCountFn(); const el=document.getElementById('queuePill'); if(el) el.textContent=`${t('queue')} ${state.queueCount}`;}
+
+/* INLINE SURVEY — PR #18 이전 003_voice.sql 시드 (survey_v1_dealer, 16문항) */
+const INLINE_SURVEY = {
+  survey: {
+    id: 'survey_v1_dealer',
+    title: 'HD건설기계 — Dealer 인터뷰 v1',
+    description: 'CTT Moscow 2026 부스 딜러 인터뷰 (PR #18 이전 원본)',
+    target_audience: 'dealer',
+    language_default: 'ru',
+    languages_available: ['ru','en','ko'],
+    estimated_minutes: 5,
+    status: 'active',
+    version_label: '1.0',
+  },
+  questions: [
+    { id:'q_v1d_scale', survey_id:'survey_v1_dealer', type:'single_select', axis:'scale', required:true, sort_order:1,
+      title_ru:'Размер компании', title_en:'Company size', title_ko:'회사 규모',
+      options:[{value:'S',label_ru:'до 50',label_en:'≤50',label_ko:'~50인'},{value:'M',label_ru:'51—200',label_en:'51—200',label_ko:'51~200'},{value:'L',label_ru:'201—1000',label_en:'201—1000',label_ko:'201~1000'},{value:'XL',label_ru:'1000+',label_en:'1000+',label_ko:'1000+'}] },
+    { id:'q_v1d_usage', survey_id:'survey_v1_dealer', type:'single_select', axis:'usage', required:true, sort_order:2,
+      title_ru:'Основное применение', title_en:'Primary usage', title_ko:'주요 용도',
+      options:[{value:'mining',label_ru:'Горнодобыча',label_en:'Mining',label_ko:'광업'},{value:'construction_heavy',label_ru:'Крупное строит.',label_en:'Heavy construction',label_ko:'대형 건설'},{value:'agriculture',label_ru:'С/х',label_en:'Agriculture',label_ko:'농업'},{value:'forestry',label_ru:'Лесное хоз-во',label_en:'Forestry',label_ko:'임업'},{value:'general_construction',label_ru:'Общ. строит.',label_en:'General constr.',label_ko:'일반 건설'},{value:'rental',label_ru:'Аренда',label_en:'Rental',label_ko:'렌탈'},{value:'other',label_ru:'Другое',label_en:'Other',label_ko:'기타'}] },
+    { id:'q_v1d_hours', survey_id:'survey_v1_dealer', type:'single_select', axis:'annual_operating_hours', required:true, sort_order:3,
+      title_ru:'Часы эксплуатации в год', title_en:'Annual operating hours', title_ko:'연간 가동 시간',
+      options:[{value:'low',label_ru:'<1000ч',label_en:'<1000h',label_ko:'<1000h'},{value:'mid',label_ru:'1000—3000ч',label_en:'1000—3000h',label_ko:'1000~3000h'},{value:'high',label_ru:'>3000ч',label_en:'>3000h',label_ko:'>3000h'}] },
+    { id:'q_v1d_deal_rub', survey_id:'survey_v1_dealer', type:'single_select', axis:'annual_deal_rub', required:true, sort_order:4,
+      title_ru:'Годовой объём сделок (₽)', title_en:'Annual deal volume (RUB)', title_ko:'연간 거래액 (₽)',
+      options:[{value:'small',label_ru:'<5 млн',label_en:'<5M',label_ko:'<5M'},{value:'mid',label_ru:'5—50 млн',label_en:'5—50M',label_ko:'5~50M'},{value:'large',label_ru:'>50 млн',label_en:'>50M',label_ko:'>50M'}] },
+    { id:'q_v1d_fleet', survey_id:'survey_v1_dealer', type:'single_select', axis:'fleet_size', required:true, sort_order:5,
+      title_ru:'Парк техники', title_en:'Fleet size', title_ko:'보유 장비',
+      options:[{value:'0',label_ru:'0',label_en:'0',label_ko:'0'},{value:'1-3',label_ru:'1—3',label_en:'1—3',label_ko:'1~3'},{value:'4-10',label_ru:'4—10',label_en:'4—10',label_ko:'4~10'},{value:'11+',label_ru:'11+',label_en:'11+',label_ko:'11+'}] },
+    { id:'q_v1d_role', survey_id:'survey_v1_dealer', type:'single_select', axis:'decision_role', required:true, sort_order:6,
+      title_ru:'Ваша роль в решении', title_en:'Decision role', title_ko:'의사결정 역할',
+      options:[{value:'owner',label_ru:'Владелец',label_en:'Owner',label_ko:'오너'},{value:'purchaser',label_ru:'Закупщик',label_en:'Purchaser',label_ko:'구매'},{value:'influencer',label_ru:'Влияющий',label_en:'Influencer',label_ko:'영향자'},{value:'user',label_ru:'Оператор',label_en:'User',label_ko:'사용자'}] },
+    { id:'q_v1d_sat', survey_id:'survey_v1_dealer', type:'scale_1_5', axis:null, required:true, sort_order:7,
+      title_ru:'Удовлетворённость текущей техникой', title_en:'Satisfaction with current equipment', title_ko:'현재 장비 만족도', options:null },
+    { id:'q_v1d_plan', survey_id:'survey_v1_dealer', type:'single_select', axis:null, required:true, sort_order:8,
+      title_ru:'План закупки в течение года', title_en:'1-year purchase plan', title_ko:'1년 내 구매 계획',
+      options:[{value:'yes',label_ru:'Да',label_en:'Yes',label_ko:'예'},{value:'no',label_ru:'Нет',label_en:'No',label_ko:'아니오'},{value:'maybe',label_ru:'Возможно',label_en:'Maybe',label_ko:'미정'}] },
+    { id:'q_v1d_factors', survey_id:'survey_v1_dealer', type:'multi_select', axis:null, required:true, sort_order:9,
+      title_ru:'Важнейшие факторы выбора (до 3)', title_en:'Top factors (up to 3)', title_ko:'구매 결정 요소 (3개)',
+      options:[{value:'price',label_ru:'Цена',label_en:'Price',label_ko:'가격'},{value:'reliability',label_ru:'Надёжность',label_en:'Reliability',label_ko:'내구성'},{value:'service',label_ru:'Сервис',label_en:'Service',label_ko:'서비스'},{value:'parts',label_ru:'Запчасти',label_en:'Parts',label_ko:'부품'},{value:'financing',label_ru:'Финансирование',label_en:'Financing',label_ko:'파이낸싱'},{value:'residual',label_ru:'Остат. стоим.',label_en:'Resale',label_ko:'잔존가치'}] },
+    { id:'q_v1d_channels', survey_id:'survey_v1_dealer', type:'multi_select', axis:null, required:false, sort_order:10,
+      title_ru:'Каналы получения информации', title_en:'Information channels', title_ko:'정보 수집 채널',
+      options:[{value:'trade_show',label_ru:'Выставки',label_en:'Trade shows',label_ko:'전시회'},{value:'online',label_ru:'Онлайн',label_en:'Online',label_ko:'온라인'},{value:'dealer',label_ru:'Дилер',label_en:'Dealer',label_ko:'딜러'},{value:'peer',label_ru:'Коллеги',label_en:'Peers',label_ko:'동료 추천'}] },
+    { id:'q_v1d_competitor', survey_id:'survey_v1_dealer', type:'single_select', axis:null, required:true, sort_order:11,
+      title_ru:'Какой конкурент рассматривается', title_en:'Competitor considered', title_ko:'경쟁사 검토',
+      options:[{value:'caterpillar',label_ru:'Caterpillar',label_en:'Caterpillar',label_ko:'Caterpillar'},{value:'komatsu',label_ru:'Komatsu',label_en:'Komatsu',label_ko:'Komatsu'},{value:'volvo',label_ru:'Volvo',label_en:'Volvo',label_ko:'Volvo'},{value:'other',label_ru:'Другое',label_en:'Other',label_ko:'기타'},{value:'none',label_ru:'Никто',label_en:'None',label_ko:'없음'}] },
+    { id:'q_v1d_value', survey_id:'survey_v1_dealer', type:'slider', axis:null, required:true, sort_order:12,
+      title_ru:'Цена ↔ Качество (1 цена / 5 качество)', title_en:'Price ↔ Quality (1 price / 5 quality)', title_ko:'가격 ↔ 품질 (1 가격 / 5 품질)',
+      options:{min:1,max:5,step:1} },
+    { id:'q_v1d_service', survey_id:'survey_v1_dealer', type:'multi_select', axis:null, required:false, sort_order:13,
+      title_ru:'Ожидания от сервиса', title_en:'Service expectations', title_ko:'서비스 기대',
+      options:[{value:'uptime',label_ru:'Без простоя',label_en:'Uptime',label_ko:'가동률'},{value:'parts_speed',label_ru:'Скорость запч.',label_en:'Parts speed',label_ko:'부품 속도'},{value:'24_7',label_ru:'24/7',label_en:'24/7',label_ko:'24/7'},{value:'training',label_ru:'Обучение',label_en:'Training',label_ko:'교육'}] },
+    { id:'q_v1d_nps', survey_id:'survey_v1_dealer', type:'nps', axis:null, required:true, sort_order:14,
+      title_ru:'Насколько вы готовы рекомендовать HD коллегам (0—10)', title_en:'How likely to recommend HD (0—10)', title_ko:'HD를 동료에게 추천 (0~10)', options:null },
+    { id:'q_v1d_subscribe', survey_id:'survey_v1_dealer', type:'consent', axis:null, required:false, sort_order:15,
+      title_ru:'Подписаться на дальнейшие обновления', title_en:'Subscribe to future updates', title_ko:'향후 업데이트 수신 동의', options:null },
+    { id:'q_v1d_consent', survey_id:'survey_v1_dealer', type:'consent', axis:null, required:true, sort_order:16,
+      title_ru:'Согласие на обработку персональных данных', title_en:'Consent to data processing', title_ko:'개인정보 처리 동의', options:null },
+  ],
+};
+
+/* API */
+// API_BASE: 1) URL 쿼리 ?api_base=... 2) window.HD_API_BASE (host inject) 3) 빈 문자열(미설정 에러)
+const _urlParams = new URLSearchParams(window.location.search);
+const _apiBaseFromUrl = _urlParams.get('api_base');
+if (_apiBaseFromUrl) {
+  try { localStorage.setItem('hd_api_base', _apiBaseFromUrl); } catch {}
+}
+const API_BASE = (
+  _apiBaseFromUrl
+    || window.HD_API_BASE
+    || (() => { try { return localStorage.getItem('hd_api_base'); } catch { return ''; } })()
+    || ''
+).replace(/\/$/,'');
+async function postOne(rec){
+  if (!API_BASE) { console.log('[DEMO] payload (not sent):', rec.payload); return { id: 'demo-' + rec.id, lead_id: null }; }
+  const res = await fetch(`${API_BASE}/responses-receive`, {
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      ...(state.token ? {'Authorization': `Bearer ${state.token}`} : {}),
+      'Idempotency-Key': rec.idempotency_key || rec.id,
+    },
+    body: JSON.stringify(rec.payload),
+  });
+  if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+  return res.json();
+}
+async function drainQueue(){
+  if (!state.online) return;
+  const p = await queueListPending();
+  for (const rec of p) {
+    try { await postOne(rec); await queueUpdate(rec.id,{status:'sent',sent_at:new Date().toISOString()}); }
+    catch (e) { await queueUpdate(rec.id,{status:'pending',attempts:(rec.attempts||0)+1,last_error:String(e).slice(0,300)}); }
+  }
+  refreshQueue();
+}
+
+async function loadSurvey(){
+  if (!API_BASE) {
+    // 데모 모드 — inline 23문항 사용
+    state.survey = INLINE_SURVEY.survey;
+    state.questions = INLINE_SURVEY.questions;
+    state.axes = [...new Set(state.questions.map((q) => q.axis).filter(Boolean))];
+    state.loadError = null;
+    const crumb = document.getElementById('surveyCrumb');
+    if (crumb) crumb.textContent = `${t('survey_id')}: ${state.survey.id} (demo)`;
+    const meta = document.getElementById('surveyMeta');
+    if (meta) { meta.textContent = `${state.survey.id} · ${state.questions.length} q · ${state.axes.length} axes (demo)`; meta.style.display = ''; }
+    renderQA(); renderRadar(); refreshSubmit();
+    return;
+  }
+  try {
+    // 명시 survey_id로 v2(CTT) 고정 — v1·v1.2026rev와 다중 active 환경에서 안전.
+    // 명시 survey_id로 v1.2026rev 고정 — v1·v2와 다중 active 환경에서 안전.
+    const r = await fetch(`${API_BASE}/surveys-get?audience=dealer&survey_id=survey_v1_dealer_2026rev`);
+    if (!r.ok) throw new Error(`${r.status}: ${await r.text()}`);
+    const d = await r.json();
+    state.survey = d.survey;
+    state.questions = d.questions || [];
+    state.axes = [...new Set(state.questions.map((q) => q.axis).filter(Boolean))];
+    state.loadError = null;
+    document.getElementById('surveyCrumb').textContent = `${t('survey_id')}: ${state.survey.id}`;
+    const meta = document.getElementById('surveyMeta');
+    meta.textContent = `${state.survey.id} · ${state.questions.length} q · ${state.axes.length} axes`;
+    meta.style.display = '';
+    renderQA(); renderRadar(); refreshSubmit();
+  } catch (e) {
+    state.loadError = String(e);
+    renderQA();
+  }
+}
+
+/* ============================================================================
+   Scoring — answer → 1~5 normalized
+   ============================================================================ */
+function scoreOf(q, ans){
+  if (ans == null || ans === '') return null;
+  if (q.type === 'scale_1_5' && typeof ans === 'number') return Math.max(1, Math.min(5, ans));
+  if (q.type === 'scale_1_10' && typeof ans === 'number') return Math.max(1, Math.min(5, ans / 2));
+  if (q.type === 'nps' && typeof ans === 'number') return Math.max(0, Math.min(5, ans / 2));
+  if (q.type === 'slider' && typeof ans === 'number') return Math.max(1, Math.min(5, ans));
+  if (q.type === 'number' && typeof ans === 'number') return null; // 자유 숫자 — axis 미반영
+  if (q.type === 'single_select') {
+    const opts = q.options || [];
+    const idx = opts.findIndex((o) => o.value === ans);
+    if (idx < 0) return null;
+    return ((idx + 1) / opts.length) * 5;
+  }
+  if (q.type === 'multi_select' && Array.isArray(ans)) {
+    return Math.min(5, Math.max(1, ans.length));
+  }
+  if (q.type === 'consent') return ans === true ? 5 : 0;
+  if (q.type === 'text_short' || q.type === 'text_long') return null;
+  return null;
+}
+function computeAxes(){
+  const out = {};
+  for (const ax of state.axes) {
+    const qs = state.questions.filter((q) => q.axis === ax);
+    const vals = qs.map((q) => scoreOf(q, state.answers[q.id])).filter((v) => v != null);
+    out[ax] = vals.length ? vals.reduce((s,v) => s+v, 0) / vals.length : null;
+  }
+  return out;
+}
+
+/* ============================================================================
+   Render
+   ============================================================================ */
+// 8 segments — 클릭 순서대로 최대 3개까지 ranked 선택 (1·2·3 순위 표시).
+// state.segment: string[] (0~3 entries). 1순위가 dealer_hypothesis_segment.
+const SEGMENT_RANK_MAX = 3;
+function renderSegments(){
+  const list = document.getElementById('segList');
+  list.innerHTML = '';
+  const sel = Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []);
+  state.segment = sel;
+  for (const s of SEGMENTS) {
+    const el = document.createElement('div');
+    const rankIdx = sel.indexOf(s.id);
+    const active = rankIdx >= 0;
+    el.className = 'seg' + (active ? ' active rank-' + (rankIdx + 1) : '');
+    const badge = active ? `<span class="seg-rank">${rankIdx + 1}</span>` : '';
+    el.innerHTML = `<span class="seg-dot" style="background:${s.color}"></span><span>${tx(s.i18n)}</span>${badge}`;
+    el.onclick = () => {
+      const cur = Array.isArray(state.segment) ? state.segment.slice() : [];
+      const idx = cur.indexOf(s.id);
+      if (idx >= 0) {
+        cur.splice(idx, 1);  // 해제 시 뒷 순위가 자동으로 올라옴
+      } else {
+        if (cur.length >= SEGMENT_RANK_MAX) return;  // 최대 3
+        cur.push(s.id);
+      }
+      state.segment = cur;
+      renderSegments(); renderRadar();
+    };
+    list.appendChild(el);
+  }
+}
+
+function renderRadar(){
+  const wrap = document.getElementById('radarWrap');
+  const N = state.axes.length;
+  if (N < 3) {
+    wrap.innerHTML = `<span class="radar-empty">${state.axes.length ? t('radar_axes_short').replace('{n}', N) : t('radar_empty')}</span>`;
+    document.getElementById('summary').innerHTML = '';
+    return;
+  }
+  const cx=200, cy=200, R=130;
+  const angle=(i)=>-Math.PI/2 + i*(2*Math.PI/N);
+  const pt=(i,f)=>({x:cx+Math.cos(angle(i))*R*f, y:cy+Math.sin(angle(i))*R*f});
+  const axes = computeAxes();
+
+  let out = `<svg width="400" height="400" viewBox="0 0 400 400">`;
+  for (let lv=1; lv<=5; lv++) {
+    const f = lv/5;
+    const pts = state.axes.map((_,i)=>{const p=pt(i,f); return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;}).join(' ');
+    out += `<polygon points="${pts}" fill="none" stroke="${lv===5?'#d6dadf':'#e9edf0'}" stroke-width="${lv===5?1:0.6}"/>`;
+  }
+  for (let i=0; i<N; i++) {
+    const p = pt(i,1);
+    out += `<line x1="${cx}" y1="${cy}" x2="${p.x.toFixed(1)}" y2="${p.y.toFixed(1)}" stroke="#e9edf0" stroke-width="0.6"/>`;
+  }
+  for (let i=0; i<N; i++) {
+    const p = pt(i, 1.18);
+    const ax = state.axes[i];
+    const v = axes[ax];
+    // 사용자에게 보이는 점수는 1~10 raw (scoreOf의 /2 정규화 전). polygon shape은 v(1~5)로 그대로.
+    const vRaw = state.answers[`q_v1d26_dw_${ax}`];
+    const vStr = typeof vRaw === 'number' ? String(vRaw) : (v != null ? v.toFixed(1) : '–');
+    const axLabel = AXIS_LABEL[ax] ? tx(AXIS_LABEL[ax]) : ax;
+    out += `<text x="${p.x.toFixed(1)}" y="${(p.y-4).toFixed(1)}" text-anchor="middle" font-family="Noto Sans KR" font-size="11" font-weight="600" fill="#002554">${axLabel}</text>`;
+    out += `<text x="${p.x.toFixed(1)}" y="${(p.y+8).toFixed(1)}" text-anchor="middle" font-family="Geist Mono" font-size="9.5" fill="#63666A">${vStr}</text>`;
+  }
+  const hasAny = state.axes.some((a) => axes[a] != null);
+  if (hasAny) {
+    const pts = state.axes.map((a,i)=>{const v=axes[a]||0; const f=Math.max(0,Math.min(5,v))/5; return pt(i,f);});
+    const ptsStr = pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    out += `<polygon points="${ptsStr}" fill="rgba(0,173,29,0.12)" stroke="#00AD1D" stroke-width="2"/>`;
+    for (const p of pts) {
+      if (p.x === cx && p.y === cy) continue;
+      out += `<circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="3.5" fill="#00AD1D"/>`;
+    }
+  }
+  // 8 segments ranked — 1순위 segment의 색상 점선 outline.
+  const segArr = Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []);
+  if (segArr.length > 0) {
+    const seg = SEGMENTS.find((s) => s.id === segArr[0]);
+    if (seg) out += `<circle cx="${cx}" cy="${cy}" r="${R+7}" fill="none" stroke="${seg.color}" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.55"/>`;
+  }
+  out += `</svg>`;
+  wrap.innerHTML = out;
+
+  // Summary
+  const sum = document.getElementById('summary');
+  const all = state.axes.map((a) => ({ id: a, v: axes[a] })).filter((x) => x.v != null);
+  const avg = all.length ? all.reduce((s, x) => s + x.v, 0) / all.length : null;
+  const strong = all.length ? all.reduce((m, x) => x.v > m.v ? x : m) : null;
+  const weak   = all.length ? all.reduce((m, x) => x.v < m.v ? x : m) : null;
+  sum.innerHTML = `
+    <div class="metric"><div class="metric-label">${t('avg')}</div><div class="metric-value num">${avg != null ? avg.toFixed(2) : '–'}</div></div>
+    <div class="metric"><div class="metric-label">${t('strong')}</div><div class="metric-value num">${strong ? `${strong.id} · ${strong.v.toFixed(1)}` : '–'}</div></div>
+    <div class="metric"><div class="metric-label">${t('weak')}</div><div class="metric-value num">${weak ? `${weak.id} · ${weak.v.toFixed(1)}` : '–'}</div></div>
+  `;
+}
+
+const PAGE_SIZE = 3;
+let _currentPage = 0;
+
+// q.id가 'q_v2dctt_<block><n>_...' 패턴이면 첫 block 문자(a/b/c/d)를 페이지 key로 사용 → 4 Block 페이저.
+// 패턴 미일치 시 PAGE_SIZE chunk fallback (survey_v1 호환).
+function blockKeyOf(_q) { return null; }  // v1.2026rev — Block 그룹핑 미사용
+
+function getPages(){
+  // axis 질문(DW 6축)은 center 그리드. 나머지 question은 sort_order로 정렬 후 PAGE_SIZE chunk.
+  // 옵션 _meta.dependsOn에 의해 hidden 상태인 질문은 페이지 카운트에 포함 (조건 만족 시 노출).
+  const otherQs = state.questions
+    .filter((q) => !q.axis)
+    .sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+
+  const pages = [];
+  for (let i = 0; i < otherQs.length; i += PAGE_SIZE) {
+    pages.push(otherQs.slice(i, i + PAGE_SIZE));
+  }
+  if (!pages.length) pages.push([]);
+  return pages;
+}
+
+function renderQA(){
+  const grid = document.getElementById('profileGrid');
+  const track = document.getElementById('pagerTrack');
+  if (grid) grid.innerHTML = '';
+  if (track) track.innerHTML = '';
+
+  if (state.loadError) {
+    track.innerHTML = `<div class="pager-page"><div class="toast err">${t('load_error_prefix')}: ${state.loadError}</div></div>`;
+    renderPageNav(1);
+    return;
+  }
+  if (!state.questions.length) {
+    track.innerHTML = `<div class="pager-page"><div class="loading">${t('loading')}</div></div>`;
+    renderPageNav(1);
+    return;
+  }
+
+  // CENTER · axis 질문 6개 (2×3)
+  const axisQs = state.questions
+    .filter((q) => q.axis)
+    .sort((a,b) => (a.sort_order||0) - (b.sort_order||0));
+  for (const q of axisQs) grid.appendChild(renderQuestion(q));
+
+  // RIGHT · pages
+  const pages = getPages();
+  for (const pageQs of pages) {
+    const page = document.createElement('div');
+    page.className = 'pager-page';
+    for (const q of pageQs) page.appendChild(renderQuestion(q));
+    track.appendChild(page);
+  }
+
+  if (_currentPage >= pages.length) _currentPage = pages.length - 1;
+  gotoPage(_currentPage, false);
+  renderPageNav(pages.length);
+}
+
+function renderPageNav(total){
+  const dots = document.getElementById('pageDots');
+  const counter = document.getElementById('pageCounter');
+  if (!dots || !counter) return;
+  dots.innerHTML = '';
+  const pages = getPages();
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('span');
+    let cls = 'page-dot';
+    if (i === _currentPage) cls += ' active';
+    else if (pages[i] && pages[i].every((q) => !q.required || hasAnswer(q))) cls += ' done';
+    d.className = cls;
+    d.title = `Page ${i+1}/${total}`;
+    d.onclick = () => gotoPage(i, true);
+    dots.appendChild(d);
+  }
+  counter.textContent = `${_currentPage+1}/${total}`;
+
+  const prev = document.getElementById('btnPrev');
+  const next = document.getElementById('btnNext');
+  const submit = document.getElementById('btnSubmit');
+  const reset  = document.getElementById('btnReset');
+  if (prev) prev.disabled = _currentPage === 0;
+
+  const isLast = _currentPage === total - 1;
+  const submitVisible = reset && reset.style.display === '' ? false : isLast;
+  if (next) next.style.display = isLast ? 'none' : '';
+  if (submit) submit.style.display = isLast && !(reset && reset.style.display === '') ? '' : 'none';
+}
+
+function gotoPage(n, animate){
+  const track = document.getElementById('pagerTrack');
+  if (!track) return;
+  const pages = track.querySelectorAll('.pager-page');
+  if (n < 0) n = 0;
+  if (n >= pages.length) n = pages.length - 1;
+  _currentPage = n;
+  if (!animate) track.style.transition = 'none';
+  else track.style.transition = '';
+  track.style.transform = `translateX(${-n * 100}%)`;
+  if (!animate) { void track.offsetWidth; track.style.transition = ''; }
+  // Refresh nav
+  const total = pages.length;
+  renderPageNav(total);
+}
+
+function renderDealerCard(){
+  const card = document.getElementById('dealerCard');
+  if (!card) return;
+  if (!state.dealerId) {
+    card.className = 'dealer-card empty';
+    card.innerHTML = `<div class="dc-row"><span>No token</span></div>
+      <div class="dc-id">${t('no_token')}</div>
+      <div class="dc-meta">${t('no_token_hint')}</div>`;
+    return;
+  }
+  // JWT exp 추출 (옵션)
+  let expStr = '';
+  try {
+    const p = decodeJwt(state.token);
+    if (p?.exp) {
+      const d = new Date(p.exp * 1000);
+      expStr = d.toLocaleDateString('ko-KR');
+    }
+  } catch(_) {}
+  card.className = 'dealer-card';
+  card.innerHTML = `
+    <div class="dc-row"><span>Dealer</span><span>${state.event || ''}</span></div>
+    <div class="dc-id">${state.dealerId}</div>
+    <div class="dc-meta">
+      ${state.event ? `<b>Event</b> ${state.event}<br/>` : ''}
+      ${expStr ? `<b>Token exp</b> ${expStr}` : ''}
+    </div>
+  `;
+}
+
+function hasAnswer(q){
+  const v = state.answers[q.id];
+  if (q.type === 'consent') return v === true;
+  // 계층 (single 또는 multi_select with level 메타)
+  const isHier = (q.type === 'single_select' || q.type === 'multi_select')
+    && Array.isArray(q.options) && q.options.some((o) => typeof o.level === 'number');
+  if (isHier && q.type === 'multi_select') {
+    if (!Array.isArray(v) || v.length === 0) return false;
+    // is_other 선택돼 있으면 parent별 other_text 채워졌는지 검사
+    for (const val of v) {
+      const opt = q.options.find((o) => o.value === val);
+      if (opt?.is_other) {
+        const txt = state.answers[q.id + '__other_' + opt.parent_id];
+        if (!txt || !String(txt).trim()) return false;
+      }
+    }
+    return true;
+  }
+  if (isHier) {  // single_select hierarchical
+    if (!v || typeof v !== 'object' || !v.choice) return false;
+    const selOpt = q.options.find((o) => o.value === v.choice);
+    if (selOpt?.is_other && (!v.other_text || !String(v.other_text).trim())) return false;
+    return true;
+  }
+  if (q.type === 'multi_select') return Array.isArray(v) && v.length > 0;
+  return v !== undefined && v !== null && v !== '';
+}
+
+function renderQuestion(q){
+  const cur = state.answers[q.id];
+  const answered = hasAnswer(q);
+  const wrap = document.createElement('div');
+  wrap.className = 'qa' + (answered ? ' answered' : '');
+
+  const axisLabel = q.axis ? `<span class="qa-axis">${q.axis}</span>` : '';
+  const kindLabel = `<span class="qa-kind">${q.type}</span>`;
+  const title = `<div class="qa-title">${questionTitle(q)}${q.required ? `<span class="req">*</span>` : ''}</div>`;
+
+  // 조건부 follow-up — 옵션 첫 항목 _meta.dependsOn 표식이 있으면 UI에서 **항상 hidden**.
+  // 기타 텍스트 입력은 부모 multi_select의 is_other 옵션 선택 시 inline textarea로 받음.
+  // payload는 onSubmit에서 부모 question id + '_other' 키로 별 entry 추가해 DB에 매핑.
+  const depMeta = q.options?.[0]?._meta?.dependsOn;
+  if (depMeta && depMeta.question_id && depMeta.value) {
+    wrap.style.display = 'none';
+    wrap.dataset.hiddenByDep = '1';
+    return wrap;
+  }
+
+  // 042 q_v1d26_usage_hier — 계층 single_select. options에 level/parent_id 메타 있으면 펼침 UI.
+  const isHierarchical = q.type === 'single_select'
+    && Array.isArray(q.options)
+    && q.options.some((o) => typeof o.level === 'number');
+
+  let body = '';
+  if (isHierarchical) {
+    body = renderHierarchicalBody(q, cur);
+  } else if (q.type === 'single_select') {
+    const opts = q.options || [];
+    body = `<div class="opts">${opts.map((o, i) => `
+      <div class="opt${cur === o.value ? ' selected' : ''}" data-q="${q.id}" data-v="${escapeAttr(o.value)}" data-kind="single">
+        <span class="opt-num">${i+1}</span><span>${optionLabel(o)}</span>
+      </div>`).join('')}</div>`;
+  } else if (q.type === 'multi_select') {
+    const arr = Array.isArray(cur) ? cur : [];
+    const opts = q.options || [];
+    // ranked — 옵션 어느 한 곳에 rank_max 메타 있으면 ranked 모드 (042는 첫 옵션, 일반화)
+    const rankOpt = opts.find((o) => typeof o.rank_max === 'number' && o.rank_max > 0);
+    const rankMax = rankOpt?.rank_max;
+    const isRanked = !!rankMax;
+    // inline 기타 — 어느 옵션이라도 is_other 플래그 있으면 그 옵션 선택 시 같은 question 안에 textarea 노출.
+    const otherOpt = opts.find((o) => o.is_other === true);
+    const otherText = state.answers[q.id + '__other'] || '';
+    const otherSelected = otherOpt && arr.includes(otherOpt.value);
+
+    let optsHtml = '';
+    for (let i = 0; i < opts.length; i++) {
+      const o = opts[i];
+      const rankIdx = arr.indexOf(o.value);
+      const isSel = rankIdx >= 0;
+      const badge = isRanked
+        ? (isSel ? `${rankIdx + 1}` : '+')
+        : (isSel ? '✓' : `${i+1}`);
+      optsHtml += `<div class="opt${isSel ? ' selected' : ''}${isRanked && isSel ? ' rank-' + (rankIdx+1) : ''}" data-q="${q.id}" data-v="${escapeAttr(o.value)}" data-kind="${isRanked ? 'ranked' : 'multi'}" data-rank-max="${isRanked ? rankMax : ''}">
+        <span class="opt-num">${badge}</span><span>${optionLabel(o)}</span>
+      </div>`;
+      // 본 옵션이 is_other이고 선택된 상태면 바로 아래 inline textarea.
+      if (o.is_other === true && isSel) {
+        optsHtml += `<textarea class="txt-area multi-other" data-q="${q.id}" data-kind="multi-other" placeholder="${t('hier_other_placeholder')}">${escapeText(otherText)}</textarea>`;
+      }
+    }
+    body = `<div class="opts${isRanked ? ' ranked' : ''}" data-rank-max="${isRanked ? rankMax : ''}">${optsHtml}</div>`;
+  } else if (q.type === 'scale_1_5') {
+    body = `<div class="scale-grid s5">${[1,2,3,4,5].map((n) => `
+      <div class="scale-cell${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`).join('')}</div>`;
+  } else if (q.type === 'scale_1_10') {
+    // DW 6축 unique 점수 — 다른 axis가 이미 사용한 점수 셀은 disabled.
+    // 6 axis 각각 1~10 중 서로 다른 점수 부여 (한 점수가 한 axis에만).
+    const isDw = q.axis && state.axes.includes(q.axis);
+    const usedByOthers = isDw
+      ? new Set(state.axes
+          .filter((a) => a !== q.axis)
+          .map((a) => state.answers[`q_v1d26_dw_${a}`])
+          .filter((v) => typeof v === 'number'))
+      : new Set();
+    body = `<div class="scale-grid s10">${[1,2,3,4,5,6,7,8,9,10].map((n) => {
+      const tone = n <= 4 ? 'lo' : n <= 7 ? 'mid' : 'hi';
+      const disabled = usedByOthers.has(n);
+      const cls = `scale-cell ${tone}${cur === n ? ' selected' : ''}${disabled ? ' disabled' : ''}`;
+      const tip = disabled ? ` title="${t('unique_point_blocked').replace('{n}', n)}"` : '';
+      return `<div class="${cls}" data-q="${q.id}" data-v="${n}" data-kind="scale" data-disabled="${disabled ? '1' : ''}"${tip}>${n}</div>`;
+    }).join('')}</div>`;
+  } else if (q.type === 'nps') {
+    body = `<div class="scale-grid nps">${[0,1,2,3,4,5,6,7,8,9,10].map((n) => {
+      const tone = n <= 6 ? 'lo' : n <= 8 ? 'mid' : 'hi';
+      return `<div class="scale-cell ${tone}${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`;
+    }).join('')}</div>`;
+  } else if (q.type === 'slider') {
+    body = `<div class="scale-grid s5">${[1,2,3,4,5].map((n) => `
+      <div class="scale-cell${cur === n ? ' selected' : ''}" data-q="${q.id}" data-v="${n}" data-kind="scale">${n}</div>`).join('')}</div>`;
+  } else if (q.type === 'number') {
+    body = `<input class="num-input" type="number" data-q="${q.id}" data-kind="number" value="${cur != null ? cur : ''}"/>`;
+  } else if (q.type === 'text_short') {
+    body = `<input class="txt-input" type="text" data-q="${q.id}" data-kind="text" value="${escapeAttr(cur || '')}"/>`;
+  } else if (q.type === 'text_long') {
+    body = `<textarea class="txt-area" data-q="${q.id}" data-kind="text">${escapeText(cur || '')}</textarea>`;
+  } else if (q.type === 'consent') {
+    wrap.className = 'consent';
+    wrap.innerHTML = `<input type="checkbox" ${cur === true ? 'checked' : ''} data-q="${q.id}" data-kind="consent"/><span>${questionTitle(q)}${q.required ? ` <span class="req">*</span>` : ''}</span>`;
+    bindOne(wrap);
+    return wrap;
+  }
+
+  wrap.innerHTML = `<div class="qa-top">${axisLabel}${kindLabel}</div>${title}${body}`;
+  bindOne(wrap);
+  return wrap;
+}
+
+function optionLabel(o){
+  const k = `label_${state.lang}`;
+  return o[k] || o.label_ru || o.label_en || o.label_ko || o.value || '';
+}
+
+// 042 계층 single_select — level 0(대분류 4) 클릭 → level 1(자식) 펼침. level 0 자체는 선택 불가(트리거 only).
+// 답변 형식: {choice: '2.3' | '2_other', other_text?: '...'}. is_other 옵션 선택 시 conditional textarea 노출.
+function renderHierarchicalBody(q, cur){
+  const opts = Array.isArray(q.options) ? q.options : [];
+  const isMulti = q.type === 'multi_select';
+  // multi_select: cur = array of values. single_select: cur = {choice, other_text}.
+  const selectedValues = isMulti
+    ? (Array.isArray(cur) ? cur : [])
+    : (cur && typeof cur === 'object' && cur.choice ? [cur.choice] : []);
+  const otherTextSingle = !isMulti && cur && typeof cur === 'object' ? (cur.other_text || '') : '';
+  // multi_select: 4 대분류별 other_text 분리 — state.answers[q.id + '__other_' + parentId]
+  const otherTextByParent = (parentId) => {
+    if (!isMulti) return otherTextSingle;
+    return state.answers[q.id + '__other_' + parentId] || '';
+  };
+
+  // 펼침 상태 — single은 단일, multi는 array (여러 대분류 동시 펼침)
+  if (!state.hierExpand) state.hierExpand = {};
+  // 자동 펼침 — 선택한 값의 parent들을 펼침
+  for (const v of selectedValues) {
+    const sel = opts.find((o) => o.value === v);
+    if (sel && sel.parent_id) {
+      const cur = state.hierExpand[q.id];
+      if (isMulti) {
+        const arr = Array.isArray(cur) ? cur.slice() : (cur ? [cur] : []);
+        if (!arr.includes(sel.parent_id)) arr.push(sel.parent_id);
+        state.hierExpand[q.id] = arr;
+      } else if (!(q.id in state.hierExpand)) {
+        state.hierExpand[q.id] = sel.parent_id;
+      }
+    }
+  }
+  const expandedRaw = state.hierExpand[q.id];
+  const expandedSet = new Set(
+    Array.isArray(expandedRaw) ? expandedRaw : (expandedRaw ? [expandedRaw] : [])
+  );
+
+  const level0 = opts.filter((o) => o.level === 0);
+  let html = `<div class="opts hier${isMulti ? ' multi' : ''}">`;
+  for (const top of level0) {
+    const isExp = expandedSet.has(top.value);
+    const arrow = isExp ? '▼' : '▶';
+    html += `<div class="opt hier-top${isExp ? ' expanded' : ''}" data-q="${q.id}" data-v="${escapeAttr(top.value)}" data-kind="hier-top">
+      <span class="opt-num">${arrow}</span><span>${optionLabel(top)}</span>
+    </div>`;
+    if (isExp) {
+      const children = opts.filter((o) => o.level === 1 && o.parent_id === top.value);
+      for (const c of children) {
+        const selected = selectedValues.includes(c.value);
+        const mark = isMulti
+          ? (selected ? '✓' : (c.is_other ? '✎' : '+'))
+          : (c.is_other ? '✎' : '•');
+        html += `<div class="opt hier-child${selected ? ' selected' : ''}" data-q="${q.id}" data-v="${escapeAttr(c.value)}" data-kind="hier-child"${c.is_other ? ' data-is-other="1"' : ''} data-parent="${escapeAttr(top.value)}">
+          <span class="opt-num">${mark}</span><span>${optionLabel(c)}</span>
+        </div>`;
+        if (c.is_other && selected) {
+          html += `<textarea class="txt-area hier-other" data-q="${q.id}" data-kind="hier-other" data-parent="${escapeAttr(top.value)}" placeholder="${t('hier_other_placeholder')}">${escapeText(otherTextByParent(top.value))}</textarea>`;
+        }
+      }
+    }
+  }
+  html += '</div>';
+  return html;
+}
+function escapeAttr(s){ return String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeText(s){ return String(s).replace(/[&<>]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+function bindOne(wrap){
+  wrap.querySelectorAll('.opt[data-kind="single"]').forEach((el) => {
+    el.onclick = () => { const q=el.dataset.q, v=el.dataset.v;
+      state.answers[q] = state.answers[q] === v ? null : v;
+      if (state.answers[q] === null) delete state.answers[q];
+      renderQA(); renderRadar(); refreshSubmit();
+    };
+  });
+  wrap.querySelectorAll('.opt[data-kind="multi"]').forEach((el) => {
+    el.onclick = () => { const q=el.dataset.q, v=el.dataset.v;
+      const cur = Array.isArray(state.answers[q]) ? state.answers[q].slice() : [];
+      const i = cur.indexOf(v); if (i>=0) cur.splice(i,1); else cur.push(v);
+      state.answers[q] = cur;
+      renderQA(); renderRadar(); refreshSubmit();
+    };
+  });
+  // ranked multi_select — 옵션 메타 rank_max 동적. 클릭 순서대로 1·N 순위 부여, N+1번째 클릭 차단.
+  wrap.querySelectorAll('.opt[data-kind="ranked"]').forEach((el) => {
+    el.onclick = () => {
+      const q = el.dataset.q, v = el.dataset.v;
+      const rankMax = Number(el.dataset.rankMax || 3);
+      const cur = Array.isArray(state.answers[q]) ? state.answers[q].slice() : [];
+      const idx = cur.indexOf(v);
+      if (idx >= 0) {
+        cur.splice(idx, 1);  // 선택 해제 — 뒷 순위 자동 한 칸씩 올라옴
+      } else {
+        if (cur.length >= rankMax) return;
+        cur.push(v);
+      }
+      state.answers[q] = cur;
+      renderQA(); renderRadar(); refreshSubmit();
+    };
+  });
+  wrap.querySelectorAll('.scale-cell[data-kind="scale"]').forEach((el) => {
+    el.onclick = () => {
+      if (el.dataset.disabled === '1') return;  // unique 점수 가드 (render 측)
+      const q = el.dataset.q, v = Number(el.dataset.v);
+      // 추가 가드 — 클릭 시 한 번 더 검증. DW 6축에서 다른 axis가 이미 v 점수 사용 시 차단.
+      const qObj = state.questions.find((qq) => qq.id === q);
+      if (qObj?.axis && state.axes.includes(qObj.axis)) {
+        const used = state.axes
+          .filter((a) => a !== qObj.axis)
+          .map((a) => state.answers[`q_v1d26_dw_${a}`])
+          .includes(v);
+        if (used) {
+          alert(t('unique_point_blocked').replace('{n}', v));
+          return;
+        }
+      }
+      state.answers[q] = state.answers[q] === v ? null : v;
+      if (state.answers[q] === null) delete state.answers[q];
+      renderQA(); renderRadar(); refreshSubmit();
+    };
+  });
+  wrap.querySelectorAll('input[data-kind="number"]').forEach((el) => {
+    el.oninput = () => { const v = el.value === '' ? null : Number(el.value); state.answers[el.dataset.q] = v; refreshSubmit(); };
+  });
+  // 계층 level 0 클릭 — 펼침 토글 (single은 단일 대분류, multi는 여러 대분류 동시 펼침 가능)
+  wrap.querySelectorAll('.opt[data-kind="hier-top"]').forEach((el) => {
+    el.onclick = () => {
+      const qid = el.dataset.q, v = el.dataset.v;
+      const qObj = state.questions.find((q) => q.id === qid);
+      const isMulti = qObj?.type === 'multi_select';
+      if (!state.hierExpand) state.hierExpand = {};
+      if (isMulti) {
+        const cur = state.hierExpand[qid];
+        const arr = Array.isArray(cur) ? cur.slice() : (cur ? [cur] : []);
+        const idx = arr.indexOf(v);
+        if (idx >= 0) arr.splice(idx, 1); else arr.push(v);
+        state.hierExpand[qid] = arr;
+      } else {
+        state.hierExpand[qid] = state.hierExpand[qid] === v ? null : v;
+      }
+      renderQA(); refreshSubmit();
+    };
+  });
+  // 계층 level 1 자식 클릭 — single: choice 저장 / multi: array 토글
+  wrap.querySelectorAll('.opt[data-kind="hier-child"]').forEach((el) => {
+    el.onclick = () => {
+      const qid = el.dataset.q, v = el.dataset.v;
+      const qObj = state.questions.find((q) => q.id === qid);
+      const isMulti = qObj?.type === 'multi_select';
+      if (isMulti) {
+        const arr = Array.isArray(state.answers[qid]) ? state.answers[qid].slice() : [];
+        const idx = arr.indexOf(v);
+        if (idx >= 0) arr.splice(idx, 1); else arr.push(v);
+        if (arr.length === 0) delete state.answers[qid]; else state.answers[qid] = arr;
+      } else {
+        const prev = state.answers[qid] && typeof state.answers[qid] === 'object' ? state.answers[qid] : {};
+        if (prev.choice === v) {
+          delete state.answers[qid];
+        } else {
+          state.answers[qid] = { choice: v, other_text: el.dataset.isOther === '1' ? (prev.other_text || '') : null };
+        }
+      }
+      renderQA(); refreshSubmit();
+    };
+  });
+  // 계층 inline "기타" 텍스트 — multi는 parent별 분리 키, single은 단일 other_text
+  wrap.querySelectorAll('textarea[data-kind="hier-other"]').forEach((el) => {
+    el.oninput = () => {
+      const qid = el.dataset.q;
+      const parent = el.dataset.parent;
+      const qObj = state.questions.find((q) => q.id === qid);
+      const isMulti = qObj?.type === 'multi_select';
+      if (isMulti && parent) {
+        state.answers[qid + '__other_' + parent] = el.value;
+      } else {
+        const prev = state.answers[qid] && typeof state.answers[qid] === 'object' ? state.answers[qid] : { choice: null };
+        state.answers[qid] = { ...prev, other_text: el.value };
+      }
+      refreshSubmit();
+    };
+  });
+  // multi_select inline "기타" 텍스트 — answer는 array 그대로, 텍스트는 state.answers[q+'__other']
+  wrap.querySelectorAll('textarea[data-kind="multi-other"]').forEach((el) => {
+    el.oninput = () => {
+      const q = el.dataset.q;
+      state.answers[q + '__other'] = el.value;
+      refreshSubmit();
+    };
+  });
+  wrap.querySelectorAll('input[data-kind="text"],textarea[data-kind="text"]').forEach((el) => {
+    el.oninput = () => { state.answers[el.dataset.q] = el.value; refreshSubmit(); };
+  });
+  wrap.querySelectorAll('input[type="checkbox"][data-kind="consent"]').forEach((el) => {
+    el.onchange = () => { state.answers[el.dataset.q] = el.checked; refreshSubmit(); renderQA(); };
+  });
+}
+
+function refreshSubmit(){
+  const btn = document.getElementById('btnSubmit');
+  const reqQs = state.questions.filter((q) => q.required);
+  const allOk = reqQs.every((q) => hasAnswer(q));
+  // 042 — target_company는 정식 question(q_v1d26_target_company)이 required + dealer card input이 fallback.
+  const hasCompany = !!(state.answers['q_v1d26_target_company'] || state.target_company?.trim());
+  btn.disabled = !(allOk && hasCompany);
+  btn.textContent = t('submit');
+  // Re-render page dots in case answers state changed (done indicators)
+  const track = document.getElementById('pagerTrack');
+  if (track) renderPageNav(track.querySelectorAll('.pager-page').length);
+}
+
+/* ============================================================================
+   Submit
+   ============================================================================ */
+async function onSubmit(){
+  const axes = computeAxes();
+  const preference_axes = {};
+  for (const a of state.axes) {
+    if (axes[a] != null) preference_axes[a] = Math.round(axes[a] * 100) / 100;
+  }
+
+  // NPS / future_subscription / consent_data 추출 — 의미 추정
+  const npsQ = state.questions.find((q) => q.type === 'nps');
+  const subQ = state.questions.find((q) => q.type === 'consent' && /subscri|подписк|수신/i.test(questionTitle(q)));
+  const dataQ = state.questions.find((q) => q.type === 'consent' && (q.required === true || /process|обработ|처리/i.test(questionTitle(q))));
+
+  // 042 — META 키 폐기. target_company·contact_*는 정식 question 답변에서 추출.
+  const ansFor = (qid) => {
+    const v = state.answers[qid];
+    return (typeof v === 'string' && v.trim()) ? v.trim() : null;
+  };
+
+  const answersArr = state.questions.map((q) => ({ question_id: q.id, answer: state.answers[q.id] ?? null }));
+
+  // multi_select inline "기타" 텍스트 → 별도 answer entry로 송출.
+  for (const q of state.questions) {
+    if (q.type !== 'multi_select') continue;
+    const opts = q.options || [];
+    const arr = Array.isArray(state.answers[q.id]) ? state.answers[q.id] : [];
+    const isHierMulti = opts.some((o) => typeof o.level === 'number');
+    if (isHierMulti) {
+      // 계층 multi — parent별 _other 옵션 4개 (1_other ~ 4_other). 각각 textarea 별도.
+      for (const opt of opts) {
+        if (!opt.is_other) continue;
+        if (!arr.includes(opt.value)) continue;
+        const txt = (state.answers[q.id + '__other_' + opt.parent_id] || '').trim();
+        if (!txt) continue;
+        // answer 본문(array)에 이미 '1_other' 등이 포함됨. 텍스트는 question_id에 parent 접미사로 송출.
+        // FK 회피 — q_v1d26_usage_hier_other_text 같은 합성 id는 DB에 없으므로 hidden answer 채널 활용:
+        // 일반 q.id의 array에 "1_other:테스트" 같은 형태로 inline string으로 추가.
+        const idx = arr.indexOf(opt.value);
+        if (idx >= 0) arr[idx] = `${opt.value}:${txt}`;
+      }
+      if (arr.length) answersArr.find((a) => a.question_id === q.id).answer = arr;
+    } else {
+      // 평면 multi — 단일 _other 옵션 + state.answers[q+'__other'] 텍스트
+      const otherOpt = opts.find((o) => o.is_other === true);
+      if (!otherOpt) continue;
+      if (!arr.includes(otherOpt.value)) continue;
+      const txt = (state.answers[q.id + '__other'] || '').trim();
+      if (!txt) continue;
+      // 042 follow-up question id 패턴: q_v1d26_factors → q_v1d26_factors_other 등 (DB row 있음, FK 안전)
+      answersArr.push({ question_id: q.id + '_other', answer: txt });
+    }
+  }
+
+  const payload = {
+    survey_id: state.survey.id,
+    respondent_type: 'dealer',
+    dealer_id: state.dealerId,
+    event: state.event,
+    language: state.lang,
+    nps: npsQ ? (state.answers[npsQ.id] ?? null) : null,
+    future_subscription: subQ ? state.answers[subQ.id] === true : null,
+    consent_data_collection: dataQ ? state.answers[dataQ.id] === true : null,
+    segment: null, segment_method: null, segment_confidence: null, axis_data: null,
+    captured_at: new Date().toISOString(),
+    answers: answersArr,
+    preference_axes,
+    dealer_hypothesis_segment: Array.isArray(state.segment) ? (state.segment[0] ?? null) : (state.segment ?? null),
+    dealer_hypothesis_segments: Array.isArray(state.segment) ? state.segment : (state.segment ? [state.segment] : []),
+    target_company: ansFor('q_v1d26_target_company') ?? (state.target_company?.trim() || null),
+    contact_name:   ansFor('q_v1d26_contact_name')   ?? (state.contact_name?.trim()  || null),
+    contact_phone:  ansFor('q_v1d26_contact_phone')  ?? (state.contact_phone?.trim() || null),
+    notes:          state.notes?.trim() || null,
+  };
+
+  const id = crypto.randomUUID();
+  const rec = { id, payload, idempotency_key: `${id}_v1rev` };
+  setToast(null);
+  try {
+    if (state.online) {
+      await postOne(rec);
+      setToast(t('ok_sent'), 'ok');
+    } else {
+      await queueAdd(rec);
+      setToast(t('ok_offline'), 'warn');
+    }
+    document.getElementById('btnSubmit').style.display = 'none';
+    document.getElementById('btnReset').style.display = '';
+    refreshQueue();
+    // After submit, page nav shows reset button on last page
+    const track = document.getElementById('pagerTrack');
+    if (track) renderPageNav(track.querySelectorAll('.pager-page').length);
+  } catch (e) {
+    await queueAdd(rec);
+    setToast(String(e).slice(0, 200), 'err');
+  }
+}
+
+function setToast(msg, kind){
+  const slot = document.getElementById('toastSlot'); slot.innerHTML = '';
+  if (!msg) return;
+  const d = document.createElement('div'); d.className = `toast ${kind || ''}`; d.textContent = msg;
+  slot.appendChild(d);
+}
+
+function resetState(){
+  state.segment = []; state.answers = {};
+  state.target_company = ''; state.contact_name = ''; state.contact_phone = ''; state.notes = '';
+  ['inp_company','inp_contact','inp_phone','inp_notes'].forEach((id) => { const el = document.getElementById(id); if (el) el.value = ''; });
+  document.getElementById('btnReset').style.display = 'none';
+  setToast(null);
+  _currentPage = 0;
+  renderSegments(); renderRadar(); renderQA(); refreshSubmit();
+}
+
+/* ============================================================================
+   i18n / Inputs / Net
+   ============================================================================ */
+function applyI18N(){
+  document.documentElement.lang = state.lang;
+  const set=(id,k)=>{const el=document.getElementById(id); if(el) el.textContent=t(k);};
+  set('lbl_dealer_profile','dealer_profile');
+  set('lbl_hypothesis','hypothesis'); set('lbl_hypothesis_help','hypothesis_help');
+  set('lbl_summary_head','summary_head'); set('lbl_profile_head','profile_head');
+  set('lbl_target_head','target_head'); set('lbl_company','company'); set('lbl_contact','contact');
+  set('lbl_phone','phone'); set('lbl_notes','notes'); set('lbl_radar_head','radar_head');
+  set('lbl_interview','interview');
+  set('btnPrev','prev'); set('btnNext','next');
+  set('btnSubmit','submit'); set('btnReset','reset');
+  const crumb = document.getElementById('surveyCrumb');
+  if (crumb) crumb.textContent = state.survey ? `${t('survey_id')}: ${state.survey.id}` : t('loading');
+  document.getElementById('netLabel').textContent = state.online ? t('net_on') : t('net_off');
+  document.getElementById('tokenStatus').textContent = state.dealerId ? `dealer:${state.dealerId.slice(0,12)}` : 'no token';
+  refreshQueue();
+  renderDealerCard(); renderSegments(); renderRadar(); renderQA(); refreshSubmit();
+}
+
+function bindInputs(){
+  const wire=(id,prop)=>{const el=document.getElementById(id); el.value=state[prop]||''; el.addEventListener('input',()=>{state[prop]=el.value; refreshSubmit();});};
+  wire('inp_company','target_company'); wire('inp_contact','contact_name'); wire('inp_phone','contact_phone'); wire('inp_notes','notes');
+  document.getElementById('langSel').addEventListener('change',(e)=>{state.lang=e.target.value; applyI18N();});
+}
+
+function setNet(){
+  state.online = navigator.onLine;
+  const dot=document.getElementById('netDot'); if(dot) dot.classList.toggle('off', !state.online);
+  const lbl=document.getElementById('netLabel'); if(lbl) lbl.textContent = state.online ? t('net_on') : t('net_off');
+  if (state.online) drainQueue();
+}
+window.addEventListener('online',setNet); window.addEventListener('offline',setNet);
+
+document.addEventListener('DOMContentLoaded', () => {
+  bindInputs();
+  document.getElementById('btnSubmit').onclick = onSubmit;
+  document.getElementById('btnReset').onclick  = resetState;
+  document.getElementById('btnPrev').onclick   = () => gotoPage(_currentPage - 1, true);
+  document.getElementById('btnNext').onclick   = () => gotoPage(_currentPage + 1, true);
+  applyI18N(); setNet(); drainQueue();
+  loadSurvey();
+});
+</script>
+
+</body>
+</html>
